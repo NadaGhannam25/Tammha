@@ -1,0 +1,61 @@
+// ===== Settings (profile.html) — connected to the API =====
+// Profile:  GET /auth/me (session), PATCH /users/me { firstName, lastName, studentNumber }
+//           (the e-mail is the university account and is not edited here)
+// Storage:  GET /users/me/storage (10 GB quota of the student, per project)
+// Security: there is no "change password while signed in" endpoint; the reset link is sent to the
+//           account e-mail with POST /auth/forgot-password. Sign-out ends this session (POST /auth/logout).
+// Language: handled by script.js / i18n.js (one setting for the whole site).
+(function () {
+  'use strict';
+  const Api = window.TammhaApi; const UI = window.TammhaUI; const S = window.TammhaSession;
+  const { T, esc } = UI;
+  const $ = (id) => document.getElementById(id);
+
+  function fill(u, uniName) {
+    $('profileFirst').value = u.firstName || ''; $('profileLast').value = u.lastName || '';
+    $('profileEmail').value = u.email || ''; $('profileNumber').value = u.studentNumber || '';
+    $('profileUniversity').value = uniName || '';
+    $('profileInitial').textContent = UI.initial(UI.personName(u));
+  }
+  $('profileForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const first = $('profileFirst').value.trim(); const err = $('profileError'); err.textContent = '';
+    if (!first) { err.textContent = T('الاسم الأول مطلوب.', 'The first name is required.'); return; }
+    const number = $('profileNumber').value.trim();
+    if (number && !/^[A-Za-z0-9-]{4,30}$/.test(number)) { err.textContent = T('أدخل الرقم الجامعي كما في بطاقتك الجامعية.', 'Enter the student number as on your university card.'); return; }
+    UI.busy(e.target.querySelector('[type="submit"]'), async () => {
+      try {
+        const u = await Api.patch('/users/me', { firstName: first, lastName: $('profileLast').value.trim() || undefined, studentNumber: number || undefined });
+        Api.saveUser(Object.assign({}, S.user, u));
+        document.querySelectorAll('.profile__text strong').forEach((el) => { el.textContent = UI.personName(u); });
+        UI.toast(T('حُفظت التغييرات.', 'Changes saved.'), 'success');
+      } catch (er) { err.textContent = Api.message(er); }
+    });
+  });
+
+  async function storage() {
+    const box = $('storagePanel'); UI.state(box, 'loading');
+    try {
+      const s = await Api.get('/users/me/storage');
+      if (!s.quotaApplies) { UI.state(box, 'empty', { title: T('لا تنطبق حصة التخزين على هذا الحساب.', 'No storage quota applies to this account.') }); return; }
+      const pct = Math.min(100, Math.round(s.percentageUsed ?? 0));
+      box.innerHTML = `<div class="storage-compact__head"><strong dir="ltr">${esc(UI.fmtSize(s.usedBytes))}</strong><span>${esc(T('مستخدمة من', 'used of'))} <span dir="ltr">${esc(UI.fmtSize(s.quotaBytes))}</span></span><b>${pct}%</b></div>
+        <div aria-label="${esc(T(`المساحة المستخدمة ${pct} بالمئة`, `Storage used ${pct} percent`))}" class="storage-compact__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${Math.max(pct, s.usedBytes ? 1 : 0)}%"></span></div>
+        <dl class="storage-compact__meta"><div><dt>${esc(T('ملفات المشاريع', 'Project files'))}</dt><dd dir="ltr">${esc(UI.fmtSize(s.breakdown?.documentBytes))}</dd></div>
+        <div><dt>${esc(T('أدلة المشاريع', 'Project handbooks'))}</dt><dd dir="ltr">${esc(UI.fmtSize(s.breakdown?.handbookBytes))}</dd></div>
+        <div><dt>${esc(T('المتبقي', 'Remaining'))}</dt><dd dir="ltr">${esc(UI.fmtSize(s.remainingBytes))}</dd></div></dl>
+        ${(s.projects || []).length ? `<ul class="app-list">${s.projects.map((p) => `<li><span>${esc(p.projectName)}</span><span dir="ltr">${esc(UI.fmtSize(p.usedBytes))}</span></li>`).join('')}</ul>` : ''}`;
+    } catch (e) { UI.state(box, 'error', { error: e, retry: storage }); }
+  }
+
+  $('sendPasswordLink').addEventListener('click', () => UI.busy($('sendPasswordLink'), async () => {
+    await Api.post('/auth/forgot-password', { email: S.user.email }, { auth: false });
+    $('securityStatus').textContent = T(`أُرسل رابط تغيير كلمة المرور إلى ${S.user.email}.`, `A password link was sent to ${S.user.email}.`);
+  }));
+
+  S.ready.then(async (u) => {
+    let uniName = '';
+    try { const list = await Api.get('/universities', { auth: false }); uniName = (list.find((x) => x.id === u.universityId) || {}).name || ''; } catch (e) { /* optional */ }
+    fill(u, uniName); storage();
+  });
+})();
