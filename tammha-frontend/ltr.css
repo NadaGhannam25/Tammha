@@ -1,0 +1,14 @@
+/* ===== English (left-to-right) fixes =====
+   In English the site loads style-ltr.css (generated from style.css, see tools/build-ltr-css.js)
+   instead of style.css. This file holds the few things a mirrored stylesheet cannot do. */
+/* ----- hand-written fixes ----- */
+/* direction-carrying icons point the other way in English */
+html[dir="ltr"] .round-arrow svg,
+html[dir="ltr"] .calendar-arrow svg,
+html[dir="ltr"] .project-card-action svg,
+html[dir="ltr"] .tasks-row__open svg,
+html[dir="ltr"] .sv-list__go svg,
+html[dir="ltr"] .lib-card__go svg { transform: scaleX(-1); }
+/* user content keeps its own direction (Arabic names, file names) */
+html[dir="ltr"] .hb-file__text strong,
+html[dir="ltr"] .tasks-row__main strong { unicode-bidi: plaintext; }

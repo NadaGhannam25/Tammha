@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="تفاصيل مشروع تممها - المراحل" name="description"/>
+<title>تممها | ملفات المشروع</title>
+<link href="style.css" rel="stylesheet"/>
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="project-files-page" data-app-role="STUDENT">
+<div class="app-shell">
+<aside aria-label="التنقل الرئيسي" class="sidebar">
+<a class="sidebar__brand" href="dashboard.html" title="تممها — الرئيسية">
+<img alt="شعار تممها" src="assets/tammha-mini.png"/>
+</a>
+<nav aria-label="القائمة الرئيسية" class="sidebar__nav">
+<a class="nav-item" data-page="home" href="dashboard.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/application-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/application-filled.png"/>
+</span>
+<span class="nav-item__label">الرئيسية</span>
+</a>
+<a aria-current="page" class="nav-item is-active" data-page="projects" href="projects.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/project-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/project-filled.png"/>
+</span>
+<span class="nav-item__label">المشاريع</span>
+</a>
+<a class="nav-item" data-page="tasks" href="tasks.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/task-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/task-filled.png"/>
+</span>
+<span class="nav-item__label">المهام</span>
+</a>
+<a class="nav-item" data-page="meetings" href="meetings.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/meeting-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
+</span>
+<span class="nav-item__label">الاجتماعات</span>
+</a>
+<a class="nav-item" data-page="files" href="files.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M8 3.5h7l4 4v11.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"></path>
+<path d="M15 3.5v5h4"></path>
+<path d="M10 12h5.5M10 15.5h5.5"></path>
+<path d="M4 7.5v10a3 3 0 0 0 3 3"></path>
+</svg>
+</span>
+<span class="nav-item__label">الملفات</span>
+</a>
+<a class="nav-item" data-page="guide" href="guide.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"></path>
+<path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"></path>
+<path d="M8.5 7.5h7M8.5 11h5"></path>
+</svg>
+</span>
+<span class="nav-item__label">دليل المشروع</span>
+</a>
+</nav>
+<div class="sidebar__bottom">
+<a class="nav-item" data-page="settings" href="profile.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/settings-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/settings-filled.png"/>
+</span>
+<span class="nav-item__label">الإعدادات</span>
+</a>
+</div>
+</aside>
+<main class="main-content project-details-main"><header class="topbar">
+<div class="search-box">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+<input aria-label="البحث" id="globalSearch" placeholder="البحث في المشاريع أو الملفات..." type="search"/>
+</div>
+<a aria-label="الملف الشخصي" class="profile" href="profile.html">
+<span aria-hidden="true" class="profile__avatar"></span>
+<span class="profile__text">
+<strong></strong>
+<small></small>
+</span>
+</a>
+</header>
+<section aria-labelledby="filesProjectName" class="project-detail-hero project-files-hero">
+<div class="project-detail-hero__content"><h1 id="filesProjectName"></h1></div>
+</section>
+<section aria-label="ملخص المشروع" class="project-summary"></section>
+<nav aria-label="تبويبات المشروع" class="project-tabs">
+<a class="project-tab" href="project-overview.html">نظرة عامة</a>
+<a class="project-tab" href="project-details.html">مراحل المشروع</a>
+<a aria-current="page" class="project-tab is-active" href="project-files.html">الملفات</a>
+</nav>
+<section aria-labelledby="projectFilesTitle" class="project-files-panel">
+<div class="project-files-toolbar">
+<div class="project-files-title"><div><h2 id="projectFilesTitle">ملفات المشروع</h2><p>مساحة لحفظ ملفات المشروع ومرفقاته وتنظيمها، بما يسهّل الرجوع إليها ومتابعة إصداراتها.</p></div></div>
+<div class="project-files-actions">
+<button class="project-file-upload" id="openAddFileModal" type="button">+ إضافة ملف</button>
+<div class="project-files-search"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg><input aria-label="البحث في ملفات المشروع" id="projectFilesSearch" placeholder="البحث في الملفات..." type="search"/></div>
+</div>
+</div>
+<div id="projectStorage" hidden></div><div class="project-files-table-wrap">
+<div aria-label="ملفات المشروع" class="project-files-table" role="table">
+<div class="project-files-row project-files-row--head" role="row"><span>اسم الملف</span><span>النوع</span><span>تاريخ الرفع</span><span>الحجم</span><span>تم الرفع بواسطة</span><span>الإجراءات</span></div>
+<div class="project-files-body" id="projectFilesBody"></div>
+</div>
+<div class="project-files-empty" hidden="" id="projectFilesEmpty">لا توجد ملفات مطابقة للبحث.</div>
+</div>
+</section>
+<div class="file-modal" hidden="" id="addFileModal">
+<div aria-labelledby="addFileTitle" aria-modal="true" class="file-modal__dialog" role="dialog">
+<button aria-label="إغلاق" class="file-modal__close" id="closeAddFileModal" type="button">×</button>
+<div class="file-modal__heading"><h2 id="addFileTitle">إضافة ملف</h2><p>أدخل اسم الملف ثم اختر الملف من جهازك.</p></div>
+<form class="file-modal__form" id="addFileForm" onsubmit="return false;">
+<label class="file-field" for="newFileName"><span>اسم الملف</span><input id="newFileName" maxlength="200" placeholder="مثال: خطة المشروع" required="" type="text"/></label>
+<label class="file-field" for="newFileCategory"><span>نوع المستند</span><span class="file-select"><select id="newFileCategory"></select></span></label>
+<label class="file-review-option" hidden id="newFileReviewWrap"><input id="newFileReview" type="checkbox"/><span><strong>إرسال الملف إلى المشرف للمراجعة</strong><small>اختياري. بدونه يُحفظ الملف ويظهر للفريق مباشرة دون حالة «بانتظار المراجعة».</small></span></label>
+<label class="file-drop-zone" for="newFileInput"><span class="file-drop-zone__icon">＋</span><strong>اختر الملف</strong><small id="newFileChosen">PDF أو Office أو TXT أو ملف آخر</small></label>
+<input hidden="" id="newFileInput" type="file"/>
+<p class="app-field-error" id="addFileError" role="alert"></p><div class="file-modal__actions"><button class="button-secondary" id="cancelAddFileModal" type="button">إلغاء</button><button class="button-primary" type="submit">إضافة</button></div>
+</form>
+</div>
+</div>
+<div class="file-modal" hidden="" id="filePreviewModal">
+<div aria-labelledby="filePreviewTitle" aria-modal="true" class="file-modal__dialog file-preview-dialog" role="dialog">
+<button aria-label="إغلاق" class="file-modal__close" id="closeFilePreviewModal" type="button">×</button>
+<div class="file-preview-icon"><img alt="" id="filePreviewIcon" src="assets/file-txt.png"/></div>
+<h2 id="filePreviewTitle">معاينة الملف</h2>
+<p id="filePreviewText">يُعرض الملف هنا.</p>
+<button class="button-primary" id="filePreviewCloseButton" type="button">إغلاق</button>
+</div>
+</div>
+<div class="link-dialog" hidden="" id="linkDialog">
+<div aria-labelledby="linkDialogTitle" aria-modal="true" class="link-dialog__box" role="dialog">
+<div class="link-dialog__head">
+<img alt="" src="assets/file-link.png"/>
+<div><h2 id="linkDialogTitle">رابط</h2><p id="linkDialogMeta"></p></div>
+<button aria-label="إغلاق" class="link-dialog__close" data-link-close="" type="button">×</button>
+</div>
+<label class="link-dialog__label" for="linkDialogUrl">الرابط</label>
+<input class="link-dialog__url" dir="ltr" id="linkDialogUrl" readonly="" type="text"/>
+<div class="link-dialog__actions"><small aria-live="polite" id="linkDialogStatus"></small><button class="link-dialog__button" id="linkDialogCopy" type="button">نسخ الرابط</button><a class="link-dialog__button link-dialog__button--primary" href="#" id="linkDialogOpen" rel="noopener" target="_blank">فتح الرابط</a></div>
+</div>
+</div>
+<footer class="footer project-files-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
+</main>
+</div>
+<script src="script.js"></script>
+<script src="pages/documents.js"></script>
+<script src="pages/project-files.js"></script>
+</body>
+</html>

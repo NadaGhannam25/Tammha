@@ -1,0 +1,264 @@
+/* ===== Shared states of the connected application (api.js / session.js) =====
+   Uses logical properties (inline-start / inline-end), so the same rules serve Arabic RTL and
+   English LTR without the mirrored stylesheet. Blue identity, flat, no green. */
+.app-state{display:grid;gap:6px;justify-items:center;padding:28px 18px;text-align:center;color:#56707d;font-size:14px;line-height:1.8}
+.app-state strong{color:#173d57;font-size:15px}
+.app-state p{margin:0;max-width:56ch}
+.app-state--error strong{color:#b42318}
+.app-state--loading strong{font-weight:700;color:#4c6878}
+.app-state--waving>strong{display:none}
+.app-state__action{margin-top:6px;padding:8px 16px;border:1px solid #cfe2ee;border-radius:10px;background:#fff;color:#0b6e99;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+.app-state__action:hover{background:#eef7fb}
+.app-banner{margin:12px 0;padding:10px 14px;border-radius:12px;border:1px solid #cfe6f1;background:#eef7fb;color:#0b6e99;font-size:14px;line-height:1.7}
+.app-banner--error{border-color:#f3c6c0;background:#fdf2f1;color:#9a2b1f}
+.app-standalone{display:grid;place-items:center;min-height:100vh;padding:24px}
+
+.app-toasts{position:fixed;inset-block-end:20px;inset-inline-start:50%;transform:translateX(-50%);z-index:300;display:grid;gap:8px;width:min(92vw,460px)}
+[dir="rtl"] .app-toasts{transform:translateX(50%)}
+.app-toast{padding:11px 16px;border-radius:12px;background:#173d57;color:#fff;font-size:14px;line-height:1.7;box-shadow:0 8px 24px rgba(23,61,87,.18);transition:opacity .25s ease,transform .25s ease}
+.app-toast--error{background:#9a2b1f}
+.app-toast--success{background:#0b6e99}
+.app-toast.is-leaving{opacity:0;transform:translateY(6px)}
+
+.app-topbar-end{grid-column:1;grid-row:1;display:flex;align-items:center;gap:8px;justify-self:start}
+.app-topbar-end .profile{margin-top:0;align-self:center;min-width:0}
+.app-topbar-end .profile__text strong{white-space:nowrap}
+.app-bell{position:relative}
+.app-bell__button{position:relative;display:grid;place-items:center;width:40px;height:40px;border:1px solid #e3edf3;border-radius:12px;background:#fff;cursor:pointer}
+.app-bell__button svg{width:20px;height:20px;fill:none;stroke:#173d57;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.app-bell__count{position:absolute;inset-block-start:-6px;inset-inline-end:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#0a6fdc;color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}
+.app-bell__panel{position:absolute;inset-block-start:48px;inset-inline-end:0;z-index:120;width:min(360px,88vw);max-height:420px;overflow:auto;border:1px solid #e3edf3;border-radius:14px;background:#fff;box-shadow:0 14px 40px rgba(23,61,87,.14)}
+.app-bell__head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-block-end:1px solid #eef3f6}
+.app-bell__head button{border:0;background:none;color:#0b6e99;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.app-bell__item{display:grid;gap:2px;width:100%;padding:10px 14px;border:0;border-block-end:1px solid #f2f6f8;background:#fff;text-align:start;font:inherit;cursor:pointer}
+.app-bell__item strong{color:#173d57;font-size:13.5px}
+.app-bell__item span{color:#56707d;font-size:13px;line-height:1.6}
+.app-bell__item small{color:#8aa0ab;font-size:11.5px}
+.app-bell__item.is-unread{background:#f3f9fd}
+.app-bell__item.is-unread strong::before{content:"";display:inline-block;width:7px;height:7px;margin-inline-end:6px;border-radius:50%;background:#0a6fdc;vertical-align:middle}
+
+.app-modal{position:fixed;inset:0;z-index:250;display:grid;place-items:center;padding:16px;background:rgba(15,40,58,.35)}
+.app-modal__dialog{width:min(560px,100%);max-height:90vh;overflow:auto;padding:26px;border-radius:18px;background:#fff;box-shadow:0 20px 60px rgba(15,40,58,.2)}
+.app-modal__dialog h2{margin:0 0 8px;color:#173d57;font-size:21px}
+.app-modal__dialog p{margin:0 0 12px;color:#4c6878;font-size:14.5px;line-height:1.85}
+.app-modal__steps{margin:0 0 18px;padding-inline-start:20px;color:#4c6878;font-size:14px;line-height:1.9}
+.app-modal__actions{display:flex;flex-wrap:wrap;gap:10px}
+.app-btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 16px;border:1px solid #cfe2ee;border-radius:11px;background:#fff;color:#0b6e99;font:inherit;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer}
+.app-btn--primary{border-color:#0a6fdc;background:#0a6fdc;color:#fff}
+.app-btn--ghost{border-color:transparent;color:#56707d}
+.app-btn:disabled{opacity:.55;cursor:not-allowed}
+
+.app-project-switch{display:inline-flex;align-items:center;gap:8px;margin-block-start:10px;font-size:13.5px;color:#4c6878}
+.app-project-switch select{min-height:36px;padding:0 10px;border:1px solid #cfe2ee;border-radius:10px;background:#fff;color:#173d57;font:inherit}
+
+.app-field-error{display:block;margin-block-start:4px;color:#b42318;font-size:12.5px}
+.app-inline-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.app-inline-form input,.app-inline-form select{min-height:38px;padding:0 10px;border:1px solid #d7e4ec;border-radius:10px;font:inherit}
+.app-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.app-list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #edf2f5;border-radius:12px;background:#fff}
+.app-muted{color:#7a919c;font-size:13px}
+.app-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:#eef7fb;color:#0b6e99;font-size:12.5px;font-weight:700}
+.app-chip--warn{background:#fff4e5;color:#9a5b00}
+.app-chip--muted{background:#f1f4f6;color:#56707d}
+@media (max-width:620px){.app-modal__dialog{padding:20px}.app-topbar-end .profile__text{display:none}}
+
+/* sign-in pages: server messages and the university list */
+.auth-access-error{margin:0;padding:9px 12px;border-radius:8px;background:#fdf2f1;color:#9a2b1f;font-size:13px;line-height:1.7}
+.auth-access-error[hidden]{display:none}
+.auth-access-form select{box-sizing:border-box;width:100%;height:42px;padding:0 10px;border:1px solid #dfe7eb;border-radius:8px;background:#fff;color:#393939;font-family:inherit;font-size:14.5px}
+.auth-access-form select.is-invalid{border-color:#d92d20}
+.auth-access-ok{margin:0;padding:10px 12px;border-radius:8px;background:#eef7fb;color:#0b6e99;font-size:13.5px;line-height:1.8}
+.app-panel{margin:0 0 18px;padding:16px 18px;border:1px solid #e6eef3;border-radius:16px;background:#fff}
+.app-panel h2{margin:0 0 10px;color:#173d57;font-size:16px}
+.task-leader-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.task-leader-form select,.task-leader-form input{min-height:38px;padding:0 10px;border:1px solid #d7e4ec;border-radius:10px;background:#fff;font:inherit;font-size:13.5px}
+.app-storage{display:grid;gap:6px;margin:0 0 12px;font-size:13px;color:#4c6878}
+.app-storage__track{height:7px;border-radius:999px;background:#e8f0f5;overflow:hidden}
+.app-storage__track span{display:block;height:100%;border-radius:inherit;background:#0a6fdc}
+.app-storage__track.is-warning span{background:#d98a00}
+.app-storage__track.is-critical span{background:#b42318}
+.stages-row__status{margin-inline-start:8px;min-height:32px;padding:0 6px;border:1px solid #d7e4ec;border-radius:8px;background:#fff;font:inherit;font-size:12.5px}
+.meeting-participants{margin:0;padding:10px 12px;border:1px solid #e3edf3;border-radius:12px}
+.meeting-participants legend{padding:0 6px;color:#274b61;font-size:12.5px;font-weight:700}
+.meeting-participants__list{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13.5px}
+.meeting-participants__item{display:inline-flex;align-items:center;gap:6px}
+.meeting-tile-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;background:#0f283a}
+.meeting-tile{position:relative;overflow:hidden}
+.meeting-tile>span,.meeting-tile>small{position:relative;z-index:1}
+.meeting-tile.is-speaking{box-shadow:0 0 0 3px #0a6fdc inset}
+.room-error{margin:12px 20px}
+.prejoin-v43-join.is-disabled{opacity:.5;pointer-events:auto;cursor:not-allowed}
+.hb-owner{margin-inline-start:8px;min-height:32px;padding:0 6px;border:1px solid #d7e4ec;border-radius:8px;background:#fff;font:inherit;font-size:12.5px}
+.hb-quote{display:block;margin-top:4px;color:#7a919c;font-style:italic}
+.hb-file__error{display:block;color:#b42318}
+.hb-tasks__end{display:inline-flex;gap:8px;align-items:center}
+
+/* ===== Project creation wizard (projects.html): header / scrolling body / fixed footer =====
+   Fits a 768 px-high laptop screen; the actions are always visible. Logical properties serve
+   Arabic RTL and English LTR. Flat blue identity: no glow, no coloured panels. */
+.wizard-modal{padding:16px}
+.wizard-dialog.wz{width:min(880px,calc(100vw - 32px))!important;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);padding:0!important;border-radius:16px!important;display:flex;flex-direction:column;overflow:hidden}
+.wz__form{display:flex;flex-direction:column;min-height:0;flex:1}
+.wz__header{position:relative;padding:18px 24px 12px;border-block-end:1px solid #eef2f4}
+.wz__title{padding-inline-end:44px}
+.wz__title h2{margin:0 0 4px;color:#173d57;font-size:20px}
+.wz__title p{margin:0;color:#7d919c;font-size:12.5px;line-height:1.7}
+.wz__close{position:absolute;inset-block-start:14px;inset-inline-end:16px;width:34px;height:34px;border:0;border-radius:50%;background:#f3f7f9;color:#547080;font-size:22px;line-height:1;cursor:pointer}
+.wz__close:hover{background:#e8f0f4}
+.wz__steps{display:flex;gap:8px;margin:14px 0 0;padding:0;list-style:none;counter-reset:none}
+.wz__steps li{flex:1;min-width:0}
+.wz__steps .wizard-tab{width:100%;height:auto!important;display:flex!important;align-items:center;gap:8px;padding:8px 10px!important;border:1px solid #e3eaee!important;border-radius:10px!important;background:#fff!important;color:#78909c;font:inherit;font-size:12px;font-weight:700;text-align:start;cursor:pointer;box-shadow:none!important}
+.wz__steps .wizard-tab b{flex:none;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#eef3f6;color:#628090;font-size:12px}
+.wz__steps .wizard-tab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wz__steps .wizard-tab.is-active{border-color:#0a6fdc!important;color:#0b4f87}
+.wz__steps .wizard-tab.is-active b{background:#0a6fdc;color:#fff}
+.wz__steps .wizard-tab.is-done b{background:#e3f0fb;color:#0a6fdc}
+.wz__body{flex:1;min-height:0;overflow:auto;padding:16px 24px 20px;overscroll-behavior:contain}
+.wz__footer{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 24px;border-block-start:1px solid #eef2f4;background:#fff}
+.wz__spacer{flex:1}
+.wz-btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 18px;border:1px solid #cfe2ee;border-radius:10px;background:#fff;color:#0b6e99;font:inherit;font-size:13.5px;font-weight:700;text-decoration:none;cursor:pointer}
+.wz-btn[hidden]{display:none}
+.wz-btn--primary{border-color:#0a6fdc;background:#0a6fdc;color:#fff}
+.wz-btn--primary:hover{background:#0960bf}
+.wz-btn--secondary{color:#173d57}
+.wz-btn--ghost{border-color:transparent;color:#56707d}
+.wz-btn--soft{border-color:#cfe2ee;background:#f5f9fc;color:#0b6e99;white-space:nowrap}
+.wz-btn:disabled{opacity:.55;cursor:not-allowed}
+.wz .wizard-panel{min-height:0!important;padding:0!important}
+.wz .wizard-panel[hidden]{display:none}
+.wz .wizard-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px!important}
+.wz .wizard-grid textarea{min-height:72px!important;resize:vertical}
+.wz-field{display:grid;gap:8px;padding-block:12px;border-block-end:1px solid #f0f4f6}
+.wz-field:first-child{padding-block-start:0}
+.wz-field:last-child{border-block-end:0}
+.wz-field>label{display:grid;gap:3px}
+.wz-field strong{color:#173d57;font-size:14px}
+.wz-field small{color:#7d919c;font-size:12px;line-height:1.7}
+.wz-optional{color:#8aa0ab;font-style:normal;font-weight:600;font-size:12px}
+.wz .wizard-input{margin-top:0!important;height:40px}
+.wz .invite-row{display:flex;gap:8px;margin-top:0!important}
+.wz .invite-row input{flex:1;min-width:0;height:40px!important}
+.wz .invite-row button{flex:none;min-width:96px;height:40px;border-radius:10px;font-size:13px!important}
+.wz .invite-chips:empty{display:none}
+.wz .invite-chips{margin-top:0}
+.wz-alert{display:flex;align-items:flex-start;gap:10px;margin:0 0 14px;padding:10px 12px;border:1px solid #f3c6c0;border-radius:10px;background:#fdf2f1;color:#9a2b1f;font-size:13px;line-height:1.7}
+.wz-alert[hidden]{display:none}
+.wz-alert--warning{border-color:#f1d8a8;background:#fffaf0;color:#7a4b00}
+.wz-alert--success{border-color:#cfe6f1;background:#f3f9fd;color:#0b4f87}
+.wz-alert__content{flex:1;min-width:0}
+.wz-alert__content strong{display:block}
+.wz-alert__content ul{margin:4px 0 0;padding-inline-start:18px}
+.wz-alert__content ul:empty{display:none}
+.wz-alert__close{flex:none;width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:inherit;font-size:18px;line-height:1;cursor:pointer}
+.wz-alert__close:hover{background:rgba(0,0,0,.06)}
+.wz-stages{display:grid;gap:10px}
+.wz-stages__head{display:grid;gap:3px}
+.wz-stages__head strong{color:#173d57;font-size:14px}
+.wz-stages__head small{color:#7d919c;font-size:12px;line-height:1.7}
+.wz-stages__add{display:flex;gap:8px}
+.wz-stages__add input{flex:1;min-width:0;height:40px;padding:0 12px;border:1px solid #dfe7eb;border-radius:10px;font:inherit;font-size:13px}
+.wz-stages__add input.is-invalid{border-color:#d64545}
+.wz-stages__list{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.wz-stage{display:grid;grid-template-columns:auto auto 1fr auto auto;align-items:center;gap:8px;padding:6px 8px;border:1px solid #e7edf0;border-radius:10px;background:#fff}
+.wz-stage.is-off{background:#fafbfc}
+.wz-stage.is-off .wz-stage__name{color:#9aaab3;text-decoration:line-through}
+.wz-stage__check input{width:16px;height:16px;accent-color:#0a6fdc}
+.wz-stage__num{width:22px;text-align:center;color:#628090;font-size:12px;font-weight:700}
+.wz-stage__name{min-width:0;height:34px;padding:0 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:#173d57;font:inherit;font-size:13px}
+.wz-stage__name:hover,.wz-stage__name:focus{border-color:#dfe7eb;background:#fff;outline:0}
+.wz-stage__tag{padding:2px 8px;border-radius:999px;background:#eef6fd;color:#0a6fdc;font-size:11.5px;font-weight:700;white-space:nowrap}
+.wz-stage__tools{display:inline-flex;gap:4px}
+.wz-icon{width:30px;height:30px;border:1px solid #e3eaee;border-radius:8px;background:#fff;color:#56707d;font-size:14px;line-height:1;cursor:pointer}
+.wz-icon:disabled{opacity:.35;cursor:default}
+.wz-icon--danger:hover{color:#b42318;border-color:#f3c6c0}
+.wz-stages__empty{padding:12px;color:#7d919c;font-size:13px;text-align:center}
+body.has-wizard{overflow:hidden}
+@media (max-width:720px){
+  .wizard-modal{padding:0}
+  .wizard-dialog.wz{width:100vw!important;max-height:100vh;max-height:100dvh;border-radius:0!important}
+  .wz__header,.wz__body,.wz__footer{padding-inline:16px}
+  .wz .wizard-grid{grid-template-columns:1fr}
+  .wz__steps .wizard-tab span{display:none}
+  .wz__steps .wizard-tab.is-active span{display:inline}
+  .wz__steps li:has(.is-active){flex:2.4}
+  .wz-stage{grid-template-columns:auto 1fr auto;row-gap:4px}
+  .wz-stage__num{display:none}
+  .wz-stage__tag{grid-column:2}
+  .wz-stage__tools{grid-column:3;grid-row:1}
+}
+
+/* Projects list: one centred loading / error state over the whole list area */
+.projects-list-state{grid-column:1/-1;display:grid;place-items:center;min-height:min(46vh,360px)}
+.projects-list-state .app-state{padding:24px}
+/* "Setup incomplete" on a project card: plain text, no coloured box or shadow */
+.project-setup-note{margin-inline-start:6px;color:#8a5300;font-size:12px;font-weight:600;background:none;box-shadow:none}
+
+/* Header group: the user's name first, then the notifications bell, in the reading direction of
+   the page (the .topbar grid itself is laid out left-to-right in both languages) */
+[dir="rtl"] .app-topbar-end,[dir="rtl"] .sv-topbar-end{direction:rtl}
+[dir="ltr"] .app-topbar-end,[dir="ltr"] .sv-topbar-end{direction:ltr}
+.app-topbar-end .profile__text,.sv-topbar-end .profile__text{text-align:start}
+
+/* Team invitations (project overview, leader): two clear groups — invite by number / e-mail,
+   or share the code — then the pending invitations. Works at any width, RTL and LTR. */
+.invite-panel{display:grid;gap:14px}
+.invite-panel h2{margin:0}
+.invite-panel__group{display:grid;gap:8px;margin:0}
+.invite-panel__label{color:#274b61;font-size:13px;font-weight:700}
+.invite-panel__row{display:flex;flex-wrap:wrap;gap:8px}
+.invite-panel__row input{flex:1 1 180px;min-width:0;height:40px;padding:0 12px;border:1px solid #d7e4ec;border-radius:10px;background:#fff;font:inherit;font-size:13.5px}
+.invite-panel__row .app-btn{flex:0 0 auto}
+.invite-panel .app-field-error:empty{display:none}
+.invite-code{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px;border:1px solid #e6eef3;border-radius:12px;background:#fbfdfe}
+.invite-code__value{flex:1 1 120px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:16px;font-weight:700;letter-spacing:.12em;color:#173d57;text-align:center}
+.invite-code__actions{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 220px;justify-content:flex-end}
+.invite-code__actions .app-btn{flex:1 1 auto;min-height:36px;font-size:13px;white-space:nowrap}
+.invite-panel__sent:empty{display:none}
+.invite-panel__sent-head{padding:0!important;border:0!important;background:none!important;color:#274b61;font-size:13px;font-weight:700}
+/* team member rows: name and role on one line, leader actions below, never squeezed */
+#ovTeam .team-member>.app-inline-form{grid-column:1/-1;justify-content:flex-end;gap:4px;margin-block-start:-4px}
+#ovTeam .team-member__avatar{display:grid;place-items:center;color:#35617a;font-size:15px;font-weight:700;background:#f2f7fa}
+#ovTeam .team-member__name{text-align:start}
+#ovTeam .team-member__role{text-align:end}
+#ovTeam .team-member>.app-inline-form .app-btn{min-height:32px;padding:0 10px;font-size:12.5px}
+
+/* Upload dialog: the document-type list matches the other fields (same height, border, label
+   position and spacing), with its own arrow on the correct side in Arabic and English */
+.file-modal__form .file-field{display:grid;gap:7px}
+.file-select{position:relative;display:block}
+.file-select select{-webkit-appearance:none;appearance:none;background-image:none!important;width:100%;box-sizing:border-box;height:44px;padding-block:0;padding-inline:12px 38px;border:1px solid #dfe7eb;border-radius:10px;background:#fff;color:#173d57;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;outline:0}
+.file-select select:focus-visible{border-color:#0a6fdc;box-shadow:0 0 0 3px rgba(10,111,220,.12)}
+.file-select::after{content:"";position:absolute;inset-block-start:50%;inset-inline-end:15px;width:8px;height:8px;margin-block-start:-6px;border-inline-end:2px solid #6b8594;border-block-end:2px solid #6b8594;transform:rotate(45deg);pointer-events:none}
+.file-review-option{display:flex!important;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid #e3edf3;border-radius:10px;background:#fff;cursor:pointer}
+.file-review-option[hidden]{display:none!important}
+.file-review-option input{width:16px;height:16px;margin-top:3px;accent-color:#0a6fdc;flex:none}
+.file-review-option span{display:grid;gap:2px}
+.file-review-option strong{color:#173d57;font-size:13px}
+.file-review-option small{color:#7d919c;font-size:12px;font-weight:500;line-height:1.6}
+
+/* Meetings: the table shows only with data; the empty / loading / error state sits in the same
+   white card right under the filters (no column titles over nothing, no large gap) */
+.meetings-list[hidden]{display:none!important}
+.meetings-section .meetings-empty-state,.meetings-state{min-height:220px!important;margin:0;border:1px solid #e4edf1;border-radius:15px;background:#fff;display:flex;align-items:center;justify-content:center}
+.meetings-section .meetings-empty-state{padding:28px 20px}
+.meetings-section__heading{margin-bottom:12px!important}
+.meetings-section{min-height:0!important}
+
+/* register: the e-mail takes the whole row when there is no student number (supervisor) */
+.auth-access-two--identity:has(> [hidden]){grid-template-columns:1fr}
+
+/* project stages: the current stage is named above the list and tagged in its row */
+.stages-current{margin:0 0 10px;padding:0 4px;color:#35617a;font-size:13.5px}
+.stages-current strong{color:#0b4f87}
+.stage-current-tag{display:inline-block;margin-inline-start:6px;padding:1px 8px;border-radius:999px;background:#eef6fd;color:#0a6fdc;font-size:11.5px;font-weight:700;vertical-align:middle}
+/* the inline loader of a loading state sits on the page itself (no small card around it) */
+.app-state--waving .tm-loader--inline{background:transparent!important;box-shadow:none!important;border:0!important;padding:0!important}
+/* Files pages: no column titles over a loading / empty / error state; the state sits right under
+   the filters, centred in the same white area (card and table views alike) */
+.project-files-table:has(.project-files-body > .app-state) .project-files-row--head{display:none}
+.project-files-body > .app-state,.file-cards-grid > .app-state{grid-column:1/-1;min-height:200px;display:grid;align-content:center}
+.project-files-empty{margin:0;padding:16px;text-align:center;color:#7a919c;font-size:13.5px}
+.tasks-table:has(#tasksBody > .app-state) .tasks-row--head{display:none}
+#tasksBody > .app-state{min-height:200px;display:grid;align-content:center}
+.stages-table:has(#stagesBody > .app-state) .stages-row--head{display:none}
+#stagesBody > .app-state{min-height:200px;display:grid;align-content:center}

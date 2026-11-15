@@ -1,0 +1,271 @@
+@font-face { font-family: "Beiruti"; src: url("assets/fonts/Beiruti-ExtraLight.woff2") format("woff2"); font-weight: 200; font-style: normal; font-display: swap; }
+@font-face { font-family: "Beiruti"; src: url("assets/fonts/Beiruti-Light.woff2") format("woff2"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Beiruti"; src: url("assets/fonts/Beiruti-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Beiruti"; src: url("assets/fonts/Beiruti-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Beiruti"; src: url("assets/fonts/Beiruti-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Beiruti"; src: url("assets/fonts/Beiruti-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Beiruti"; src: url("assets/fonts/Beiruti-ExtraBold.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Beiruti"; src: url("assets/fonts/Beiruti-Black.woff2") format("woff2"); font-weight: 900; font-style: normal; font-display: swap; }
+
+/* Tammha landing page (standalone).
+   Colours come from the Tammha logo: deep blue #0450c4, blue #0a74e0, bright #0aa0f0, cyan #5fd6f2.
+   Works in Arabic (rtl) and English (ltr): layout uses logical properties. */
+:root{
+  --font:"Beiruti",Tahoma,Arial,sans-serif;
+  --ink:#0b2340;--ink-2:#45607a;--mute:#8094a6;--line:#e1eaf2;
+  --brand:#0a74e0;--brand-2:#0560d0;--brand-deep:#0450c4;--brand-bright:#0aa0f0;--cyan:#5fd6f2;
+  --night:#032a6e;--tint:#f2f8fd;
+}
+*,*::before,*::after{box-sizing:border-box;}
+html{scroll-behavior:smooth;scroll-padding-top:72px;}
+body{margin:0;background:#fff;color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;}
+h1,h2,h3,p{margin:0;}
+ul,ol{margin:0;padding:0;list-style:none;}
+img{display:block;}
+a:focus-visible,button:focus-visible{outline:2px solid var(--brand-bright);outline-offset:3px;border-radius:8px;}
+.wrap{width:min(1200px,calc(100% - 64px));margin:0 auto;}
+.skip{position:absolute;inset-inline-start:12px;top:-60px;z-index:80;padding:8px 14px;border-radius:8px;background:#fff;color:var(--brand-deep);font-weight:700;}
+.skip:focus{top:12px;}
+
+/* Buttons */
+.btn{height:46px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 24px;border:1.5px solid var(--brand);border-radius:12px;background:var(--brand);color:#fff;font:inherit;font-size:16px;font-weight:700;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s ease,border-color .2s ease,color .2s ease;}
+.btn:hover{background:var(--brand-2);border-color:var(--brand-2);}
+.btn--sm{height:38px;padding:0 16px;font-size:15px;border-radius:10px;}
+.btn--lg{height:54px;padding:0 30px;font-size:18px;border-radius:14px;}
+/* Over the video: the Tammha logo blue, solid; login as a white button with blue text */
+.btn--brand{border-color:var(--brand);background:var(--brand);}
+.btn--brand:hover{border-color:var(--brand-2);background:var(--brand-2);}
+.btn--line{border-color:#fff;background:#fff;color:var(--brand);}
+.btn--line:hover{border-color:#e6f2fd;background:#e6f2fd;color:var(--brand-2);}
+
+/* Header: transparent over the video, white after it */
+.hd{position:fixed;inset:0 0 auto 0;z-index:50;border-bottom:1px solid transparent;transition:background-color .3s ease,border-color .3s ease;}
+.hd__inner{height:74px;display:flex;align-items:center;gap:36px;transition:height .25s ease;}
+.hd__brand img{height:34px;width:auto;filter:brightness(0) invert(1);transition:filter .3s ease;}
+.hd__nav{display:flex;gap:30px;}
+.hd__nav a{position:relative;padding:6px 0;color:rgba(255,255,255,.92);font-size:16px;font-weight:600;text-decoration:none;}
+.hd__nav a::after{content:"";position:absolute;inset-inline:0;bottom:0;height:2px;background:var(--cyan);transform:scaleX(0);transition:transform .3s ease;}
+.hd__nav a:hover::after,.hd__nav a.is-current::after{transform:scaleX(1);}
+.hd__actions{display:flex;align-items:center;gap:20px;margin-inline-start:auto;}
+.hd__login{color:#fff;font-size:16px;font-weight:700;text-decoration:none;}
+.hd .btn{border-color:var(--brand);background:var(--brand);}
+.hd .btn:hover{border-color:var(--brand-2);background:var(--brand-2);}
+.lang{height:34px;min-width:46px;padding:0 10px;border:1.5px solid rgba(255,255,255,.55);border-radius:10px;background:transparent;color:#fff;font:inherit;font-size:14px;font-weight:700;letter-spacing:.02em;cursor:pointer;transition:border-color .2s ease,color .2s ease,background-color .2s ease;}
+.lang:hover{border-color:var(--cyan);color:var(--cyan);}
+.hd__toggle{display:none;width:42px;height:42px;padding:12px 10px;border:0;background:transparent;cursor:pointer;}
+.hd__toggle span{display:block;height:2px;margin:5px 0;background:#fff;transition:transform .2s ease;}
+.hd.is-solid,.hd.is-open{background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(16px) saturate(180%);backdrop-filter:blur(16px) saturate(180%);border-bottom-color:var(--line);}
+.hd.is-solid .hd__inner{height:64px;}
+.hd.is-solid .hd__brand img,.hd.is-open .hd__brand img{filter:none;}
+.hd.is-solid .hd__nav a,.hd.is-open .hd__nav a{color:var(--ink-2);}
+.hd.is-solid .hd__nav a:hover,.hd.is-solid .hd__nav a.is-current{color:var(--ink);}
+.hd.is-solid .hd__nav a::after{background:var(--brand);}
+.hd.is-solid .hd__login,.hd.is-open .hd__login{color:var(--ink);}
+.hd.is-solid .lang,.hd.is-open .lang{border-color:var(--line);color:var(--brand);}
+.hd.is-solid .lang:hover{border-color:var(--brand);}
+.hd.is-solid .hd__toggle span,.hd.is-open .hd__toggle span{background:var(--ink);}
+.hd.is-open .hd__toggle span:first-child{transform:translateY(3.5px) rotate(45deg);}
+.hd.is-open .hd__toggle span:last-child{transform:translateY(-3.5px) rotate(-45deg);}
+
+/* 1. Hero: full-screen background video, text and buttons only */
+.hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:flex-end;padding:140px 0 120px;overflow:hidden;background:#0d1a26;color:#fff;isolation:isolate;}
+.hero__media{position:absolute;inset:0;z-index:-1;}
+.hero__media video{width:100%;height:100%;object-fit:cover;pointer-events:none;}
+.hero__media video::-webkit-media-controls{display:none!important;}
+/* a light shade only behind the text */
+.hero__media::after{content:"";position:absolute;inset:0;background:linear-gradient(to var(--text-side,left),rgba(6,24,48,.62) 0%,rgba(6,24,48,.32) 42%,rgba(6,24,48,0) 75%),linear-gradient(to top,rgba(6,24,48,.5) 0%,rgba(6,24,48,0) 40%);}
+[dir="ltr"] .hero__media::after{--text-side:right;}
+.hero__content{position:relative;}
+.hero h1{display:flex;flex-direction:column;align-items:flex-start;gap:clamp(14px,1.6vw,22px);}
+.hero__logo{display:block;width:clamp(200px,24vw,340px);height:auto;}
+.hero__brand{font-size:clamp(72px,9vw,136px);font-weight:900;line-height:1;}
+.hero__tag{margin-top:0;color:var(--cyan);font-size:clamp(22px,2.3vw,34px);font-weight:500;line-height:1.3;}
+.hero__content>p{max-width:42ch;margin-top:20px;color:rgba(255,255,255,.9);font-size:clamp(17px,1.45vw,20px);line-height:1.8;}
+.hero__actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:34px;}
+.hero__cue{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;color:rgba(255,255,255,.85);font-size:13.5px;font-weight:600;text-decoration:none;}
+.hero__cue i{position:relative;width:1px;height:34px;background:rgba(255,255,255,.3);overflow:hidden;}
+.hero__cue i::after{content:"";position:absolute;inset:0;background:var(--cyan);transform:translateY(-100%);animation:cue 2.2s ease-in-out 1s 4;}
+@keyframes cue{50%{transform:translateY(0);}100%{transform:translateY(100%);}}
+
+/* 2. About Tammha: statement upper-right, story lower-left (mirrored in English) */
+.story{padding:130px 0 120px;background:#fff;}
+.story__grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);grid-template-rows:auto auto;row-gap:72px;}
+.story__head{grid-column:1;grid-row:1;}
+.story__label{color:var(--brand);font-size:16px;font-weight:700;}
+.story h2{margin-top:10px;font-size:clamp(36px,3.9vw,58px);font-weight:800;line-height:1.2;}
+.story__lines{grid-column:2;grid-row:2;}
+.story__lines p{font-size:clamp(19px,1.75vw,26px);font-weight:500;line-height:2.15;}
+.story__lines .w{color:#c3d1df;transition:color .35s ease;}
+.story__lines .w.is-lit{color:var(--ink);}
+.story__lines .story__end{margin-top:6px;}
+[lang="en"] .story__lines p{line-height:1.9;}
+.story__lines .story__end .w.is-lit{color:var(--brand);}
+
+/* 2b. Not one task */
+.about{position:relative;overflow-x:clip;background:#fff;}
+.about__stick{padding:40px 0 120px;}
+.about__head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:end;}
+.about__head h2{font-size:clamp(38px,4.6vw,68px);font-weight:800;line-height:1.12;}
+.about__note{max-width:32ch;justify-self:end;color:var(--ink-2);font-size:clamp(17px,1.5vw,20px);line-height:1.75;}
+.about__then{display:block;margin-top:4px;font-size:clamp(18px,1.6vw,22px);color:var(--brand);font-weight:700;opacity:var(--p,1);transition:opacity .3s ease;}
+.board{--p:1;margin-top:44px;}
+.board__bar{display:flex;align-items:center;gap:18px;padding:14px 20px;border:1px solid #d3e5f5;border-radius:14px;background:var(--tint);opacity:var(--p);transform:translateY(calc((1 - var(--p)) * 14px));}
+.board__bar strong{font-size:17px;}
+.board__bar span:not(.bar){color:var(--ink-2);font-size:15px;}
+.board__bar .bar{flex:1;max-width:320px;margin-inline-start:auto;}
+.board__bar b{color:var(--brand);font-size:16px;}
+.bar{display:block;height:6px;border-radius:3px;background:#dde9f4;overflow:hidden;}
+.bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--brand-deep),var(--brand-bright));}
+.board__grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:14px;}
+.pc{--q:1;display:flex;flex-direction:column;gap:6px;min-height:124px;padding:16px 18px 18px;border:1px solid var(--line);border-radius:14px;background:#fff;
+  box-shadow:0 calc(18px * (1 - var(--q))) calc(34px * (1 - var(--q))) -22px rgba(3,42,110,.45);
+  transform:translate(calc(var(--dx,0px) * (1 - var(--q))),calc(var(--dy,0px) * (1 - var(--q)))) rotate(calc(var(--r,0deg) * (1 - var(--q))));}
+.pc small{color:var(--brand);font-size:13px;font-weight:700;}
+.pc strong{font-size:17px;font-weight:700;line-height:1.45;}
+.pc em{margin-top:auto;color:var(--mute);font-size:14px;font-style:normal;}
+.pc .bar{margin:4px 0 2px;}
+.pc em.is-blue{color:var(--brand);}
+.pc em.is-late{color:#c0392b;}
+.pc__file{display:flex;align-items:center;gap:8px;}
+.pc__people{display:flex;}
+.pc__people span{width:30px;height:30px;display:grid;place-items:center;margin-inline-end:-6px;border:2px solid #fff;border-radius:50%;background:#e2f2fd;color:var(--brand-deep);font-size:13px;}
+.pc--blue{border-color:transparent;background:linear-gradient(140deg,var(--brand) 0%,var(--brand-deep) 100%);color:#fff;}
+.pc--blue small,.pc--blue em{color:rgba(255,255,255,.8);}
+.pc--blue .bar{background:rgba(255,255,255,.25);}
+.pc--blue .bar i{background:#fff;}
+.about.is-settling .pc{transition:transform .9s cubic-bezier(.2,.7,.2,1) calc(var(--i) * 70ms),box-shadow .9s ease calc(var(--i) * 70ms);}
+.about.is-settling .board__bar,.about.is-settling .about__then{transition:opacity .6s ease .5s,transform .6s ease .5s;}
+
+/* 3. What Tammha offers: four ideas, big type, room to breathe */
+.offer{padding:28px 24px;background:#fff;}
+.offer__panel{padding:110px 0 120px;border-radius:32px;background:linear-gradient(150deg,#0a7ae4 0%,var(--brand-deep) 55%,var(--night) 100%);color:#fff;}
+.offer h2{font-size:clamp(36px,4.2vw,62px);font-weight:800;}
+.offer__list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:40px;margin-top:72px;}
+.core{position:relative;padding-top:26px;}
+.core::before,.core::after{content:"";position:absolute;top:0;inset-inline:0;height:2px;background:rgba(255,255,255,.22);}
+.core::after{background:var(--cyan);transform:scaleX(var(--line,1));transform-origin:var(--origin,right);transition:transform .9s cubic-bezier(.2,.7,.2,1) var(--d,0s);}
+[dir="ltr"] .core::after{--origin:left;}
+.core__n{display:block;color:var(--cyan);font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;}
+.core h3{margin-top:18px;font-size:clamp(24px,2.3vw,34px);font-weight:800;line-height:1.2;}
+.core p{max-width:22ch;margin-top:12px;color:rgba(255,255,255,.82);font-size:17px;line-height:1.7;}
+.offer.is-waiting .core{--line:0;}
+.offer.is-waiting .core h3,.offer.is-waiting .core p{opacity:0;transform:translateY(14px);}
+.core h3,.core p{transition:opacity .6s ease calc(var(--d,0s) + .2s),transform .6s ease calc(var(--d,0s) + .2s);}
+
+/* 4. Team: two people side by side */
+/* Entrance: the short line grows, photos open from the bottom, text fades up */
+
+/* 5. Footer: deep logo blue, signed with the Tammha wordmark */
+.ft{position:relative;overflow:hidden;padding-top:96px;background:var(--night);color:#fff;}
+.ft__groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;padding-bottom:52px;}
+.ft__groups>*{display:flex;flex-direction:column;align-items:flex-start;gap:11px;}
+.ft__groups h2{margin-bottom:6px;color:var(--cyan);font-size:14.5px;font-weight:700;}
+.ft__groups a{color:rgba(255,255,255,.92);font-size:16px;text-decoration:none;transition:color .2s ease;}
+.ft__groups a:hover{color:var(--cyan);}
+.ft__label{margin-top:4px;color:rgba(255,255,255,.5);font-size:13px;}
+.ft__end{display:flex;justify-content:space-between;gap:24px;padding:22px 0;border-top:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.6);font-size:14px;}
+.ft__end a{color:rgba(255,255,255,.85);text-decoration:none;}
+.ft__end a:hover{color:var(--cyan);}
+.ft__mark{margin-top:8px;overflow:hidden;pointer-events:none;}
+.ft__mark img{width:min(1500px,calc(100% - 48px));height:auto;margin:0 auto -7%;opacity:.5;
+  -webkit-mask-image:linear-gradient(to bottom,#000 45%,transparent 100%);mask-image:linear-gradient(to bottom,#000 45%,transparent 100%);
+  transform:translateY(calc((1 - var(--fp,1)) * 14%));}
+
+/* Contact page */
+.contact{background:#fff;}
+/* 1. Introduction: one blue banner with the title and a sentence (no photo) */
+.cintro{padding:92px 24px 0;}
+.cintro__panel{position:relative;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;min-height:260px;overflow:hidden;border-radius:32px;color:#fff;
+  background:radial-gradient(120% 140% at var(--glow-x,0%) 0%,rgba(10,160,240,.5) 0%,rgba(10,160,240,0) 55%),linear-gradient(135deg,#0a8ae8 0%,#0a6fdc 35%,var(--brand-deep) 70%,var(--night) 100%);}
+[dir="rtl"] .cintro__panel{--glow-x:100%;}
+.cintro__text{position:relative;z-index:1;align-self:center;padding:56px clamp(32px,6vw,96px);}
+.cintro h1{font-size:clamp(38px,4vw,58px);font-weight:800;line-height:1.1;}
+.cintro p{max-width:56ch;margin-top:14px;color:rgba(255,255,255,.88);font-size:clamp(16px,1.4vw,19px);line-height:1.8;}
+
+/* 2. Form and details */
+.contact__grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(40px,6vw,96px);padding:88px 0 40px;align-items:start;}
+.contact__form{display:grid;gap:20px;}
+.contact__form h2,.contact__info h2{font-size:clamp(24px,2.2vw,30px);font-weight:800;}
+.contact__form h2{margin-bottom:6px;}
+.contact__row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;}
+.field{display:grid;gap:8px;min-width:0;}
+.field label{font-size:15px;font-weight:700;}
+.field input,.field textarea{width:100%;padding:12px 14px;border:1px solid #d5dfe9;border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-size:16px;outline:none;box-shadow:none;transition:border-color .2s ease;}
+.field input{height:50px;}
+.field textarea{resize:vertical;min-height:150px;line-height:1.7;}
+.field input:hover,.field textarea:hover{border-color:#bccbd9;}
+.field input:focus,.field textarea:focus{border-color:#93a5b7;box-shadow:none;}
+.field .is-invalid,.field .is-invalid:focus{border-color:#d14343;box-shadow:none;}
+.field__error{color:#c53030;font-size:13.5px;}
+.contact__actions{display:flex;flex-wrap:wrap;align-items:center;gap:16px 24px;margin-top:4px;}
+.contact__sent{color:#18794e;font-size:15.5px;font-weight:700;}
+.contact__info h2{padding-bottom:18px;border-bottom:2px solid var(--ink);}
+.cinfo{display:grid;grid-template-columns:24px minmax(0,1fr);gap:16px;padding:24px 0;border-bottom:1px solid var(--line);}
+.cinfo__icon svg{width:24px;height:24px;fill:none;stroke:var(--brand);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.cinfo h3{font-size:17.5px;font-weight:800;}
+.cinfo p{margin-top:4px;color:var(--ink-2);font-size:15.5px;line-height:1.7;}
+.cinfo a{color:var(--brand);font-weight:700;text-decoration:none;}
+.cinfo a:hover{text-decoration:underline;text-underline-offset:4px;}
+.cinfo div>a{display:inline-block;margin-top:8px;font-size:17px;}
+/* 3. Closing note */
+.contact__note{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px 16px 96px;color:var(--mute);font-size:15px;}
+
+/* Scroll scene: only on laptop screens without reduced motion */
+@media (min-width:1000px) and (min-height:600px) and (prefers-reduced-motion:no-preference){
+  .about.is-scrub{height:240vh;}
+  .about.is-scrub .about__stick{position:sticky;top:0;height:100vh;display:flex;align-items:center;padding:64px 0 0;}
+  .about.is-scrub .about__stick>.wrap{width:min(1200px,calc(100% - 64px));}
+}
+@media (min-width:1000px) and (max-height:760px){
+  .about__head h2{font-size:clamp(34px,3.8vw,52px);}
+  .board{margin-top:26px;}
+  .pc{min-height:108px;padding:13px 16px 14px;}
+  .board__bar{padding:11px 18px;}
+}
+@media (max-width:1100px){
+  .hd__nav{gap:22px;}
+  .hd__inner{gap:26px;}
+  .offer__list{grid-template-columns:repeat(2,minmax(0,1fr));gap:48px 40px;}
+}
+@media (max-width:999px){
+  .wrap{width:calc(100% - 48px);}
+  .hd__nav,.hd__actions{display:none;}
+  .hd__toggle{display:block;margin-inline-start:auto;}
+  .hd.is-open .hd__inner{flex-wrap:wrap;height:auto;padding:14px 0 22px;}
+  .hd.is-open .hd__nav{display:flex;flex-direction:column;gap:12px;width:100%;}
+  .hd.is-open .hd__actions{display:flex;width:100%;margin:0;}
+  .about__head{grid-template-columns:minmax(0,1fr);gap:16px;}
+  .hero__cue{display:none;}
+  .about__note{justify-self:start;}
+  .board__grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .story__grid{grid-template-columns:minmax(0,1fr);row-gap:36px;}
+  .story__lines{grid-column:1;}
+  .ft__groups{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .contact__grid{grid-template-columns:minmax(0,1fr);padding-top:64px;}
+  .cintro__text{padding:40px 28px 24px;}
+}
+@media (max-width:620px){
+  .wrap{width:calc(100% - 32px);}
+  .hero{padding:120px 0 110px;}
+  .hero__cue{display:none;}
+  .about__stick{padding:90px 0;}
+  .board__bar{flex-wrap:wrap;gap:6px 14px;}
+  .board__bar .bar{flex-basis:100%;max-width:none;margin:4px 0 0;order:5;}
+  .board__grid{gap:10px;}
+  .pc{min-height:0;padding:13px 14px 14px;}
+  .pc strong{font-size:15.5px;}
+  .offer{padding:12px 8px;}
+  .offer__panel{padding:72px 0 76px;border-radius:24px;}
+  .offer__list{grid-template-columns:minmax(0,1fr);gap:36px;margin-top:44px;}
+  .ft{padding-top:72px;}
+  .ft__groups{gap:32px 20px;}
+  .cintro{padding:80px 8px 0;}
+  .cintro__panel{border-radius:24px;}
+  .cintro__text{padding:36px 22px 20px;}
+  .contact__row{grid-template-columns:minmax(0,1fr);}
+  .ft__end{flex-direction:column;}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  *,*::before,*::after{transition-duration:.01ms!important;animation:none!important;}
+}

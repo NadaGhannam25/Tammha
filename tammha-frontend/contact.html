@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="تواصل مع فريق تممها للدعم الفني أو الاستفسارات العامة." data-i18n-attr="content:cMetaDesc" name="description"/>
+<title data-i18n="cPageTitle">تواصل معنا — تممها</title>
+<link href="landing.css" rel="stylesheet"/>
+<script>/* Apply the saved language before first paint. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+</head>
+<body class="page-contact" id="top">
+<a class="skip" data-i18n="skip" href="#main">تخطَّ إلى المحتوى</a>
+
+<header class="hd" id="siteHeader">
+<div class="wrap hd__inner">
+<a aria-label="تممها — الصفحة الرئيسية" class="hd__brand" data-i18n-attr="aria-label:homeLabel" href="index.html"><img alt="تممها" data-i18n-attr="alt:brand" height="34" src="assets/landing/logo.webp" width="103"/></a>
+<nav aria-label="أقسام الصفحة" class="hd__nav" data-i18n-attr="aria-label:navLabel" id="siteNav">
+<a data-i18n="navAbout" href="index.html#about">عن تممها</a>
+<a data-i18n="navFeatures" href="index.html#features">المزايا</a>
+<a data-i18n="navContact" href="contact.html">تواصل معنا</a>
+</nav>
+<div class="hd__actions">
+<button aria-label="Switch to English" class="lang" id="langToggle" lang="en" type="button">EN</button>
+<a class="hd__login" data-i18n="login" href="login.html">تسجيل الدخول</a>
+<a class="btn btn--sm" data-i18n="register" href="register.html">إنشاء حساب</a>
+</div>
+<button aria-controls="siteNav" aria-expanded="false" aria-label="القائمة" class="hd__toggle" data-i18n-attr="aria-label:menu" id="navToggle" type="button"><span></span><span></span></button>
+</div>
+</header>
+
+<main class="contact" id="main">
+<!-- 1. Introduction: rounded blue-gradient banner with the title and one sentence (no photo) -->
+<section aria-labelledby="cTitle" class="cintro">
+<div class="cintro__panel">
+<div class="cintro__text">
+<h1 data-i18n="cTitle" id="cTitle">تواصل معنا</h1>
+<p data-i18n="cIntro">يتيح هذا القسم التواصل مع فريق تممها لتقديم الاستفسارات والملاحظات المتعلقة باستخدام المنصة.</p>
+</div>
+</div>
+</section>
+
+<!-- 2. Form and contact details -->
+<section class="wrap contact__grid">
+<form class="contact__form" id="contactForm" novalidate="">
+<h2 data-i18n="cFormT">أرسل رسالة</h2>
+<div class="contact__row">
+<div class="field"><label data-i18n="cName" for="cName">الاسم الكامل</label><input autocomplete="name" id="cName" type="text"/><small class="field__error" data-i18n="cNameErr" hidden="">اكتب اسمك</small></div>
+<div class="field"><label data-i18n="cEmail" for="cEmail">البريد الإلكتروني</label><input autocomplete="email" dir="ltr" id="cEmail" type="email"/><small class="field__error" data-i18n="cEmailErr" hidden="">اكتب بريدًا صحيحًا، مثل name@stu.edu.sa</small></div>
+</div>
+<div class="field"><label data-i18n="cSubject" for="cSubject">الموضوع</label><input id="cSubject" type="text"/><small class="field__error" data-i18n="cSubjectErr" hidden="">اكتب موضوع الرسالة</small></div>
+<div class="field"><label data-i18n="cMessage" for="cMessage">الرسالة</label><textarea id="cMessage" rows="6"></textarea><small class="field__error" data-i18n="cMessageErr" hidden="">اكتب رسالتك</small></div>
+<div class="contact__actions"><button class="btn btn--lg" data-i18n="cSend" type="submit">إرسال الرسالة</button>
+<p aria-live="polite" class="contact__sent" data-i18n="cSent" hidden="" id="contactSent">فُتح تطبيق البريد برسالة موجهة إلى info@tammha.site. إن لم يُفتح، يمكن المراسلة مباشرة على العنوان نفسه.</p></div>
+</form>
+<aside aria-labelledby="cHelpT" class="contact__info">
+<h2 data-i18n="cHelpT" id="cHelpT">مجالات التواصل</h2>
+<div class="cinfo"><span class="cinfo__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14"></path><path d="M12 17.5v.01"></path></svg></span><div><h3 data-i18n="cSupportT">الدعم الفني</h3><p data-i18n="cSupportP">مشكلات الحساب وتسجيل الدخول والملفات والاجتماعات.</p><a dir="ltr" href="mailto:support@tammha.site">support@tammha.site</a></div></div>
+<div class="cinfo"><span class="cinfo__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 6h18v12H3z"></path><path d="m3 7 9 6 9-6"></path></svg></span><div><h3 data-i18n="cInfoT">الاستفسارات العامة</h3><p data-i18n="cInfoP">الأسئلة عن تممها، والتعاون مع الكليات والمشرفين.</p><a dir="ltr" href="mailto:info@tammha.site">info@tammha.site</a></div></div>
+</aside>
+</section>
+
+<!-- 3. Small closing note -->
+<p class="contact__note"><img alt="" height="28" src="assets/landing/mark.webp" width="28"/><span data-i18n="cNote">تُراجع جميع الرسائل، ويُرد عليها عادةً خلال يومي عمل.</span></p>
+</main>
+
+<footer class="ft">
+<div class="wrap ft__groups">
+<nav aria-labelledby="ftTammha"><h2 data-i18n="fTammha" id="ftTammha">تممها</h2><a data-i18n="navAbout" href="index.html#about">عن تممها</a><a data-i18n="fHow" href="index.html#features">كيف تعمل</a><a data-i18n="fHandbook" href="index.html#features">دليل الجامعة</a></nav>
+<div aria-labelledby="ftContact" role="group"><h2 data-i18n="navContact" id="ftContact">تواصل معنا</h2>
+<span class="ft__label" data-i18n="fSupport">الدعم الفني</span><a dir="ltr" href="mailto:support@tammha.site">support@tammha.site</a>
+<span class="ft__label" data-i18n="fInfo">الاستفسارات</span><a dir="ltr" href="mailto:info@tammha.site">info@tammha.site</a>
+<a data-i18n="fForm" href="contact.html">نموذج التواصل</a></div>
+<nav aria-labelledby="ftAccount"><h2 data-i18n="fAccount" id="ftAccount">الحساب</h2><a data-i18n="login" href="login.html">تسجيل الدخول</a><a data-i18n="register" href="register.html">إنشاء حساب</a></nav>
+</div>
+<div class="wrap ft__end"><p data-i18n="fCopy">© 2026 تممها. مشروع تخرج، جامعة المعرفة.</p><a data-i18n="fTop" href="#top">العودة إلى الأعلى ↑</a></div>
+<div aria-hidden="true" class="ft__mark"><img alt="" src="assets/landing/wordmark.webp"/></div>
+</footer>
+
+<script src="landing.js"></script>
+</body>
+</html>

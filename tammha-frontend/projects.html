@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="مشاريع الطالبة - منصة تممها" name="description"/>
+<title>تممها | المشاريع</title>
+<link href="style.css" rel="stylesheet"/>
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="projects-page" data-app-role="STUDENT">
+<div class="app-shell">
+<aside aria-label="التنقل الرئيسي" class="sidebar">
+<a class="sidebar__brand" href="dashboard.html" title="تممها — الرئيسية">
+<img alt="شعار تممها" src="assets/tammha-mini.png"/>
+</a>
+<nav aria-label="القائمة الرئيسية" class="sidebar__nav">
+<a class="nav-item" data-page="home" href="dashboard.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/application-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/application-filled.png"/>
+</span>
+<span class="nav-item__label">الرئيسية</span>
+</a>
+<a aria-current="page" class="nav-item is-active" data-page="projects" href="projects.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/project-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/project-filled.png"/>
+</span>
+<span class="nav-item__label">المشاريع</span>
+</a>
+<a class="nav-item" data-page="tasks" href="tasks.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/task-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/task-filled.png"/>
+</span>
+<span class="nav-item__label">المهام</span>
+</a>
+<a class="nav-item" data-page="meetings" href="meetings.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/meeting-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
+</span>
+<span class="nav-item__label">الاجتماعات</span>
+</a>
+<a class="nav-item" data-page="files" href="files.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M8 3.5h7l4 4v11.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"></path>
+<path d="M15 3.5v5h4"></path>
+<path d="M10 12h5.5M10 15.5h5.5"></path>
+<path d="M4 7.5v10a3 3 0 0 0 3 3"></path>
+</svg>
+</span>
+<span class="nav-item__label">الملفات</span>
+</a>
+<a class="nav-item" data-page="guide" href="guide.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"></path>
+<path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"></path>
+<path d="M8.5 7.5h7M8.5 11h5"></path>
+</svg>
+</span>
+<span class="nav-item__label">دليل المشروع</span>
+</a>
+</nav>
+<div class="sidebar__bottom">
+<a class="nav-item" data-page="settings" href="profile.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/settings-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/settings-filled.png"/>
+</span>
+<span class="nav-item__label">الإعدادات</span>
+</a>
+</div>
+</aside>
+<main class="main-content projects-main-content">
+<header class="topbar">
+<div class="search-box">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+<input aria-label="البحث" id="globalSearch" placeholder="البحث في المشاريع أو الملفات..." type="search"/>
+</div>
+<a aria-label="الملف الشخصي" class="profile" href="profile.html">
+<span aria-hidden="true" class="profile__avatar"></span>
+<span class="profile__text">
+<strong></strong>
+<small></small>
+</span>
+</a>
+</header>
+<section aria-labelledby="projectsTitle" class="projects-hero">
+<div class="projects-hero__content">
+<h1 id="projectsTitle">المشاريع</h1>
+<p>مساحة مخصصة لإدارة مشاريع التخرج، تتيح الوصول إلى تفاصيل كل مشروع ومتابعة تطوره خلال المراحل الأكاديمية المختلفة.</p>
+</div>
+</section>
+<section aria-label="أدوات المشاريع" class="projects-toolbar">
+<div aria-label="تصفية المشاريع" class="project-filters" role="tablist">
+<button aria-selected="true" class="project-filter is-active" data-filter="all" role="tab" type="button">كل المشاريع <span data-project-count="all"></span></button>
+<button aria-selected="false" class="project-filter" data-filter="IN_PROGRESS" role="tab" type="button">قيد التنفيذ <span data-project-count="IN_PROGRESS"></span></button>
+<button aria-selected="false" class="project-filter" data-filter="COMPLETED" role="tab" type="button">مكتملة <span data-project-count="COMPLETED"></span></button>
+<button aria-selected="false" class="project-filter" data-filter="ARCHIVED" role="tab" type="button">مؤرشفة <span data-project-count="ARCHIVED"></span></button>
+</div>
+<div class="app-inline-form"><a class="app-btn" href="join.html">الانضمام برمز دعوة</a><button class="add-project-button" id="openProjectWizard" type="button">+ إضافة مشروع</button></div>
+</section>
+<section aria-labelledby="invitationsTitle" class="app-panel" hidden id="invitations"><h2 id="invitationsTitle">دعوات الانضمام إلى فرق</h2><ul class="app-list"></ul></section>
+<section aria-label="قائمة المشاريع" class="projects-list">
+<div aria-live="polite" class="projects-empty-state" hidden="" id="projectsEmptyState">
+<div aria-hidden="true" class="projects-empty-state__icon" id="projectsEmptyIcon"></div>
+<h2 id="projectsEmptyTitle">لا توجد مشاريع هنا حتى الآن</h2>
+<p id="projectsEmptyText">تُعرض المشاريع في هذا القسم عند توفرها.</p>
+</div>
+</section>
+
+<div class="wizard-modal" hidden="" id="projectWizard">
+<div aria-labelledby="projectWizardTitle" aria-modal="true" class="wizard-dialog wz" role="dialog">
+<form class="wz__form" id="projectWizardForm" novalidate>
+<header class="wz__header">
+<div class="wz__title"><h2 id="projectWizardTitle">إنشاء مشروع جديد</h2><p>أكمل الخطوات الأربع لإعداد المشروع؛ يمكن تعديل التفاصيل لاحقًا من صفحة المشروع.</p></div>
+<button aria-label="إغلاق" class="wz__close" id="closeProjectWizard" type="button">×</button>
+<ol aria-label="خطوات إنشاء المشروع" class="wz__steps">
+<li><button class="wizard-tab is-active" data-step="1" type="button"><b>1</b><span>بيانات المشروع</span></button></li>
+<li><button class="wizard-tab" data-step="2" type="button"><b>2</b><span>الفريق والمشرف</span></button></li>
+<li><button class="wizard-tab" data-step="3" type="button"><b>3</b><span>دليل المشروع</span></button></li>
+<li><button class="wizard-tab" data-step="4" type="button"><b>4</b><span>مراحل المشروع</span></button></li>
+</ol>
+</header>
+<div class="wz__body" id="wizardBody">
+<div class="wz-alert" hidden id="wizardAlert" role="alert"><div class="wz-alert__content"><strong id="wizardAlertTitle"></strong><ul id="wizardAlertList"></ul></div><button aria-label="إغلاق التنبيه" class="wz-alert__close" id="wizardAlertClose" type="button">×</button></div>
+<section class="wizard-panel is-active" data-wizard-panel="1"><div class="wizard-grid">
+<label><span>اسم المشروع</span><input id="wizardProjectName" maxlength="200" placeholder="مثال: تممها" required=""/><small class="field-error" hidden data-error-for="wizardProjectName"></small></label>
+<label><span>وصف مختصر</span><input id="wizardProjectDescription" maxlength="300" placeholder="جملة واحدة تعرّف المشروع" required=""/><small class="field-error" hidden data-error-for="wizardProjectDescription"></small></label>
+<label><span>تصنيف المشروع</span><select id="wizardCategory" required=""><option value="">اختر التصنيف</option></select><small class="field-error" hidden data-error-for="wizardCategory"></small></label>
+<label><span>نوع المشروع</span><select id="wizardOrigin" required=""><option value="">اختر النوع</option></select><small class="field-error" hidden data-error-for="wizardOrigin"></small></label>
+<label><span>تاريخ البدء</span><input id="wizardStartDate" required="" type="date"/><small class="field-error" hidden data-error-for="wizardStartDate"></small></label>
+<label><span>تاريخ الإنجاز المتوقع</span><input id="wizardEndDate" required="" type="date"/><small class="field-error" hidden data-error-for="wizardEndDate"></small></label>
+<label><span>هدف المشروع</span><textarea id="wizardProjectGoal" placeholder="اكتب الهدف الرئيسي للمشروع" required="" rows="3"></textarea><small class="field-error" hidden data-error-for="wizardProjectGoal"></small></label>
+<label><span>نبذة عن المشروع</span><textarea id="wizardProjectAbout" placeholder="اكتب نبذة مختصرة وواضحة" required="" rows="3"></textarea><small class="field-error" hidden data-error-for="wizardProjectAbout"></small></label>
+</div></section>
+<section class="wizard-panel" data-wizard-panel="2" hidden="">
+<div class="wz-field"><label for="wizardTeamName"><strong>اسم الفريق</strong><small>أنت قائد الفريق في هذا المشروع، ولكل مشروع فريقه ومهامه وملفاته.</small></label><input class="wizard-input" id="wizardTeamName" maxlength="100" placeholder="مثال: فريق تممها"/><small class="field-error" hidden data-error-for="wizardTeamName"></small></div>
+<div class="wz-field"><label for="teamInviteInput"><strong>أعضاء الفريق <em class="wz-optional">(اختياري)</em></strong><small>أضف الرقم الجامعي أو البريد الجامعي لكل عضو، وتُرسل الدعوات عند إنشاء المشروع.</small></label><div class="invite-row"><input id="teamInviteInput" placeholder="الرقم الجامعي أو البريد الجامعي"/><button data-add-invite="team" type="button">إضافة</button></div><small class="field-error" hidden data-error-for="teamInviteInput"></small><div class="invite-chips" id="teamInviteChips"></div></div>
+<div class="wz-field"><label for="supervisorInviteInput"><strong>المشرف الأكاديمي <em class="wz-optional">(اختياري)</em></strong><small>يمكن إرسال طلب الإشراف الآن أو لاحقًا من صفحة المشروع؛ إكمال الإعداد لا يتطلب مشرفًا.</small></label><div class="invite-row"><input id="supervisorInviteInput" list="supervisorOptions" placeholder="البريد الجامعي للمشرف"/><datalist id="supervisorOptions"></datalist><button data-add-invite="supervisor" type="button">إضافة</button></div><small class="field-error" hidden data-error-for="supervisorInviteInput"></small><div class="invite-chips" id="supervisorInviteChips"></div></div>
+</section>
+<section class="wizard-panel" data-wizard-panel="3" hidden=""><div class="wizard-handbook"><div><strong>الدليل الذي يتبعه المشروع</strong><small>اختر دليل إحدى الجامعات أو ارفع دليلًا خاصًا بالمشروع، ويُعتمد عليه في ملخص الدليل واستخراج المهام.</small></div>
+<label class="wizard-choice"><input checked name="wizardHandbookSource" type="radio" value="UNIVERSITY"/><span>دليل جامعة</span></label>
+<div class="wizard-handbook__field" data-handbook-source="UNIVERSITY"><label class="visually-hidden" for="wizardHandbookUniversity">الجامعة</label><select id="wizardHandbookUniversity"><option value="">اختر الجامعة</option></select><a class="wizard-handbook__link" href="guide.html" target="_blank">صفحة دليل مشروع التخرج</a></div>
+<label class="wizard-choice"><input name="wizardHandbookSource" type="radio" value="UPLOAD"/><span>رفع دليل خاص (PDF)</span></label>
+<div class="wizard-handbook__field" data-handbook-source="UPLOAD" hidden><input accept="application/pdf,.pdf" id="wizardHandbookFile" type="file"/></div>
+<p class="wizard-note" id="wizardHandbookNote" hidden></p>
+<small class="field-error" hidden data-error-for="wizardHandbook"></small></div></section>
+<section class="wizard-panel" data-wizard-panel="4" hidden=""><div class="wz-stages">
+<div class="wz-stages__head"><strong>مراحل المشروع</strong><small>رتّب المراحل كما ستسير في مشروعك. تصبح المرحلة الأولى هي المرحلة الحالية عند البدء، وتُوزّع تواريخها بين تاريخ البدء وتاريخ الإنجاز ويمكن تعديلها لاحقًا.</small></div>
+<div class="wz-stages__add"><label class="visually-hidden" for="customStageName">اسم المرحلة الجديدة</label><input id="customStageName" maxlength="200" placeholder="أضف مرحلة، مثل: التوثيق" type="text"/><button class="wz-btn wz-btn--soft" id="saveCustomStage" type="button">+ إضافة مرحلة</button></div>
+<small class="field-error" hidden data-error-for="customStageName"></small>
+<ol class="wz-stages__list" id="wizardStages"></ol>
+</div></section>
+</div>
+<footer class="wz__footer">
+<button class="wz-btn wz-btn--ghost" id="wizardCancel" type="button">إلغاء</button>
+<span class="wz__spacer"></span>
+<button class="wz-btn wz-btn--secondary" hidden="" id="wizardPrev" type="button">السابق</button>
+<button class="wz-btn wz-btn--primary" id="wizardNext" type="button">التالي</button>
+<button class="wz-btn wz-btn--primary" hidden="" id="wizardCreate" type="submit">إنشاء المشروع</button>
+<a class="wz-btn wz-btn--primary" hidden="" id="wizardOpenProject" href="#">فتح المشروع</a>
+</footer>
+</form>
+</div>
+</div>
+<footer class="footer projects-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
+</main>
+</div>
+<script src="script.js"></script>
+<script src="pages/projects.js"></script>
+</body>
+</html>

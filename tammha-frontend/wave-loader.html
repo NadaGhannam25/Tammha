@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>Tammha Wave Loading</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .loader {
+            width: 650px;
+            max-width: 80vw;
+        }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        #error {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+
+            font-family: Arial;
+            color: red;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="loader">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div id="error"></div>
+
+
+    <script>
+
+        const canvas =
+            document.getElementById("canvas");
+
+        const ctx =
+            canvas.getContext("2d");
+
+        const error =
+            document.getElementById("error");
+
+        const logo =
+            new Image();
+
+
+        /* صورتك الموجودة أصلًا */
+        logo.src =
+            "assets/tammha-logo.png";
+
+
+        logo.onerror = function () {
+
+            error.innerHTML =
+                "الصورة لم يتم العثور عليها: assets/tammha-logo.png";
+
+        };
+
+
+        logo.onload = function () {
+
+            /* نفس مقاس الصورة الحقيقي */
+            canvas.width =
+                logo.naturalWidth;
+
+            canvas.height =
+                logo.naturalHeight;
+
+
+            const width =
+                canvas.width;
+
+            const height =
+                canvas.height;
+
+
+            /*
+              مدة التحميل
+              4 ثواني
+            */
+            const duration = 4000;
+
+            const start =
+                performance.now();
+
+
+            function draw(time) {
+
+                const elapsed =
+                    time - start;
+
+                let progress =
+                    elapsed / duration;
+
+                progress =
+                    Math.min(progress, 1);
+
+
+                ctx.clearRect(
+                    0,
+                    0,
+                    width,
+                    height
+                );
+
+
+                /*
+                  =======================
+                  الشعار الخافت بالخلف
+                  =======================
+                */
+
+                ctx.save();
+
+                ctx.globalAlpha = 0.15;
+
+                ctx.filter =
+                    "grayscale(100%) brightness(45%)";
+
+                ctx.drawImage(
+                    logo,
+                    0,
+                    0,
+                    width,
+                    height
+                );
+
+                ctx.restore();
+
+
+                /*
+                  =======================
+                  ارتفاع الماء
+                  =======================
+                */
+
+                const waterLevel =
+                    height -
+                    progress * height;
+
+
+                /*
+                  الموجة
+                */
+
+                const amplitude =
+                    height * 0.035;
+
+                const wavelength =
+                    width / 2.2;
+
+                const speed =
+                    time * 0.004;
+
+
+                ctx.save();
+
+                ctx.beginPath();
+
+
+                /*
+                  نبدأ من يسار الموجة
+                */
+
+                ctx.moveTo(
+                    0,
+                    waterLevel
+                );
+
+
+                /*
+                  نرسم موج حقيقي
+                */
+
+                for (
+                    let x = 0;
+                    x <= width;
+                    x += 4
+                ) {
+
+                    const wave1 =
+                        Math.sin(
+                            (x / wavelength)
+                            * Math.PI * 2
+                            + speed
+                        );
+
+
+                    const wave2 =
+                        Math.sin(
+                            (x / wavelength)
+                            * Math.PI * 4
+                            - speed * 0.7
+                        ) * 0.35;
+
+
+                    /*
+                      حركة صعود ونزول
+                      للموجة نفسها
+                    */
+
+                    const bounce =
+                        Math.sin(time * 0.006)
+                        * amplitude
+                        * 0.18;
+
+
+                    const y =
+                        waterLevel
+                        + ((wave1 + wave2)
+                            * amplitude)
+                        + bounce;
+
+
+                    ctx.lineTo(
+                        x,
+                        y
+                    );
+                }
+
+
+                /*
+                  نقفل المنطقة من تحت
+                */
+
+                ctx.lineTo(
+                    width,
+                    height
+                );
+
+                ctx.lineTo(
+                    0,
+                    height
+                );
+
+                ctx.closePath();
+
+
+                /*
+                  نقص أي شيء فوق الموجة
+                */
+
+                ctx.clip();
+
+
+                /*
+                  نرسم اللوقو الأصلي
+                  داخل منطقة الماء فقط
+                */
+
+                ctx.filter = "none";
+
+                ctx.globalAlpha = 1;
+
+                ctx.drawImage(
+                    logo,
+                    0,
+                    0,
+                    width,
+                    height
+                );
+
+
+                ctx.restore();
+
+
+                /*
+                  إعادة الحركة
+                */
+
+                if (progress < 1) {
+
+                    requestAnimationFrame(draw);
+
+                } else {
+
+                    /*
+                      وقفة قصيرة
+                      ثم إعادة التحميل
+                      عشان تشوفينها أكثر من مرة
+                    */
+
+                    setTimeout(
+                        restart,
+                        900
+                    );
+
+                }
+
+            }
+
+
+            function restart() {
+
+                /*
+                  نعيد الصفحة تلقائيًا
+                  للتجربة فقط
+                */
+
+                location.reload();
+
+            }
+
+
+            requestAnimationFrame(draw);
+
+        };
+
+    </script>
+
+</body>
+
+</html>

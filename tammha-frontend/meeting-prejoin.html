@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script><meta name="viewport" content="width=device-width,initial-scale=1"><title>تممها | الاستعداد للاجتماع</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="supervisor.css"><link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="prejoin-v43-page" data-app-role="ANY">
+<main class="prejoin-v43-shell">
+  <header class="prejoin-v43-header">
+    <img src="assets/tammha-mark.png" alt="شعار تممها" class="prejoin-v43-logo">
+    <a href="meetings.html" class="prejoin-v43-back"><span>العودة للاجتماعات</span><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"></path></svg></a>
+  </header>
+  <section class="prejoin-v43-title"><h1>الاستعداد للدخول</h1></section>
+  <section class="prejoin-v43-grid">
+    <div class="prejoin-v43-preview" id="cameraPreview">
+      <video id="prejoinVideo" autoplay muted playsinline hidden></video>
+      <div class="prejoin-v43-avatar" id="prejoinAvatar"></div>
+    </div>
+    <aside class="prejoin-v43-panel">
+      <h2>إعدادات الاجتماع</h2>
+      <div class="prejoin-v43-meeting"><span>الاجتماع</span><strong id="prejoinMeetingTitle"></strong></div>
+      <p>يمكن تغيير الميكروفون والكاميرا الآن أو بعد الدخول.</p>
+      <p class="app-muted" id="prejoinWhen"></p>
+      <p class="app-field-error" id="prejoinError" role="alert"></p>
+      <div class="prejoin-v43-toggles">
+        <button id="toggleMic" class="prejoin-v43-toggle is-on" aria-pressed="true" type="button"><span class="prejoin-v43-toggle-icon"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"></path></svg></span><span class="prejoin-v43-toggle-copy"><b id="micStatus">الميكروفون يعمل</b><small>اضغط للإيقاف</small></span><span class="prejoin-v43-switch"><i></i></span></button>
+        <button id="toggleCamera" class="prejoin-v43-toggle" aria-pressed="false" type="button"><span class="prejoin-v43-toggle-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"></rect><path d="m16 10 5-3v10l-5-3"></path></svg></span><span class="prejoin-v43-toggle-copy"><b id="cameraStatus">الكاميرا غير مفعلة</b><small>اضغط للتشغيل</small></span><span class="prejoin-v43-switch"><i></i></span></button>
+      </div>
+      <a id="joinMeetingNow" class="prejoin-v43-join" href="meeting-room.html">دخول الاجتماع</a>
+    </aside>
+  </section>
+</main>
+<script src="pages/meeting-prejoin.js"></script>
+</body></html>
