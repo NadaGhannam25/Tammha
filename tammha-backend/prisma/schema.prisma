@@ -1,0 +1,1156 @@
+// Prisma Schema for Tammha Backend
+// Database: PostgreSQL (Supabase)
+// Version: 2.7.0 (P16 - end-to-end flow: auth tokens, onboarding, setup, leader rules, project handbooks, AI conversations)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// University & User Models
+// ============================================
+
+model University {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  code         String   @unique
+  country      String?
+  city         String?
+  website      String?
+  logo         String?
+  isActive     Boolean  @default(true)
+  // University e-mail domains (e.g. "um.edu.sa"; subdomains match). Empty = not configured:
+  // any well-formed university e-mail is accepted (it must still be verified).
+  emailDomains String[] @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  users            User[]
+  handbooks        UniversityHandbook[]
+  colleges         College[]
+  libraryHandbooks LibraryHandbook[]
+
+  @@map("universities")
+}
+
+// ============================================
+// Handbook library: University -> College -> Major/Department -> Handbook -> Version
+// ============================================
+
+model College {
+  id           String   @id @default(cuid())
+  universityId String
+  name         String
+  nameAr       String?
+  code         String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  university University        @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  majors     Major[]
+  handbooks  LibraryHandbook[]
+
+  @@unique([universityId, name])
+  @@index([universityId])
+  @@map("colleges")
+}
+
+/// A major or a department of a college.
+model Major {
+  id        String   @id @default(cuid())
+  collegeId String
+  name      String
+  nameAr    String?
+  code      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  college   College           @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  handbooks LibraryHandbook[]
+
+  @@unique([collegeId, name])
+  @@index([collegeId])
+  @@map("majors")
+}
+
+/// A graduation-project handbook in the library. Scope: the whole university (no
+/// college), a college (no major) or one major/department. Its files are the versions
+/// (university_handbooks rows); one version is the current one.
+model LibraryHandbook {
+  id                  String   @id @default(cuid())
+  universityId        String
+  collegeId           String?
+  majorId             String?
+  title               String
+  description         String?
+  /// the university's default handbook (used by the AI when a project selected none)
+  isUniversityDefault Boolean  @default(false)
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  university University           @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  college    College?             @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  major      Major?               @relation(fields: [majorId], references: [id], onDelete: Cascade)
+  versions   UniversityHandbook[]
+
+  @@index([universityId, collegeId, majorId])
+  @@map("library_handbooks")
+}
+
+// ============================================
+// University Handbook Model
+// ============================================
+
+/// One VERSION of a library handbook (official PDF uploaded by an ADMIN; text extracted
+/// on upload). Historically "the university handbook"; each existing row became version 1
+/// of its university's default library handbook.
+model UniversityHandbook {
+  id             String   @id @default(cuid())
+  universityId   String
+  handbookId     String
+  version        Int      @default(1)
+  versionLabel   String   @default("1")
+  isCurrent      Boolean  @default(true)
+  title          String
+  description    String?
+  fileUrl        String // Supabase Storage path
+  fileName       String
+  fileSize       Int // in bytes
+  uploadedAt     DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  // P13: extracted text for handbook-aware AI guidance (pages separated by form feed)
+  contentType    String   @default("application/pdf")
+  pageCount      Int?
+  extractedText  String?
+  extractedChars Int      @default(0)
+  uploadedById   String?
+
+  // Relations
+  university   University            @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  handbook     LibraryHandbook       @relation(fields: [handbookId], references: [id], onDelete: Cascade)
+  uploadedBy   User?                 @relation("handbookUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  aiRequests   AISupport[]
+  selectedBy   Project[]             @relation("projectLibraryHandbook")
+  explanations HandbookExplanation[]
+
+  @@unique([handbookId, version])
+  @@index([universityId])
+  @@index([handbookId, isCurrent])
+  @@map("university_handbooks")
+}
+
+model User {
+  id                        String    @id @default(cuid())
+  email                     String    @unique
+  password                  String
+  firstName                 String?
+  lastName                  String?
+  /// User-selected email and interface language (ar / en).
+  preferredLanguage         String    @default("ar")
+  role                      UserRole  @default(STUDENT)
+  universityId              String? // Required for STUDENT and SUPERVISOR; optional for ADMIN (global system admin)
+  avatar                    String?
+  bio                       String?
+  isActive                  Boolean   @default(true)
+  // P16: safe identifier students type to invite each other (unique per university)
+  studentNumber             String?
+  // University identity (STUDENT): a student number OR a VERIFIED university e-mail.
+  // universityEmail only ever holds a verified address (unique); a requested address
+  // waits in pendingUniversityEmail until its verification link is used.
+  universityEmail           String?   @unique
+  universityEmailVerifiedAt DateTime?
+  pendingUniversityEmail    String?
+  // P16: e-mail verification and first-login onboarding (persisted across devices)
+  emailVerifiedAt           DateTime?
+  onboardingCompletedAt     DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  // Relations
+  university                  University?              @relation(fields: [universityId], references: [id], onDelete: SetNull)
+  teams                       TeamMember[]
+  projects                    ProjectMember[]
+  tasksAssigned               Task[]                   @relation("assignedTo")
+  taskCreated                 Task[]                   @relation("createdBy")
+  milestones                  Milestone[]              @relation("createdBy")
+  documents                   Document[]               @relation("uploadedBy")
+  comments                    Comment[]
+  feedbacks                   Feedback[]               @relation("givenBy")
+  feedbackReceived            Feedback[]               @relation("receivedBy")
+  meetings                    Meeting[]                @relation("createdBy")
+  attendedMeetings            MeetingAttendee[]
+  notifications               Notification[]
+  emailDeliveries             EmailDelivery[]
+  aiRequests                  AISupport[]
+  handbooksUploaded           UniversityHandbook[]     @relation("handbookUploadedBy")
+  refreshTokens               RefreshToken[]
+  supervisionRequestsReceived SupervisionRequest[]     @relation("supervisionRequestSupervisor")
+  supervisionRequestsSent     SupervisionRequest[]     @relation("supervisionRequestRequester")
+  // P16
+  authTokens                  AuthToken[]
+  teamInvitationsReceived     TeamInvitation[]         @relation("teamInvitationInvitee")
+  teamInvitationsSent         TeamInvitation[]         @relation("teamInvitationInviter")
+  projectHandbooksUploaded    ProjectHandbook[]        @relation("projectHandbookUploadedBy")
+  aiConversations             AiConversation[]
+  documentVersionsUploaded    DocumentVersion[]        @relation("documentVersionUploadedBy")
+  storagePendingDeletions     StoragePendingDeletion[] @relation("storagePendingDeletionUploadedBy")
+  meetingNotesCreated         MeetingNotes[]           @relation("meetingNotesCreatedBy")
+  meetingNotesUpdated         MeetingNotes[]           @relation("meetingNotesUpdatedBy")
+
+  @@unique([universityId, studentNumber])
+  @@index([universityId])
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  SUPERVISOR
+  STUDENT
+}
+
+// ============================================
+// Authentication & Session Models
+// ============================================
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique // Hashed token value (never store raw)
+  expiresAt DateTime
+  revokedAt DateTime? // NULL = active, timestamp = revoked (logout)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+/// P16: single-use e-mail verification and password reset tokens.
+/// Only a SHA-256 digest of the 256-bit token is stored; it expires and is marked used.
+model AuthToken {
+  id        String        @id @default(cuid())
+  userId    String
+  type      AuthTokenType
+  tokenHash String        @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  // UNIVERSITY_EMAIL_VERIFICATION: the address the link was sent to
+  email     String?
+  createdAt DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@map("auth_tokens")
+}
+
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  UNIVERSITY_EMAIL_VERIFICATION
+  /// a SUPERVISOR account created by an ADMIN: the link sets the first password
+  ACCOUNT_ACTIVATION
+}
+
+// ============================================
+// Team & Project Models
+// ============================================
+// Note: In Tammha, one Team belongs to one Project and vice versa (one-to-one).
+// A Team is a group of students working on a single Project. A student can work on
+// several Projects, i.e. be a member of several Teams (each with its own role).
+// A Supervisor can supervise multiple Projects but not be part of the Team.
+
+model Team {
+  id                  String    @id @default(cuid())
+  name                String
+  description         String?
+  avatar              String?
+  isActive            Boolean   @default(true)
+  // P04: invitation code students use to join this team (via code or shareable link)
+  inviteCode          String?   @unique
+  inviteCodeUpdatedAt DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations - one-to-one with Project
+  project Project?
+
+  // Student team members (Team contains only students)
+  members TeamMember[]
+
+  // P16: direct invitations sent by the team leader (by student number)
+  invitations TeamInvitation[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id     String   @id @default(cuid())
+  // A student may belong to several teams (one per project they work on);
+  // [teamId, userId] stays unique: never twice in the same team.
+  userId String
+  teamId String
+  role   TeamRole @default(MEMBER)
+  // P16: TeamRole grants permissions inside the team's project. The LEADER manages the
+  //      team, invitations, the supervisor request, project details, tasks, milestones
+  //      and the project handbook. Global roles stay STUDENT/SUPERVISOR.
+  //      Service layer enforces exactly one LEADER per team.
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@map("team_members")
+}
+
+enum TeamRole {
+  LEADER
+  MEMBER
+}
+
+/// P16: a direct invitation from the team leader to a student (found by student number).
+/// Separate from the invitation code/link, which stays available.
+model TeamInvitation {
+  id          String               @id @default(cuid())
+  teamId      String
+  inviteeId   String
+  invitedById String
+  status      TeamInvitationStatus @default(PENDING)
+  message     String?
+  respondedAt DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  team      Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitee   User @relation("teamInvitationInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+  invitedBy User @relation("teamInvitationInviter", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([inviteeId, status])
+  @@index([teamId, status])
+  @@map("team_invitations")
+}
+
+enum TeamInvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
+model Project {
+  id                     String           @id @default(cuid())
+  name                   String
+  description            String?
+  teamId                 String           @unique
+  status                 ProjectStatus    @default(PLANNING)
+  startDate              DateTime?
+  endDate                DateTime?
+  thumbnail              String?
+  isPublic               Boolean          @default(false)
+  // P16: project details collected during setup
+  overview               String?
+  objectives             String[]         @default([])
+  category               ProjectCategory?
+  origin                 ProjectOrigin?
+  expectedCompletionDate DateTime?
+  // P16: first-project setup wizard (projects created before P16 count as completed)
+  setupStep              ProjectSetupStep @default(COMPLETED)
+  setupCompletedAt       DateTime?
+  // Handbook library: the project's handbook is a selected library version (LIBRARY) or
+  // the PDF the leader uploaded (UPLOAD; also when null, as before the library existed).
+  // Selecting a handbook of another university never changes anyone's university.
+  handbookSource         HandbookSource?
+  libraryHandbookId      String?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  // Relations - one-to-one with Team
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  // Project members (includes supervisors and team leads)
+  members ProjectMember[]
+
+  // Project content
+  milestones Milestone[]
+  tasks      Task[]
+  documents  Document[]
+  meetings   Meeting[]
+  feedbacks  Feedback[]
+  aiRequests AISupport[]
+
+  // P04: supervision requests sent by the team to supervisors
+  supervisionRequests SupervisionRequest[]
+
+  // P16: project handbook (versions) and AI conversations
+  handbooks       ProjectHandbook[]
+  aiConversations AiConversation[]
+  libraryHandbook UniversityHandbook? @relation("projectLibraryHandbook", fields: [libraryHandbookId], references: [id], onDelete: SetNull)
+
+  @@index([teamId])
+  @@index([libraryHandbookId])
+  @@map("projects")
+}
+
+enum HandbookSource {
+  UPLOAD
+  LIBRARY
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  ARCHIVED
+}
+
+enum ProjectCategory {
+  TECHNOLOGY
+  EDUCATION
+  HEALTH
+  MEDICAL
+  BUSINESS
+  ENGINEERING
+  OTHER
+}
+
+enum ProjectOrigin {
+  NEW
+  CONTINUATION
+  PREVIOUSLY_IMPLEMENTED
+}
+
+/// P16: where the leader is in the first-project setup. COMPLETED = fully configured.
+enum ProjectSetupStep {
+  TEAM
+  SUPERVISOR
+  DETAILS
+  QUESTIONS
+  HANDBOOK
+  COMPLETED
+}
+
+/// P16: the project's handbook / official guide (PDF). Each upload is a new version;
+/// the active version is the latest one that finished processing (READY).
+model ProjectHandbook {
+  id                  String         @id @default(cuid())
+  projectId           String
+  version             Int
+  isActive            Boolean        @default(false)
+  status              HandbookStatus @default(PROCESSING)
+  title               String
+  fileName            String
+  fileSize            Int
+  contentType         String         @default("application/pdf")
+  storagePath         String
+  pageCount           Int?
+  extractedText       String?
+  extractedChars      Int            @default(0)
+  sectionCount        Int            @default(0)
+  errorCode           String?
+  uploadedById        String?
+  processingStartedAt DateTime?
+  processedAt         DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  project      Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploadedBy   User?                 @relation("projectHandbookUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  aiRequests   AISupport[]
+  explanations HandbookExplanation[]
+
+  @@unique([projectId, version])
+  @@index([projectId, isActive])
+  @@index([uploadedById])
+  @@map("project_handbooks")
+}
+
+enum HandbookStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  userId    String
+  projectId String
+  role      ProjectRole @default(CONTRIBUTOR)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, projectId])
+  @@map("project_members")
+}
+
+enum ProjectRole {
+  PROJECT_MANAGER
+  LEAD
+  CONTRIBUTOR
+  VIEWER
+}
+
+// ============================================
+// Supervision Requests (P04)
+// ============================================
+// A student of the project team asks a SUPERVISOR to supervise the project.
+// On ACCEPT, the supervisor is linked through ProjectMember (role PROJECT_MANAGER).
+// Business rules (service layer, inside transactions):
+//   - one accepted supervisor per project (MVP)
+//   - one PENDING request per project at a time
+//   - supervisor must belong to the same university as the team
+
+model SupervisionRequest {
+  id            String                   @id @default(cuid())
+  projectId     String
+  supervisorId  String
+  requestedById String
+  status        SupervisionRequestStatus @default(PENDING)
+  message       String?
+  responseNote  String?
+  respondedAt   DateTime?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supervisor  User    @relation("supervisionRequestSupervisor", fields: [supervisorId], references: [id], onDelete: Cascade)
+  requestedBy User    @relation("supervisionRequestRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([supervisorId, status])
+  @@map("supervision_requests")
+}
+
+enum SupervisionRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+// ============================================
+// Task & Milestone Models
+// ============================================
+
+model Milestone {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  projectId   String
+  dueDate     DateTime
+  status      MilestoneStatus @default(PENDING)
+  // P16: position of the stage in the project (1 = first); null = ordered by due date
+  sortOrder   Int?
+  createdById String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relations
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy User    @relation("createdBy", fields: [createdById], references: [id])
+  tasks     Task[]
+
+  // P06: milestones are always listed per project, ordered by due date
+  @@index([projectId, dueDate])
+  @@map("milestones")
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+  CANCELLED
+}
+
+model Task {
+  id             String     @id @default(cuid())
+  title          String
+  description    String?
+  projectId      String
+  milestoneId    String?
+  assignedToId   String?
+  createdById    String
+  priority       Priority   @default(MEDIUM)
+  status         TaskStatus @default(TODO)
+  dueDate        DateTime?
+  completedAt    DateTime? // Tracks when task was actually completed
+  estimatedHours Float?
+  actualHours    Float?
+  // P16: tasks created from approved AI suggestions
+  source         TaskSource @default(MANUAL)
+  estimatedDays  Int?
+  /// "<aiRequestId>:<suggestionId>" — the same suggestion can never become two tasks
+  sourceKey      String?    @unique
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  // Relations
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone   Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  assignedTo  User?        @relation("assignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy   User         @relation("createdBy", fields: [createdById], references: [id])
+  comments    Comment[]
+  attachments Attachment[]
+  feedbacks   Feedback[]
+
+  @@index([projectId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([completedAt])
+  // P06: project-scoped task lists filtered by status / sorted by deadline
+  @@index([projectId, status])
+  @@index([projectId, dueDate])
+  @@map("tasks")
+}
+
+enum TaskSource {
+  MANUAL
+  AI_SUGGESTION
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  COMPLETED
+  BLOCKED
+  CANCELLED
+}
+
+// ============================================
+// Document & File Models
+// ============================================
+
+model Document {
+  id                    String           @id @default(cuid())
+  title                 String
+  description           String?
+  projectId             String
+  uploadedById          String
+  fileUrl               String // Supabase Storage path
+  fileType              String
+  fileSize              Int // in bytes
+  category              DocumentCategory @default(GENERAL)
+  isPublic              Boolean          @default(false)
+  // A regular upload is UPLOADED (no review). SUBMITTED = sent to the supervisor for review
+  // (chosen when uploading, or later); the supervisor moves it through review. The database
+  // default stays SUBMITTED for compatibility: the API always sets the status explicitly.
+  reviewStatus          SubmissionStatus @default(SUBMITTED)
+  reviewStatusUpdatedAt DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  // Relations
+  project    Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploadedBy User              @relation("uploadedBy", fields: [uploadedById], references: [id])
+  versions   DocumentVersion[]
+  feedbacks  Feedback[]
+
+  @@index([projectId, reviewStatus])
+  @@map("documents")
+}
+
+enum DocumentCategory {
+  GENERAL
+  PROPOSAL
+  REPORT
+  PRESENTATION
+  DESIGN
+  CODE
+  DOCUMENTATION
+  MEETING_NOTES
+  OTHER
+}
+
+model DocumentVersion {
+  id           String   @id @default(cuid())
+  documentId   String
+  fileUrl      String
+  version      Int
+  // Storage quota: every stored object is charged to the account that uploaded it.
+  // fileSize is in bytes; NULL only for versions uploaded before quotas existed whose
+  // size is unknown (npm run storage:reconcile fills them from Supabase Storage).
+  fileSize     Int?
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  uploadedBy User?    @relation("documentVersionUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@unique([documentId, version])
+  @@index([documentId])
+  @@index([uploadedById])
+  @@map("document_versions")
+}
+
+// ============================================
+// Comment & Attachment Models
+// ============================================
+
+model Comment {
+  id        String   @id @default(cuid())
+  taskId    String
+  content   String
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  taskId    String
+  fileUrl   String
+  fileName  String
+  fileSize  Int
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+// ============================================
+// Feedback Model
+// ============================================
+
+/// Written supervisor feedback on a project, a document (submission) or a task.
+/// No grades or scores: Tammha does not grade students.
+model Feedback {
+  id              String            @id @default(cuid())
+  projectId       String?
+  givenById       String // the supervisor (API: supervisorId)
+  receivedById    String? // P08: optional; the document's uploader / the task's assignee
+  comment         String?
+  category        FeedbackCategory  @default(GENERAL)
+  // P08: feedback on a document (submission); null = feedback on the whole project
+  documentId      String?
+  documentVersion Int? // document version that was reviewed
+  // feedback on one task (written by the project's supervisor; never changes the task)
+  taskId          String?
+  // P08: review decision recorded with this feedback (null = comment only)
+  status          SubmissionStatus?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  task       Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  givenBy    User      @relation("givenBy", fields: [givenById], references: [id], onDelete: Cascade)
+  receivedBy User?     @relation("receivedBy", fields: [receivedById], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([givenById])
+  @@index([receivedById])
+  @@index([documentId])
+  @@index([taskId])
+  @@map("feedbacks")
+}
+
+/// P08: review state of a document submission.
+enum SubmissionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+  // a regular project file: uploaded, no supervisor review requested (added at the end,
+  // migration 20261115090000_document_uploaded_status)
+  UPLOADED
+}
+
+enum FeedbackCategory {
+  PERFORMANCE
+  COLLABORATION
+  LEADERSHIP
+  COMMUNICATION
+  TECHNICAL_SKILLS
+  GENERAL
+}
+
+// ============================================
+// Meeting Model
+// ============================================
+
+model Meeting {
+  id                 String        @id @default(cuid())
+  title              String
+  description        String?
+  projectId          String
+  createdById        String
+  scheduledAt        DateTime
+  duration           Int // in minutes
+  location           String?
+  meetingUrl         String?
+  status             MeetingStatus @default(SCHEDULED)
+  // P12: LiveKit room of this meeting (random, contains no personal data)
+  liveKitRoomName    String?       @unique
+  // P12: cancellation (the meeting is kept for history)
+  cancelledAt        DateTime?
+  cancellationReason String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy User              @relation("createdBy", fields: [createdById], references: [id])
+  attendees MeetingAttendee[]
+  notes     MeetingNotes?
+
+  @@index([projectId, scheduledAt])
+  @@map("meetings")
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+model MeetingAttendee {
+  id        String           @id @default(cuid())
+  meetingId String
+  userId    String
+  status    AttendanceStatus @default(PENDING)
+  joinedAt  DateTime?
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, userId])
+  @@index([userId])
+  @@map("meeting_attendees")
+}
+
+enum AttendanceStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  ATTENDED
+}
+
+/// Notes of one meeting (one per meeting), written and edited by its participants.
+model MeetingNotes {
+  id          String   @id @default(cuid())
+  meetingId   String   @unique
+  content     String
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  createdBy User?   @relation("meetingNotesCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?   @relation("meetingNotesUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("meeting_notes")
+}
+
+// ============================================
+// Notification Model
+// ============================================
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json? // Store additional context as JSON
+  isRead    Boolean          @default(false)
+  // P11: when it was marked as read
+  readAt    DateTime?
+  // P11: one notification per (user, event) - reminders and events are never duplicated
+  dedupeKey String?
+  createdAt DateTime         @default(now())
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailDeliveries EmailDelivery[]
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_UPDATED
+  MILESTONE_DUE
+  PROJECT_UPDATE
+  MEETING_INVITATION
+  FEEDBACK_RECEIVED
+  COMMENT_ADDED
+  SYSTEM_ALERT
+  // P11
+  TASK_DUE_SOON
+  TASK_OVERDUE
+  SUBMISSION_STATUS_CHANGED
+  DOCUMENT_SUBMITTED
+  MEETING_UPDATED
+  MEETING_CANCELLED
+  PROJECT_STATUS_CHANGED
+  // P16
+  TEAM_INVITATION
+  SUPERVISION_REQUESTED
+  SUPERVISION_RESPONDED
+  HANDBOOK_PROCESSED
+}
+
+// ============================================
+// Email delivery log (P11) - outbox for email notifications
+// ============================================
+
+/// One row per (user, event): duplicate emails are impossible (unique userId + dedupeKey).
+/// Rows are written in the same transaction as the in-app notification and sent afterwards,
+/// so a provider failure never removes or blocks the in-app notification.
+model EmailDelivery {
+  id                String              @id @default(cuid())
+  userId            String
+  notificationId    String?
+  dedupeKey         String
+  type              NotificationType
+  subject           String
+  textBody          String
+  htmlBody          String?
+  status            EmailDeliveryStatus @default(PENDING)
+  attempts          Int                 @default(0)
+  nextAttemptAt     DateTime            @default(now())
+  lastError         String? // short code/message, never secrets
+  provider          String?
+  providerMessageId String?
+  sentAt            DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification Notification? @relation(fields: [notificationId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, dedupeKey])
+  @@index([status, nextAttemptAt])
+  @@index([notificationId])
+  @@map("email_deliveries")
+}
+
+enum EmailDeliveryStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+}
+
+// ============================================
+// AI Support Model
+// ============================================
+
+model AISupport {
+  id                String            @id @default(cuid())
+  userId            String
+  projectId         String?
+  query             String
+  response          String?
+  category          AISupportCategory
+  status            AISupportStatus   @default(PENDING)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  // P13: request metadata (the prompt itself is never stored)
+  kind              AiRequestKind     @default(PROJECT_QUESTION)
+  provider          String?
+  model             String?
+  result            Json? // structured guidance returned to the user
+  errorCode         String?
+  latencyMs         Int?
+  inputTokens       Int?
+  outputTokens      Int?
+  handbookId        String?
+  handbookExcerpts  Int               @default(0)
+  completedAt       DateTime?
+  // P16: project handbook used for this answer (preferred over the university handbook)
+  projectHandbookId String?
+
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project         Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  handbook        UniversityHandbook? @relation(fields: [handbookId], references: [id], onDelete: SetNull)
+  projectHandbook ProjectHandbook?    @relation(fields: [projectHandbookId], references: [id], onDelete: SetNull)
+  messages        AiMessage[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([userId, createdAt])
+  @@index([projectId, createdAt])
+  @@map("ai_support")
+}
+
+enum AISupportCategory {
+  GENERAL_HELP
+  PROJECT_GUIDANCE
+  TASK_PLANNING
+  CODE_REVIEW
+  DOCUMENTATION_HELP
+  OTHER
+}
+
+/// P13: what the AI was asked to do. ROADMAP_GENERATION is reserved for a later stage.
+/// (AI project-idea evaluation was removed: Tammha does not evaluate ideas.)
+enum AiRequestKind {
+  PROJECT_QUESTION
+  NEXT_STEPS
+  TASK_BREAKDOWN
+  MILESTONE_GUIDANCE
+  HANDBOOK_GUIDANCE
+  HANDBOOK_EXPLANATION
+  ROADMAP_GENERATION
+}
+
+enum AISupportStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+// ============================================
+// AI conversations (P16) - project-specific side chat
+// ============================================
+
+/// A user's conversation with Tammha AI about one project. Private to that user.
+model AiConversation {
+  id            String   @id @default(cuid())
+  projectId     String
+  userId        String
+  title         String
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project  Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@index([userId, projectId, lastMessageAt])
+  @@map("ai_conversations")
+}
+
+/// One message of a conversation. Assistant messages keep the structured guidance
+/// (incl. task suggestions) and point at the ai_support request that produced them.
+model AiMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  role           AiMessageRole
+  content        String
+  kind           AiRequestKind?
+  aiRequestId    String?
+  guidance       Json?
+  createdAt      DateTime       @default(now())
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  aiRequest    AISupport?     @relation(fields: [aiRequestId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+enum AiMessageRole {
+  USER
+  ASSISTANT
+}
+
+/// A stored object (Supabase Storage) whose database record was deleted but whose removal
+/// from Storage is not yet confirmed. It keeps counting toward the uploader's storage quota
+/// until the object is removed; failed removals are retried in the background.
+model StoragePendingDeletion {
+  id            String                @id @default(cuid())
+  storagePath   String                @unique
+  kind          StoredObjectKind
+  status        StorageDeletionStatus @default(PENDING)
+  fileSize      Int?
+  uploadedById  String?
+  projectId     String? // no FK: the project may be gone, the object may not
+  attempts      Int                   @default(0)
+  lastError     String? // short code, never secrets
+  lastAttemptAt DateTime?
+  nextAttemptAt DateTime              @default(now())
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  uploadedBy User? @relation("storagePendingDeletionUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([uploadedById])
+  @@index([status, nextAttemptAt])
+  @@map("storage_pending_deletions")
+}
+
+enum StoredObjectKind {
+  DOCUMENT_FILE
+  PROJECT_HANDBOOK
+}
+
+/// PENDING = retried automatically; BLOCKED = path outside the expected folder, never
+/// deleted automatically (needs a manual check) and still counted.
+enum StorageDeletionStatus {
+  PENDING
+  BLOCKED
+}
+
+/// AI explanation of one handbook version (library version OR project upload) in one
+/// language, generated on request and reused by everyone who opens the same version.
+/// Advisory: built only from the extracted handbook text, with page references.
+model HandbookExplanation {
+  id                   String   @id @default(cuid())
+  universityHandbookId String?
+  projectHandbookId    String?
+  language             String // 'ar' | 'en'
+  result               Json
+  promptVersion        String
+  provider             String?
+  model                String?
+  pageCount            Int?
+  pagesIncluded        Int      @default(0)
+  truncated            Boolean  @default(false)
+  createdById          String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  universityHandbook UniversityHandbook? @relation(fields: [universityHandbookId], references: [id], onDelete: Cascade)
+  projectHandbook    ProjectHandbook?    @relation(fields: [projectHandbookId], references: [id], onDelete: Cascade)
+
+  @@unique([universityHandbookId, language])
+  @@unique([projectHandbookId, language])
+  @@map("handbook_explanations")
+}
