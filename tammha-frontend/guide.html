@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="دليل مشروع التخرج في منصة تممها" name="description"/>
+<title data-en="Tammha | Graduation Project Handbook">تممها | دليل مشروع التخرج</title>
+<link href="style.css" rel="stylesheet"/>
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="guide-page" data-app-role="STUDENT">
+<div class="app-shell">
+<aside aria-label="التنقل الرئيسي" class="sidebar">
+<a class="sidebar__brand" href="dashboard.html" title="تممها — الرئيسية">
+<img alt="شعار تممها" src="assets/tammha-mini.png"/>
+</a>
+<nav aria-label="القائمة الرئيسية" class="sidebar__nav">
+<a class="nav-item" data-page="home" href="dashboard.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/application-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/application-filled.png"/>
+</span>
+<span class="nav-item__label">الرئيسية</span>
+</a>
+<a class="nav-item" data-page="projects" href="projects.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/project-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/project-filled.png"/>
+</span>
+<span class="nav-item__label">المشاريع</span>
+</a>
+<a class="nav-item" data-page="tasks" href="tasks.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/task-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/task-filled.png"/>
+</span>
+<span class="nav-item__label">المهام</span>
+</a>
+<a class="nav-item" data-page="meetings" href="meetings.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/meeting-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
+</span>
+<span class="nav-item__label">الاجتماعات</span>
+</a>
+<a class="nav-item" data-page="files" href="files.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M8 3.5h7l4 4v11.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"></path>
+<path d="M15 3.5v5h4"></path>
+<path d="M10 12h5.5M10 15.5h5.5"></path>
+<path d="M4 7.5v10a3 3 0 0 0 3 3"></path>
+</svg>
+</span>
+<span class="nav-item__label">الملفات</span>
+</a>
+<a aria-current="page" class="nav-item is-active" data-page="guide" href="guide.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"></path>
+<path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"></path>
+<path d="M8.5 7.5h7M8.5 11h5"></path>
+</svg>
+</span>
+<span class="nav-item__label">دليل المشروع</span>
+</a>
+</nav>
+<div class="sidebar__bottom">
+<a class="nav-item" data-page="settings" href="profile.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/settings-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/settings-filled.png"/>
+</span>
+<span class="nav-item__label">الإعدادات</span>
+</a>
+</div>
+</aside>
+<main class="main-content projects-main-content guide-main-content">
+<header class="topbar">
+<div class="search-box">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+<input aria-label="البحث" id="globalSearch" placeholder="البحث في المشاريع أو الملفات..." type="search"/>
+</div>
+<a aria-label="الملف الشخصي" class="profile" href="profile.html">
+<span aria-hidden="true" class="profile__avatar"></span>
+<span class="profile__text">
+<strong></strong>
+<small></small>
+</span>
+</a>
+</header>
+
+<div class="projects-hero page-banner--compact">
+<div class="projects-hero__content">
+<h1 data-en="Graduation Project Handbook">دليل مشروع التخرج</h1>
+<p data-en="This section provides access to the available graduation project handbooks or lets you upload a handbook for the project, so that its content can be used to review academic information and organise the related work.">يتيح هذا القسم الوصول إلى أدلة مشاريع التخرج المتاحة أو رفع دليل خاص بالمشروع، والاستفادة من محتواها في استعراض المعلومات الأكاديمية وتنظيم الأعمال المرتبطة بها.</p>
+</div>
+</div>
+
+<!-- The handbook currently selected for the project -->
+<section aria-labelledby="hbSelectedTitle" class="hb-selected" id="hbSelected">
+<div class="hb-selected__head">
+<h2 data-en="Selected handbook" id="hbSelectedTitle">الدليل المعتمد للمشروع</h2>
+<label class="hb-project"><span data-en="Project">المشروع</span><select id="hbProject"></select></label>
+</div>
+<div id="hbSelectedBody"></div>
+</section>
+
+<!-- Two ways to choose the handbook -->
+<div class="hb-options">
+<section aria-labelledby="hbUniTitle" class="hb-option">
+<h2 data-en="University handbook" id="hbUniTitle">دليل الجامعة</h2>
+<p class="hb-option__hint" data-en="Choose a university to use its official graduation project handbook.">اختر الجامعة لاستخدام دليل مشروع التخرج المعتمد لديها.</p>
+<label class="hb-field"><span data-en="University">الجامعة</span><select id="hbUniversity"></select></label>
+<div aria-live="polite" id="hbUniversityFile"></div>
+</section>
+<section aria-labelledby="hbUploadTitle" class="hb-option">
+<h2 data-en="Upload a handbook" id="hbUploadTitle">رفع دليل خاص</h2>
+<p class="hb-option__hint" data-en="Upload the handbook approved by your department or supervisor if it is not listed.">ارفع الدليل المعتمد من القسم أو المشرف إذا لم يكن ضمن القائمة.</p>
+<label class="handbook-drop hb-drop" for="hbFile" id="hbDrop">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M5 14v5h14v-5"></path></svg>
+<strong data-en="Drag the PDF here or choose a file">اسحب ملف الدليل هنا أو اختر ملفًا</strong>
+<small data-en="PDF, up to 20 MB">PDF بحد أقصى 20MB</small>
+<span class="handbook-drop__button" data-en="Choose file">اختيار ملف</span>
+</label>
+<input accept="application/pdf,.pdf" hidden="" id="hbFile" type="file"/>
+<p class="field-error" hidden="" id="hbFileError" role="alert"></p>
+</section>
+</div>
+<p class="hb-note" data-en="Choosing another university's handbook does not change your registered university. The Team Leader sets the project handbook.">اختيار دليل جامعة أخرى لا يغيّر الجامعة المسجلة في حسابك، ويعتمد قائد الفريق دليل المشروع.</p>
+
+<!-- AI actions on the selected handbook -->
+<section aria-labelledby="hbAiTitle" class="hb-ai" hidden="" id="hbAi">
+<h2 class="visually-hidden" data-en="Handbook AI" id="hbAiTitle">الذكاء الاصطناعي للدليل</h2>
+<div aria-label="إجراءات الدليل" class="tasks-filters hb-tabs" data-en-aria-label="Handbook actions" role="tablist">
+<button aria-controls="hbSummaryPanel" aria-selected="true" class="tasks-filter is-active" data-hb-tab="summary" id="hbTabSummary" role="tab" type="button" data-en="Handbook Summary">ملخص الدليل</button>
+<button aria-controls="hbTasksPanel" aria-selected="false" class="tasks-filter" data-hb-tab="tasks" id="hbTabTasks" role="tab" type="button" data-en="Extract Tasks">استخراج المهام</button>
+</div>
+<div aria-labelledby="hbTabSummary" class="hb-panel" id="hbSummaryPanel" role="tabpanel"></div>
+<div aria-labelledby="hbTabTasks" class="hb-panel" hidden="" id="hbTasksPanel" role="tabpanel"></div>
+</section>
+
+<p aria-live="polite" class="lib-toast" hidden="" id="hbToast" role="status"></p>
+
+<footer class="footer projects-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
+</main>
+</div>
+<script src="guide.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="اجتماعات المشروع - منصة تممها" name="description"/>
+<title>تممها | الاجتماعات</title>
+<link href="style.css" rel="stylesheet"/>
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="meetings-page" data-app-role="STUDENT">
+<div class="app-shell">
+<aside aria-label="التنقل الرئيسي" class="sidebar">
+<a class="sidebar__brand" href="dashboard.html" title="تممها — الرئيسية">
+<img alt="شعار تممها" src="assets/tammha-mini.png"/>
+</a>
+<nav aria-label="القائمة الرئيسية" class="sidebar__nav">
+<a class="nav-item" data-page="home" href="dashboard.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/application-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/application-filled.png"/>
+</span>
+<span class="nav-item__label">الرئيسية</span>
+</a>
+<a class="nav-item" data-page="projects" href="projects.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/project-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/project-filled.png"/>
+</span>
+<span class="nav-item__label">المشاريع</span>
+</a>
+<a class="nav-item" data-page="tasks" href="tasks.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/task-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/task-filled.png"/>
+</span>
+<span class="nav-item__label">المهام</span>
+</a>
+<a aria-current="page" class="nav-item is-active" data-page="meetings" href="meetings.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/meeting-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
+</span>
+<span class="nav-item__label">الاجتماعات</span>
+</a>
+<a class="nav-item" data-page="files" href="files.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M8 3.5h7l4 4v11.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"></path>
+<path d="M15 3.5v5h4"></path>
+<path d="M10 12h5.5M10 15.5h5.5"></path>
+<path d="M4 7.5v10a3 3 0 0 0 3 3"></path>
+</svg>
+</span>
+<span class="nav-item__label">الملفات</span>
+</a>
+<a class="nav-item" data-page="guide" href="guide.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"></path>
+<path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"></path>
+<path d="M8.5 7.5h7M8.5 11h5"></path>
+</svg>
+</span>
+<span class="nav-item__label">دليل المشروع</span>
+</a>
+</nav>
+<div class="sidebar__bottom">
+<a class="nav-item" data-page="settings" href="profile.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/settings-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/settings-filled.png"/>
+</span>
+<span class="nav-item__label">الإعدادات</span>
+</a>
+</div>
+</aside>
+<main class="main-content meetings-main-content"><header class="topbar">
+<div class="search-box">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+<input aria-label="البحث" id="globalSearch" placeholder="البحث في الاجتماعات..." type="search"/>
+</div>
+<a aria-label="الملف الشخصي" class="profile" href="profile.html">
+<span aria-hidden="true" class="profile__avatar"></span>
+<span class="profile__text">
+<strong></strong>
+<small></small>
+</span>
+</a>
+</header>
+<section aria-labelledby="meetingsTitle" class="meetings-hero">
+<div class="meetings-hero__mark"><img alt="" src="assets/tammha-mark.png"/></div>
+<div class="meetings-hero__content meetings-hero__content--right">
+<h1 id="meetingsTitle">الاجتماعات</h1>
+<p>تُخصص هذه المساحة لتنظيم التواصل بين أعضاء الفريق والمشرف، وتوثيق المناقشات والقرارات التي تسهم في متابعة سير المشروع.</p>
+</div>
+</section>
+<section aria-label="أدوات الاجتماعات" class="meetings-toolbar">
+<div aria-label="تصفية الاجتماعات" class="meeting-filters" role="tablist">
+<button class="meeting-filter is-active" data-meeting-filter="all" type="button">الكل</button>
+<button class="meeting-filter" data-meeting-filter="upcoming" type="button">الاجتماعات القادمة</button>
+<button class="meeting-filter" data-meeting-filter="previous" type="button">الاجتماعات السابقة</button>
+<button class="meeting-filter" data-meeting-filter="invitations" type="button">دعوات الاجتماع</button>
+</div>
+<button class="add-meeting-button" id="openMeetingModal" type="button"><span>+</span> جدولة اجتماع جديد</button>
+</section>
+<section aria-labelledby="scheduledMeetingsTitle" class="meetings-section">
+<div class="meetings-section__heading">
+<div>
+<span aria-hidden="true" class="meetings-section__icon">
+<svg viewbox="0 0 24 24"><path d="M6 3v3M18 3v3M4 9h16M5 5h14a2 2 0 0 1 2 2v12H3V7a2 2 0 0 1 2-2Z"></path></svg>
+</span>
+<h2 id="scheduledMeetingsTitle">الاجتماعات المجدولة</h2>
+</div>
+
+</div>
+<div class="meetings-empty-state" hidden="" id="meetingsEmptyState">
+<div aria-hidden="true" class="meetings-empty-state__icon">
+<svg viewbox="0 0 24 24"><path d="M6 3v3M18 3v3M4 9h16M5 5h14a2 2 0 0 1 2 2v12H3V7a2 2 0 0 1 2-2Z"></path><path d="M9 14h6"></path></svg>
+</div>
+<h3>لا توجد اجتماعات في هذا القسم حتى الآن</h3>
+<p>تُعرض الاجتماعات في هذا القسم عند جدولتها أو عند استلام دعوة جديدة.</p>
+</div>
+<div class="meetings-list" id="meetingsList"><div class="meeting-table-header"><span class="meeting-table-header__icon"></span><span class="meeting-table-header__name">اسم الاجتماع</span><span class="meeting-table-header__supervisor">المشروع</span><span class="meeting-table-header__date">التاريخ</span><span class="meeting-table-header__time">الوقت</span><span class="meeting-table-header__action">الإجراء</span></div></div>
+</section>
+<div class="meeting-ended-dialog" hidden="" id="meetingEndedPanel">
+<div aria-labelledby="meetingEndedTitle" aria-modal="true" class="meeting-ended-dialog__box" role="dialog">
+<div class="meeting-ended-dialog__head">
+<div><h2 id="meetingEndedTitle">ملاحظات الاجتماع</h2><p id="meetingEndedName"></p></div>
+<button aria-label="إغلاق" class="meeting-ended-dialog__close" id="meetingEndedClose" type="button">×</button>
+</div>
+<form id="meetingEndedForm">
+<label class="visually-hidden" for="meetingEndedNotes">ملاحظات الاجتماع</label>
+<textarea id="meetingEndedNotes" placeholder="اكتب ما تمت مناقشته والقرارات ونقاط المتابعة" rows="5"></textarea>
+<div class="meeting-ended-dialog__actions"><small aria-live="polite" id="meetingEndedStatus"></small><button class="meeting-ended-dialog__cancel" id="meetingEndedLater" type="button">إغلاق</button><button class="meeting-ended-dialog__save" type="submit">حفظ</button></div>
+</form>
+</div>
+</div>
+<div class="meeting-modal" hidden="" id="meetingModal">
+<div aria-labelledby="meetingModalTitle" aria-modal="true" class="meeting-modal__dialog" role="dialog">
+<button aria-label="إغلاق" class="meeting-modal__close" id="closeMeetingModal" type="button">×</button>
+<div class="meeting-modal__heading"><h2 id="meetingModalTitle">إنشاء اجتماع</h2><p>يُحدَّد عنوان الاجتماع والمدعوون والأهداف والتاريخ والوقت.</p></div>
+<form class="meeting-modal__form" id="meetingForm" onsubmit="return false;">
+<div class="meeting-create-grid">
+<label class="meeting-create-wide"><span>عنوان الاجتماع</span><input id="meetingCreateTitle" placeholder="مثال: مراجعة التقدم" required=""/></label>
+<label><span>المشروع</span><select id="meetingCreateProject"></select></label>
+<fieldset class="meeting-create-full meeting-participants"><legend>المدعوون</legend><div id="meetingCreateParticipants" class="meeting-participants__list"></div></fieldset>
+<label class="meeting-create-full"><span>أهداف الاجتماع</span><textarea id="meetingCreateGoals" placeholder="أهداف الاجتماع والنقاط المطلوب مناقشتها" rows="3"></textarea></label>
+<label><span>التاريخ</span><input id="meetingCreateDate" required="" type="date"/></label>
+<label><span>الوقت</span><input id="meetingCreateTime" required="" type="time"/></label> <label><span>المدة</span><select id="meetingCreateDuration"><option value="30">30 دقيقة</option><option value="45">45 دقيقة</option><option selected value="60">60 دقيقة</option><option value="90">90 دقيقة</option><option value="120">120 دقيقة</option></select></label>
+</div>
+<p class="app-field-error" id="meetingCreateError" role="alert"></p><div class="meeting-modal__actions"><button class="meeting-modal__cancel" id="cancelMeetingModal" type="button">إلغاء</button><button class="meeting-modal__submit" type="submit">إنشاء الاجتماع</button></div>
+</form>
+</div>
+</div>
+<div class="meeting-modal meeting-notes-modal" hidden="" id="meetingNotesModal">
+<div aria-labelledby="meetingNotesTitle" aria-modal="true" class="meeting-modal__dialog meeting-notes-modal__dialog" role="dialog">
+<button aria-label="إغلاق" class="meeting-modal__close" id="closeMeetingNotesModal" type="button">×</button>
+<div class="meeting-modal__heading"><h2 id="meetingNotesTitle">ملاحظات الاجتماع</h2><p id="meetingNotesSubtitle"></p></div>
+<div class="meeting-notes-sections"><section class="meeting-notes-field"><h3>ملاحظات الاجتماع</h3><div class="meeting-notes-box"><p id="meetingNotesContent"></p></div></section><section class="meeting-notes-field meeting-notes-field--improvements"><h3>نقاط التحسين والمتابعة</h3><div class="meeting-notes-box"><p id="meetingImprovementsContent"></p></div></section></div>
+<p class="meeting-notes-meta" hidden id="meetingNotesMeta"></p>
+<div class="meeting-notes-actions"><button class="meeting-notes-close-button" id="meetingNotesCloseButton" type="button">إغلاق</button><button class="meeting-notes-edit-button" id="meetingNotesEdit" type="button">تعديل الملاحظات</button><button class="meeting-notes-edit-button meeting-notes-edit-button--save" hidden id="meetingNotesSave" type="button">حفظ الملاحظات</button></div>
+</div></div><footer class="footer meetings-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
+</main>
+</div>
+
+<script src="script.js"></script>
+<script src="pages/meetings.js"></script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="تممها منصة تنظّم مشروع التخرج للطلاب وفرقهم ومشرفيهم: المراحل والمهام والاجتماعات والملفات ومتطلبات دليل الجامعة." data-i18n-attr="content:metaDesc" name="description"/>
+<title data-i18n="pageTitle">تممها — منصة إدارة مشاريع التخرج</title>
+<link href="landing.css" rel="stylesheet"/>
+<script>/* Apply the saved language before first paint. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+</head>
+<body id="top">
+<a class="skip" data-i18n="skip" href="#main">تخطَّ إلى المحتوى</a>
+
+<header class="hd" id="siteHeader">
+<div class="wrap hd__inner">
+<a aria-label="تممها — الصفحة الرئيسية" class="hd__brand" data-i18n-attr="aria-label:homeLabel" href="#top"><img alt="تممها" data-i18n-attr="alt:brand" height="34" src="assets/landing/logo.webp" width="103"/></a>
+<nav aria-label="أقسام الصفحة" class="hd__nav" data-i18n-attr="aria-label:navLabel" id="siteNav">
+<a data-i18n="navAbout" href="#about">عن تممها</a>
+<a data-i18n="navFeatures" href="#features">المزايا</a>
+<a data-i18n="navContact" href="contact.html">تواصل معنا</a>
+</nav>
+<div class="hd__actions">
+<button aria-label="Switch to English" class="lang" id="langToggle" lang="en" type="button">EN</button>
+<a class="hd__login" data-i18n="login" href="login.html">تسجيل الدخول</a>
+<a class="btn btn--sm" data-i18n="register" href="register.html">إنشاء حساب</a>
+</div>
+<button aria-controls="siteNav" aria-expanded="false" aria-label="القائمة" class="hd__toggle" data-i18n-attr="aria-label:menu" id="navToggle" type="button"><span></span><span></span></button>
+</div>
+</header>
+
+<main id="main">
+
+<!-- 1. Hero: a real background video only, with the title and the two buttons -->
+<section aria-labelledby="heroTitle" class="hero">
+<div aria-hidden="true" class="hero__media">
+<!-- الفيديو يُحدَّد في landing.js (HERO_SOURCES). لاستخدام فيديو آخر ضعيه باسم assets/landing/hero.mp4 وسيُستخدم أولًا. -->
+<video autoplay="" disablepictureinpicture="" id="heroVideo" loop="" muted="" playsinline="" poster="https://images.pexels.com/videos/30614422/pexels-photo-30614422.jpeg?auto=compress&amp;w=1920" preload="auto" tabindex="-1"></video>
+</div>
+<div class="wrap hero__content">
+<h1 id="heroTitle"><img alt="تممها" class="hero__logo" data-i18n-attr="alt:heroBrand" height="466" src="assets/landing/logo-white.webp" width="1400"/><span class="hero__tag" data-i18n="heroTag">ابنِ فكرتك بوعي، وتمّمها بأثر</span></h1>
+<p data-i18n="heroText">تممها تنظّم مشروع التخرج لك ولفريقك ومشرفك: المراحل والمهام والاجتماعات والملفات ومتطلبات دليل الجامعة.</p>
+<div class="hero__actions">
+<a class="btn btn--brand btn--lg" data-i18n="register" href="register.html">إنشاء حساب</a>
+<a class="btn btn--line btn--lg" data-i18n="login" href="login.html">تسجيل الدخول</a>
+</div>
+</div>
+<a class="hero__cue" href="#about"><span data-i18n="scroll">مرّر للأسفل</span><i aria-hidden="true"></i></a>
+</section>
+
+<!-- 2. About Tammha: statement on the upper right, the story on the lower left; words fill in while scrolling -->
+<section aria-labelledby="storyTitle" class="story" id="about">
+<div class="wrap story__grid">
+<div class="story__head">
+<p class="story__label" data-i18n="storyLabel">نبذة عن تممها</p>
+<h2 data-i18n="storyTitle" id="storyTitle">مشروع التخرج<br/>ليس مهمة واحدة.</h2>
+</div>
+<div class="story__lines" id="storyLines">
+<p data-i18n="s1">هو متطلبات جامعة تُقرأ بدقة، ومسؤوليات موزعة على الفريق، واجتماعات مع المشرف، وملفات تتراكم، ومواعيد تقترب أسبوعًا بعد أسبوع، ومتابعة لا تتوقف حتى يوم المناقشة.</p>
+<p class="story__end" data-i18n="s2">تممها تجمع كل ذلك في مساحة عمل واحدة منظّمة، فيعرف كل عضو ما عليه، ومتى، ولماذا.</p>
+</div>
+</div>
+</section>
+
+<!-- 2b. The same idea shown: scattered pieces settle into one project -->
+<section aria-label="من عناصر متفرقة إلى مشروع واحد" class="about" data-i18n-attr="aria-label:boardSection" id="organize">
+<div class="about__stick">
+<div class="wrap">
+<p class="about__then" data-i18n="aboutThen">تممها ترتّب مشروعك في مكان واحد واضح.</p>
+<div class="board" id="board">
+<div aria-hidden="true" class="board__bar"><strong data-i18n="bProject">مشروع تممها</strong><span data-i18n="bStage">المرحلة الحالية: التطوير</span><span class="bar"><i style="width:60%"></i></span><b>60%</b></div>
+<ul aria-label="ما يجمعه مشروع التخرج" class="board__grid" data-i18n-attr="aria-label:boardLabel">
+<li class="pc" data-dx="-6" data-dy="-16" data-r="-7"><small data-i18n="c1k">متطلب من دليل الجامعة</small><strong data-i18n="c1t">تقرير التحليل والتصميم</strong><em data-i18n="c1m">ص 11</em></li>
+<li class="pc pc--blue" data-dx="10" data-dy="-26" data-r="6"><small data-i18n="c2k">مرحلة</small><strong data-i18n="c2t">التطوير</strong><span class="bar"><i style="width:60%"></i></span><em data-i18n="c2m">قيد التنفيذ · 60%</em></li>
+<li class="pc" data-dx="-12" data-dy="-8" data-r="5"><small data-i18n="c3k">مهمة · عضو الفريق</small><strong data-i18n="c3t">بناء صفحة الملفات</strong><em class="is-blue" data-i18n="c3m">30 أكتوبر</em></li>
+<li class="pc" data-dx="8" data-dy="-22" data-r="-4"><small data-i18n="c4k">اجتماع</small><strong data-i18n="c4t">متابعة مع المشرف</strong><em data-i18n="c4m">الخميس 10:00 ص</em></li>
+<li class="pc" data-dx="-4" data-dy="16" data-r="-8"><small data-i18n="c5k">ملف</small><strong class="pc__file"><img alt="" height="20" src="assets/landing/file-pdf.webp" width="20"/><span data-i18n="c5t">خطة المشروع.pdf</span></strong><em>PDF · 2.4 MB</em></li>
+<li class="pc" data-dx="-10" data-dy="24" data-r="7"><small data-i18n="c6k">موعد تسليم</small><strong data-i18n="c6t">النموذج الأولي</strong><em class="is-late" data-i18n="c6m">19 نوفمبر</em></li>
+<li class="pc" data-dx="12" data-dy="8" data-r="-5"><small data-i18n="c7k">الفريق</small><strong class="pc__people" data-i18n="c7t"><span>ن</span><span>ر</span><span>ل</span><span>ن</span></strong><em data-i18n="c7m">4 أعضاء ومشرف</em></li>
+<li class="pc" data-dx="6" data-dy="20" data-r="4"><small data-i18n="c8k">ملاحظة المشرف · د. نورة</small><strong data-i18n="c8t">اعتماد واجهات المهام قبل العرض.</strong><em data-i18n="c8m">أمس</em></li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 3. What Tammha offers: four core ideas -->
+<section aria-labelledby="featuresTitle" class="offer" id="features">
+<div class="offer__panel">
+<div class="wrap">
+<h2 data-i18n="offerTitle" id="featuresTitle">ما تقدّمه تممها</h2>
+<ol class="offer__list">
+<li class="core"><span class="core__n">01</span><h3 data-i18n="o1t">تنظيم المشروع</h3><p data-i18n="o1p">المشروع وفريقه ومشرفه في مساحة واحدة.</p></li>
+<li class="core"><span class="core__n">02</span><h3 data-i18n="o2t">المراحل والمهام</h3><p data-i18n="o2p">مراحل واضحة، ولكل مهمة مسؤول وموعد.</p></li>
+<li class="core"><span class="core__n">03</span><h3 data-i18n="o3t">الاجتماعات والفريق</h3><p data-i18n="o3p">اجتماعات تُجدول وتُعقد وتُوثّق في المنصة.</p></li>
+<li class="core"><span class="core__n">04</span><h3 data-i18n="o4t">متطلبات دليل الجامعة</h3><p data-i18n="o4p">متطلبات الكلية تتحول إلى مهام.</p></li>
+</ol>
+</div>
+</div>
+</section>
+
+
+</main>
+
+<footer class="ft">
+<div class="wrap ft__groups">
+<nav aria-labelledby="ftTammha"><h2 data-i18n="fTammha" id="ftTammha">تممها</h2><a data-i18n="navAbout" href="#about">عن تممها</a><a data-i18n="fHow" href="#features">كيف تعمل</a><a data-i18n="fHandbook" href="#features">دليل الجامعة</a></nav>
+<div aria-labelledby="ftContact" role="group"><h2 data-i18n="navContact" id="ftContact">تواصل معنا</h2>
+<!-- عناوين البريد مؤقتة: استبدليها بالعناوين الفعلية للمشروع -->
+<span class="ft__label" data-i18n="fSupport">الدعم الفني</span><a dir="ltr" href="mailto:support@tammha.site">support@tammha.site</a>
+<span class="ft__label" data-i18n="fInfo">الاستفسارات</span><a dir="ltr" href="mailto:info@tammha.site">info@tammha.site</a>
+<a data-i18n="fForm" href="contact.html">نموذج التواصل</a></div>
+<nav aria-labelledby="ftAccount"><h2 data-i18n="fAccount" id="ftAccount">الحساب</h2><a data-i18n="login" href="login.html">تسجيل الدخول</a><a data-i18n="register" href="register.html">إنشاء حساب</a></nav>
+</div>
+<div class="wrap ft__end"><p data-i18n="fCopy">© 2026 تممها. مشروع تخرج، جامعة المعرفة.</p><a data-i18n="fTop" href="#top">العودة إلى الأعلى ↑</a></div>
+<div aria-hidden="true" class="ft__mark"><img alt="" src="assets/landing/wordmark.webp"/></div>
+</footer>
+
+<script src="landing.js"></script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title data-en="AI assistant — Tammha">المساعد الذكي — تممها</title>
+<link href="style.css" rel="stylesheet"/>
+<link href="supervisor.css" rel="stylesheet"/>
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="sv-page" data-sv-page="assistant" data-app-role="SUPERVISOR">
+<div class="app-shell">
+<main class="main-content projects-main-content sv-main">
+<header class="topbar">
+<div class="search-box">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+<input aria-label="البحث" data-en-aria-label="Search" data-en-placeholder="Search projects or files..." id="globalSearch" placeholder="البحث في المشاريع أو الملفات..." type="search"/>
+</div>
+<div class="sv-topbar-end">
+<a aria-label="الملف الشخصي" class="profile" data-en-aria-label="Profile" href="supervisor-settings.html">
+<span aria-hidden="true" class="profile__avatar"></span>
+<span class="profile__text">
+<strong data-me-name></strong>
+<small data-me-title></small>
+</span>
+</a>
+<a aria-label="الإشعارات" class="sv-bell" data-en-aria-label="Notifications" href="supervisor-notifications.html"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5l1.5-2Z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg><span class="sv-bell__count" data-unread hidden></span></a>
+</div>
+</header>
+<section class="projects-hero page-banner--compact sv-banner"><div class="projects-hero__content"><h1 data-en="AI assistant">المساعد الذكي</h1><p data-en="Provides answers and summaries based on the records of the projects assigned to the supervisor, helping to follow progress and identify points to discuss with the teams.">يقدّم المساعد إجابات وملخصات مستندة إلى بيانات المشاريع المسندة إلى المشرف، بما يساعد على متابعة سير العمل وتحديد النقاط التي تحتاج إلى نقاش مع الفرق.</p></div></section>
+<div class="sv-ai">
+<aside class="sv-ai__side">
+<label class="sv-field"><span data-en="Project">المشروع</span><select id="svAiProject"></select></label>
+<section class="sv-ai__context"><h2 data-en="What the assistant uses">ما يعتمد عليه المساعد</h2>
+<ul><li data-en="Project information and objectives">معلومات المشروع وأهدافه</li><li data-en="Project handbook">دليل المشروع</li><li data-en="Stages, tasks and dates">المراحل والمهام والمواعيد</li><li data-en="File details">بيانات الملفات</li><li data-en="Previous feedback">الملاحظات السابقة</li></ul></section>
+<p class="sv-readonly"><svg aria-hidden="true" viewBox="0 0 24 24"><rect height="10" rx="2" width="14" x="5" y="10"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg><span data-en="Applying AI tasks and assigning them stays with the Team Leader.">تطبيق المهام المقترحة وإسنادها يبقى لقائد الفريق.</span></p>
+</aside>
+<section aria-label="المحادثة" class="sv-ai__chat" data-en-aria-label="Conversation">
+<div aria-live="polite" class="sv-ai__thread" id="svAiThread"></div>
+<div class="sv-ai__prompts" id="svAiPrompts"></div>
+<form class="sv-ai__form" id="svAiForm"><label class="visually-hidden" data-en="Your question" for="svAiInput">سؤالك</label><input autocomplete="off" data-en-placeholder="Type your question about the project…" id="svAiInput" placeholder="اكتب سؤالك عن المشروع…" type="text"/><button aria-label="إرسال" class="sv-btn" data-en-aria-label="Send" type="submit"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 12h14M13 6l6 6-6 6"></path></svg></button></form>
+</section>
+</div>
+<footer class="footer projects-footer" data-en="All rights reserved © Tammha 2026">جميع الحقوق محفوظة لتممها ©2026</footer>
+</main>
+<aside aria-label="التنقل الرئيسي" class="sidebar" data-en-aria-label="Main navigation">
+<a class="sidebar__brand" href="supervisor.html" title="تممها — الرئيسية" data-en-title="Tammha — Dashboard">
+<img alt="شعار تممها" src="assets/tammha-mini.png"/>
+</a>
+<nav aria-label="القائمة الرئيسية" class="sidebar__nav" data-en-aria-label="Main menu">
+<a class="nav-item" data-page="home" href="supervisor.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/application-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/application-filled.png"/>
+</span>
+<span class="nav-item__label" data-en="Dashboard">الرئيسية</span>
+</a>
+<a class="nav-item" data-page="projects" href="supervisor-projects.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/project-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/project-filled.png"/>
+</span>
+<span class="nav-item__label" data-en="Projects">المشاريع</span><span class="sv-nav-badge" data-requests hidden></span>
+</a>
+<a class="nav-item" data-page="reviews" href="supervisor-reviews.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24"><path d="M8 3.5h7l4 4v11.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"></path><path d="M15 3.5v5h4"></path><path d="m9.5 14 2 2 4-4.5"></path></svg>
+</span>
+<span class="nav-item__label" data-en="Reviews">المراجعات</span>
+</a>
+<a class="nav-item" data-page="meetings" href="supervisor-meetings.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/meeting-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
+</span>
+<span class="nav-item__label" data-en="Meetings">الاجتماعات</span>
+</a>
+<a class="nav-item" data-page="notifications" href="supervisor-notifications.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5l1.5-2Z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg>
+</span>
+<span class="nav-item__label" data-en="Notifications">الإشعارات</span><span class="sv-nav-badge" data-unread hidden></span>
+</a>
+<a aria-current="page" class="nav-item is-active" data-page="assistant" href="supervisor-assistant.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24"><path d="M12 3.5l1.8 4.7 4.7 1.8-4.7 1.8L12 16.5l-1.8-4.7L5.5 10l4.7-1.8L12 3.5Z"></path><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2Z"></path></svg>
+</span>
+<span class="nav-item__label" data-en="AI assistant">المساعد الذكي</span>
+</a>
+</nav>
+<div class="sidebar__bottom">
+<a class="nav-item" data-page="settings" href="supervisor-settings.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/settings-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/settings-filled.png"/>
+</span>
+<span class="nav-item__label" data-en="Settings">الإعدادات</span>
+</a>
+</div>
+</aside>
+</div>
+
+<!-- Shared: details drawer (task details, file review, meeting summary) -->
+<div class="task-drawer" hidden id="svDrawer">
+<aside aria-labelledby="svDrawerTitle" aria-modal="true" class="task-drawer__panel" role="dialog">
+<div class="task-drawer__head"><div><span class="task-drawer__project" id="svDrawerKicker"></span><h2 id="svDrawerTitle"></h2></div><button aria-label="إغلاق" class="task-drawer__close" data-en-aria-label="Close" id="svDrawerClose" type="button">×</button></div>
+<div class="task-drawer__body" id="svDrawerBody"></div>
+</aside>
+</div>
+
+<!-- Shared: feedback -->
+<div class="meeting-modal" hidden id="svFeedbackModal">
+<div aria-labelledby="fbHeading" aria-modal="true" class="meeting-modal__dialog" role="dialog">
+<button aria-label="إغلاق" class="meeting-modal__close" data-close-feedback data-en-aria-label="Close" type="button">×</button>
+<div class="meeting-modal__heading"><h2 data-en="New feedback" id="fbHeading">ملاحظة جديدة</h2><p data-en="The team sees it as new feedback in the project.">تظهر للفريق كملاحظة جديدة في المشروع.</p></div>
+<form class="meeting-modal__form" id="fbForm" novalidate>
+<div class="meeting-create-grid">
+<label><span data-en="Project">المشروع</span><select id="fbProject"></select></label>
+<label><span data-en="About">تتعلق بـ</span><select id="fbScope"><option data-en="The project" value="PROJECT">المشروع</option><option data-en="A task" value="TASK">مهمة</option></select></label>
+<label hidden id="fbTaskWrap"><span data-en="Task">المهمة</span><select id="fbTask"></select></label>
+<label><span data-en="Related file">ملف مرتبط</span><select id="fbFile"></select></label>
+<label class="meeting-create-full"><span data-en="Feedback">الملاحظة</span><textarea id="fbText" rows="4"></textarea><small class="field-error" data-en="Write the feedback first" hidden id="fbTextError">اكتب الملاحظة أولًا</small></label>
+</div>
+<div class="meeting-modal__actions"><button class="meeting-modal__cancel" data-close-feedback data-en="Cancel" type="button">إلغاء</button><button class="meeting-modal__submit" data-en="Send feedback" type="submit">إرسال الملاحظة</button></div>
+</form>
+</div>
+</div>
+
+<!-- Shared: confirmation -->
+<div class="meeting-modal sv-confirm" hidden id="svConfirm">
+<div aria-labelledby="svConfirmTitle" aria-modal="true" class="meeting-modal__dialog sv-confirm__dialog" role="alertdialog">
+<div class="meeting-modal__heading"><h2 id="svConfirmTitle"></h2><p id="svConfirmText"></p></div>
+<label class="sv-confirm__reason" hidden id="svConfirmReasonWrap"><span data-en="Reason (optional)">السبب (اختياري)</span><textarea id="svConfirmReason" rows="2"></textarea></label>
+<div class="meeting-modal__actions"><button class="meeting-modal__cancel" data-en="Back" id="svConfirmCancel" type="button">تراجع</button><button class="meeting-modal__submit sv-danger" id="svConfirmOk" type="button"></button></div>
+</div>
+</div>
+
+<script src="script.js"></script>
+<script src="pages/documents.js"></script>
+<script src="supervisor.js"></script>
+</body>
+</html>

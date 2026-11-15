@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="جميع ملفات المشاريع في منصة تممها" name="description"/>
+<title>تممها | الملفات</title>
+<link href="style.css" rel="stylesheet"/>
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="files-page" data-app-role="STUDENT">
+<div class="app-shell">
+<aside aria-label="التنقل الرئيسي" class="sidebar">
+<a class="sidebar__brand" href="dashboard.html" title="تممها — الرئيسية">
+<img alt="شعار تممها" src="assets/tammha-mini.png"/>
+</a>
+<nav aria-label="القائمة الرئيسية" class="sidebar__nav">
+<a class="nav-item" data-page="home" href="dashboard.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/application-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/application-filled.png"/>
+</span>
+<span class="nav-item__label">الرئيسية</span>
+</a>
+<a class="nav-item" data-page="projects" href="projects.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/project-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/project-filled.png"/>
+</span>
+<span class="nav-item__label">المشاريع</span>
+</a>
+<a class="nav-item" data-page="tasks" href="tasks.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/task-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/task-filled.png"/>
+</span>
+<span class="nav-item__label">المهام</span>
+</a>
+<a class="nav-item" data-page="meetings" href="meetings.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/meeting-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
+</span>
+<span class="nav-item__label">الاجتماعات</span>
+</a>
+<a aria-current="page" class="nav-item is-active" data-page="files" href="files.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M8 3.5h7l4 4v11.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"></path>
+<path d="M15 3.5v5h4"></path>
+<path d="M10 12h5.5M10 15.5h5.5"></path>
+<path d="M4 7.5v10a3 3 0 0 0 3 3"></path>
+</svg>
+</span>
+<span class="nav-item__label">الملفات</span>
+</a>
+<a class="nav-item" data-page="guide" href="guide.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"></path>
+<path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"></path>
+<path d="M8.5 7.5h7M8.5 11h5"></path>
+</svg>
+</span>
+<span class="nav-item__label">دليل المشروع</span>
+</a>
+</nav>
+<div class="sidebar__bottom">
+<a class="nav-item" data-page="settings" href="profile.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/settings-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/settings-filled.png"/>
+</span>
+<span class="nav-item__label">الإعدادات</span>
+</a>
+</div>
+</aside>
+<main class="main-content projects-main-content files-main-content">
+<header class="topbar">
+<div class="search-box">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+<input aria-label="البحث" id="globalSearch" placeholder="البحث في المشاريع أو الملفات..." type="search"/>
+</div>
+<a aria-label="الملف الشخصي" class="profile" href="profile.html">
+<span aria-hidden="true" class="profile__avatar"></span>
+<span class="profile__text">
+<strong></strong>
+<small></small>
+</span>
+</a>
+</header>
+<section aria-labelledby="filesTitle" class="projects-hero">
+<div class="projects-hero__content">
+<h1 id="filesTitle">الملفات</h1>
+<p>مساحة موحدة لحفظ ملفات المشاريع ومستنداتها وتنظيمها، بما يضمن سهولة الرجوع إلى الأعمال السابقة والمحافظة على تسلسل إصدارات الملفات.</p>
+</div>
+</section>
+<section aria-labelledby="allFilesTitle" class="project-files-panel">
+<div class="project-files-toolbar">
+<div class="project-files-title"><div><h2 id="allFilesTitle">كل الملفات</h2><p>ملفات جميع المشاريع مع اسم المشروع لكل ملف.</p></div></div>
+<div class="project-files-actions">
+<div aria-label="طريقة العرض" class="files-view-toggle" role="group">
+<button aria-pressed="true" class="files-view-toggle__button is-active" data-files-view="table" type="button">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+<span>جدول</span>
+</button>
+<button aria-pressed="false" class="files-view-toggle__button" data-files-view="cards" type="button">
+<svg aria-hidden="true" viewbox="0 0 24 24"><rect height="7" rx="1.5" width="7" x="4" y="4"></rect><rect height="7" rx="1.5" width="7" x="13" y="4"></rect><rect height="7" rx="1.5" width="7" x="4" y="13"></rect><rect height="7" rx="1.5" width="7" x="13" y="13"></rect></svg>
+<span>بطاقات</span>
+</button>
+</div>
+<div class="project-files-search"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg><input aria-label="البحث في الملفات أو المشاريع" id="allFilesSearch" placeholder="ابحث باسم الملف أو المشروع..." type="search"/></div>
+</div>
+</div>
+
+<div class="files-view" data-files-panel="table">
+<div class="project-files-table-wrap">
+<div aria-label="كل الملفات" class="project-files-table project-files-table--global" role="table">
+<div class="project-files-row project-files-row--head" role="row"><span role="columnheader">اسم الملف</span><span role="columnheader">المشروع</span><span role="columnheader">النوع</span><span role="columnheader">تاريخ الرفع</span><span role="columnheader">الحجم</span><span role="columnheader">الإجراءات</span></div>
+<div class="project-files-body" id="allFilesTableBody"></div>
+</div>
+</div>
+</div>
+
+<div class="files-view" data-files-panel="cards" hidden="">
+<div aria-label="كل الملفات" class="file-cards-grid" id="allFilesCards" role="list"></div>
+</div>
+
+<div class="project-files-empty" hidden="" id="allFilesEmpty">لا توجد ملفات مطابقة للبحث.</div>
+</section>
+
+<div class="file-modal" hidden="" id="filePreviewModal">
+<div aria-labelledby="filePreviewTitle" aria-modal="true" class="file-modal__dialog file-preview-dialog" role="dialog">
+<button aria-label="إغلاق" class="file-modal__close" id="closeFilePreviewModal" type="button">×</button>
+<div class="file-preview-icon"><img alt="" id="filePreviewIcon" src="assets/file-txt.png"/></div>
+<h2 id="filePreviewTitle">معاينة الملف</h2>
+<p id="filePreviewText">يُعرض الملف هنا.</p>
+<button class="button-primary" id="filePreviewCloseButton" type="button">إغلاق</button>
+</div>
+</div>
+<div class="link-dialog" hidden="" id="linkDialog">
+<div aria-labelledby="linkDialogTitle" aria-modal="true" class="link-dialog__box" role="dialog">
+<div class="link-dialog__head">
+<img alt="" src="assets/file-link.png"/>
+<div><h2 id="linkDialogTitle">رابط</h2><p id="linkDialogMeta"></p></div>
+<button aria-label="إغلاق" class="link-dialog__close" data-link-close="" type="button">×</button>
+</div>
+<label class="link-dialog__label" for="linkDialogUrl">الرابط</label>
+<input class="link-dialog__url" dir="ltr" id="linkDialogUrl" readonly="" type="text"/>
+<div class="link-dialog__actions"><small aria-live="polite" id="linkDialogStatus"></small><button class="link-dialog__button" id="linkDialogCopy" type="button">نسخ الرابط</button><a class="link-dialog__button link-dialog__button--primary" href="#" id="linkDialogOpen" rel="noopener" target="_blank">فتح الرابط</a></div>
+</div>
+</div>
+<footer class="footer projects-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
+</main>
+</div>
+<script src="pages/documents.js"></script>
+<script src="files.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

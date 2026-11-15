@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="الإعدادات والملف الشخصي - تممها" name="description"/>
+<title>تممها | الإعدادات</title>
+<link href="style.css" rel="stylesheet"/>
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="settings-page" data-app-role="STUDENT">
+<div class="app-shell">
+<aside aria-label="التنقل الرئيسي" class="sidebar">
+<a class="sidebar__brand" href="dashboard.html" title="تممها — الرئيسية">
+<img alt="شعار تممها" src="assets/tammha-mini.png"/>
+</a>
+<nav aria-label="القائمة الرئيسية" class="sidebar__nav">
+<a class="nav-item" data-page="home" href="dashboard.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/application-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/application-filled.png"/>
+</span>
+<span class="nav-item__label">الرئيسية</span>
+</a>
+<a class="nav-item" data-page="projects" href="projects.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/project-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/project-filled.png"/>
+</span>
+<span class="nav-item__label">المشاريع</span>
+</a>
+<a class="nav-item" data-page="tasks" href="tasks.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/task-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/task-filled.png"/>
+</span>
+<span class="nav-item__label">المهام</span>
+</a>
+<a class="nav-item" data-page="meetings" href="meetings.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/meeting-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
+</span>
+<span class="nav-item__label">الاجتماعات</span>
+</a>
+<a class="nav-item" data-page="files" href="files.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M8 3.5h7l4 4v11.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"></path>
+<path d="M15 3.5v5h4"></path>
+<path d="M10 12h5.5M10 15.5h5.5"></path>
+<path d="M4 7.5v10a3 3 0 0 0 3 3"></path>
+</svg>
+</span>
+<span class="nav-item__label">الملفات</span>
+</a>
+<a class="nav-item" data-page="guide" href="guide.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"></path>
+<path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"></path>
+<path d="M8.5 7.5h7M8.5 11h5"></path>
+</svg>
+</span>
+<span class="nav-item__label">دليل المشروع</span>
+</a>
+</nav>
+<div class="sidebar__bottom">
+<a aria-current="page" class="nav-item is-active" data-page="settings" href="profile.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/settings-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/settings-filled.png"/>
+</span>
+<span class="nav-item__label">الإعدادات</span>
+</a>
+</div>
+</aside>
+<main class="main-content settings-main-content">
+<header class="topbar settings-topbar">
+<div class="search-box">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+<input aria-label="البحث" id="globalSearch" placeholder="البحث في المشاريع أو الملفات..." type="search"/>
+</div>
+<a aria-label="الملف الشخصي" class="profile settings-profile" href="profile.html">
+<span aria-hidden="true" class="profile__avatar"></span>
+<span class="profile__text">
+<strong></strong>
+<small></small>
+</span>
+</a>
+</header>
+<section aria-labelledby="settingsTitle" class="settings-v43">
+  <div class="settings-v43-head">
+    <div>
+      <span class="settings-v43-kicker">الحساب</span>
+      <h1 id="settingsTitle">الإعدادات</h1>
+      <p>تتيح إدارة المعلومات الشخصية وإعدادات الحساب، بما يتناسب مع طبيعة المستخدم وصلاحياته داخل المنصة.</p>
+    </div>
+  </div>
+
+  <div class="settings-v43-tabbar">
+    <nav class="settings-v43-tabs" aria-label="أقسام الإعدادات" role="tablist">
+      <button aria-selected="true" class="settings-v43-tab is-active" data-settings-tab="profile" role="tab" type="button">الملف الشخصي</button>
+      <button aria-selected="false" class="settings-v43-tab" data-settings-tab="storage" role="tab" type="button">مساحة التخزين</button>
+      <button aria-selected="false" class="settings-v43-tab" data-settings-tab="security" role="tab" type="button">الخصوصية والأمان</button>
+      <button aria-selected="false" class="settings-v43-tab" data-settings-tab="language" role="tab" type="button">اللغة</button>
+      <span aria-hidden="true" class="settings-v43-tabs__ink"></span>
+    </nav>
+    <a class="settings-logout" href="login.html"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"></path><path d="M10 8l-4 4 4 4"></path><path d="M6 12h10"></path></svg><span>تسجيل خروج</span></a>
+  </div>
+
+  <div class="settings-v43-content">
+    <section class="settings-tab-panel is-active" data-settings-panel="profile">
+      <div class="settings-v43-panel-head"><div><h2>الملف الشخصي</h2><p>تحديث بيانات الحساب الجامعي.</p></div></div>
+      <div class="settings-v43-profile-grid">
+        <form class="settings-v43-form" id="profileForm" novalidate> <label><span>الاسم الأول</span><input id="profileFirst" type="text" maxlength="128" autocomplete="given-name"></label> <label><span>اسم العائلة</span><input id="profileLast" type="text" maxlength="128" autocomplete="family-name"></label> <label><span>البريد الجامعي</span><input id="profileEmail" type="email" readonly dir="ltr"></label> <label><span>الرقم الجامعي</span><input id="profileNumber" type="text" maxlength="30" dir="ltr"></label> <label><span>الجامعة</span><input id="profileUniversity" type="text" readonly></label> <p class="app-field-error" id="profileError" role="alert"></p> <button class="settings-v43-primary" type="submit">حفظ التغييرات</button> </form>
+        <aside class="settings-v43-photo-card"> <div class="profile-photo-placeholder"><span class="profile-photo-initial" id="profileInitial"></span></div> <p>تُعرض الأحرف الأولى من الاسم في الحساب.</p> </aside>
+      </div>
+    </section>
+
+    <section class="settings-tab-panel" data-settings-panel="storage" hidden>
+      <div class="settings-v43-panel-head"><div><h2>مساحة التخزين</h2><p>متابعة استخدام مساحة الحساب والملفات.</p></div></div>
+      <div aria-live="polite" class="storage-compact" id="storagePanel"></div>
+    </section>
+
+    <section class="settings-tab-panel" data-settings-panel="security" hidden>
+      <div class="settings-v43-panel-head"><div><h2>الخصوصية والأمان</h2><p>تغيير كلمة المرور وإنهاء جلسة الحساب.</p></div></div>
+      <div class="settings-v43-session-card"><div><strong>تغيير كلمة المرور</strong><span>يُرسل رابط آمن إلى بريدك الجامعي لتعيين كلمة مرور جديدة.</span></div><button id="sendPasswordLink" type="button">إرسال الرابط</button></div> <p class="app-muted" id="securityStatus" role="status"></p> <div class="settings-v43-session-card"><div><strong>تسجيل الخروج من هذا الجهاز</strong><span>إنهاء الجلسة الحالية على هذا المتصفح.</span></div><button data-logout type="button">تسجيل الخروج</button></div>
+    </section>
+
+    <section class="settings-tab-panel" data-settings-panel="language" hidden>
+      <div class="settings-v43-panel-head"><div><h2>اللغة</h2><p>اختيار لغة واجهة تممها.</p></div></div>
+      <div class="language-options settings-lang" role="radiogroup" aria-label="لغة الواجهة">
+        <button class="language-option is-selected" data-language="ar" type="button"><span>العربية</span><small>اللغة الحالية</small><span class="language-check">✓</span></button>
+        <button class="language-option" data-language="en" type="button"><span>English</span><small>English interface</small></button>
+      </div>
+    </section>
+  </div>
+
+</section>
+
+<footer class="footer settings-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
+</main>
+</div>
+<script src="script.js"></script>
+<script src="pages/profile.js"></script>
+</body>
+</html>

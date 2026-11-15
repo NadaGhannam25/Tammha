@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="مهام المشروع في منصة تممها" name="description"/>
+<title>تممها | المهام</title>
+<link href="style.css" rel="stylesheet"/>
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="tasks-page" data-app-role="STUDENT">
+<div class="app-shell">
+<aside aria-label="التنقل الرئيسي" class="sidebar">
+<a class="sidebar__brand" href="dashboard.html" title="تممها — الرئيسية">
+<img alt="شعار تممها" src="assets/tammha-mini.png"/>
+</a>
+<nav aria-label="القائمة الرئيسية" class="sidebar__nav">
+<a class="nav-item" data-page="home" href="dashboard.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/application-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/application-filled.png"/>
+</span>
+<span class="nav-item__label">الرئيسية</span>
+</a>
+<a class="nav-item" data-page="projects" href="projects.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/project-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/project-filled.png"/>
+</span>
+<span class="nav-item__label">المشاريع</span>
+</a>
+<a aria-current="page" class="nav-item is-active" data-page="tasks" href="tasks.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/task-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/task-filled.png"/>
+</span>
+<span class="nav-item__label">المهام</span>
+</a>
+<a class="nav-item" data-page="meetings" href="meetings.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/meeting-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
+</span>
+<span class="nav-item__label">الاجتماعات</span>
+</a>
+<a class="nav-item" data-page="files" href="files.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M8 3.5h7l4 4v11.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"></path>
+<path d="M15 3.5v5h4"></path>
+<path d="M10 12h5.5M10 15.5h5.5"></path>
+<path d="M4 7.5v10a3 3 0 0 0 3 3"></path>
+</svg>
+</span>
+<span class="nav-item__label">الملفات</span>
+</a>
+<a class="nav-item" data-page="guide" href="guide.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"></path>
+<path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"></path>
+<path d="M8.5 7.5h7M8.5 11h5"></path>
+</svg>
+</span>
+<span class="nav-item__label">دليل المشروع</span>
+</a>
+</nav>
+<div class="sidebar__bottom">
+<a class="nav-item" data-page="settings" href="profile.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/settings-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/settings-filled.png"/>
+</span>
+<span class="nav-item__label">الإعدادات</span>
+</a>
+</div>
+</aside>
+<main class="main-content projects-main-content tasks-main-content">
+<header class="topbar">
+<div class="search-box">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+<input aria-label="البحث" id="globalSearch" placeholder="البحث في المشاريع أو الملفات..." type="search"/>
+</div>
+<a aria-label="الملف الشخصي" class="profile" href="profile.html">
+<span aria-hidden="true" class="profile__avatar"></span>
+<span class="profile__text">
+<strong></strong>
+<small></small>
+</span>
+</a>
+</header>
+
+<section aria-labelledby="tasksTitle" class="tasks-section">
+<div class="projects-hero page-banner--compact">
+<div class="projects-hero__content">
+<h1 id="tasksTitle">المهام</h1>
+<p>يساعد هذا القسم على تنظيم العمل داخل الفريق، بما يضمن وضوح المسؤوليات واستمرار تنفيذ المهام وفق المواعيد المعتمدة.</p>
+</div>
+</div>
+
+<div class="tasks-toolbar">
+<div aria-label="تصفية المهام" class="tasks-filters" role="tablist">
+<button aria-selected="true" class="tasks-filter is-active" data-task-filter="all" role="tab" type="button">الكل <span data-count="all"></span></button>
+<button aria-selected="false" class="tasks-filter" data-task-filter="open" role="tab" type="button">قيد العمل <span data-count="open"></span></button>
+<button aria-selected="false" class="tasks-filter" data-task-filter="IN_REVIEW" role="tab" type="button">قيد المراجعة <span data-count="IN_REVIEW"></span></button>
+<button aria-selected="false" class="tasks-filter" data-task-filter="COMPLETED" role="tab" type="button">مكتملة <span data-count="COMPLETED"></span></button>
+<button aria-selected="false" class="tasks-filter" data-task-filter="overdue" role="tab" type="button">متأخرة <span data-count="overdue"></span></button>
+</div>
+<div class="tasks-toolbar__end"><div class="project-files-search"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg><input aria-label="البحث في المهام" id="tasksSearch" placeholder="ابحث في المهام..." type="search"/></div><button class="tasks-add" id="openTaskModal" type="button">+ إضافة مهمة</button></div>
+</div>
+
+<div class="tasks-table" role="table" aria-label="قائمة المهام">
+<div class="tasks-row tasks-row--head" role="row"><span role="columnheader">المهمة</span><span role="columnheader">المسؤول</span><span role="columnheader">الحالة</span><span role="columnheader">تاريخ التسليم</span><span role="columnheader"><span class="visually-hidden">عرض</span></span></div>
+<div id="tasksBody"></div>
+<p class="tasks-empty" hidden id="tasksEmpty">لا توجد مهام في هذا القسم.</p>
+</div>
+</section>
+
+<!-- Task details: side panel on the left -->
+<div class="task-drawer" hidden id="taskDrawer">
+<aside aria-labelledby="taskDrawerTitle" aria-modal="true" class="task-drawer__panel" role="dialog">
+<div class="task-drawer__head">
+<div><span class="task-drawer__project" id="taskDrawerProject"></span><h2 id="taskDrawerTitle">المهمة</h2></div>
+<button aria-label="إغلاق" class="task-drawer__close" id="closeTaskDrawer" type="button">×</button>
+</div>
+<div class="task-drawer__body">
+<dl class="task-drawer__facts">
+<div><dt>الحالة</dt><dd id="taskDrawerStatus"></dd></div>
+<div><dt>المسؤول</dt><dd id="taskDrawerAssignee"></dd></div>
+<div><dt>تاريخ التسليم</dt><dd id="taskDrawerDue"></dd></div>
+<div><dt>المرحلة</dt><dd id="taskDrawerStage"></dd></div>
+</dl>
+<section class="task-drawer__block"><h3>الوصف</h3><p id="taskDrawerDescription"></p></section>
+<section class="task-drawer__block" id="taskDrawerFilesBlock"><h3>المرفقات</h3><ul class="task-drawer__files" id="taskDrawerFiles"></ul></section>
+<section class="task-drawer__block"><h3>تغيير الحالة</h3>
+<form class="task-status-form" id="taskStatusForm"><label class="visually-hidden" for="taskStatusSelect">الحالة الجديدة</label><select id="taskStatusSelect"></select><button class="task-status-form__save" type="submit">حفظ</button></form>
+<p class="task-drawer__hint" id="taskStatusHint"></p>
+</section>
+<section class="task-drawer__block" hidden id="taskLeaderTools"><h3>إدارة المهمة (قائد الفريق)</h3><form class="task-status-form task-leader-form" id="taskLeaderForm"><label><span class="visually-hidden">المسؤول</span><select id="taskEditAssignee" aria-label="المسؤول"></select></label><label><span class="visually-hidden">المرحلة</span><select id="taskEditStage" aria-label="المرحلة"></select></label><label><span class="visually-hidden">تاريخ التسليم</span><input id="taskEditDue" type="date" aria-label="تاريخ التسليم"/></label><button class="task-status-form__save" type="submit">حفظ</button><button class="app-btn app-btn--ghost" id="taskDelete" type="button">حذف المهمة</button></form></section> <section class="task-drawer__block task-feedback" id="taskFeedbackBlock"><h3>ملاحظات المشرف</h3><ul class="task-feedback__list" id="taskFeedbackList"></ul><p class="task-drawer__hint">يكتبها المشرف على المهمة للاطلاع والمتابعة، ولا يُعدّل المشرف المهام نفسها.</p></section>
+<section class="task-drawer__block"><h3>التعليقات <span class="task-drawer__count" id="taskCommentCount"></span></h3><ul class="task-drawer__comments" id="taskDrawerComments"></ul>
+<form class="task-comment-form" id="taskCommentForm" novalidate><label class="visually-hidden" for="taskCommentText">تعليق جديد</label><textarea id="taskCommentText" maxlength="2000" placeholder="اكتب تعليقًا لأعضاء الفريق…" rows="2"></textarea><small class="field-error" hidden id="taskCommentError">اكتب التعليق أولًا</small><button class="task-comment-form__send" type="submit">إضافة تعليق</button></form>
+</section>
+</div>
+</aside>
+</div>
+
+<!-- Add task -->
+<div class="meeting-modal" hidden id="taskModal">
+<div aria-labelledby="taskModalTitle" aria-modal="true" class="meeting-modal__dialog" role="dialog">
+<button aria-label="إغلاق" class="meeting-modal__close" id="closeTaskModal" type="button">×</button>
+<div class="meeting-modal__heading"><h2 id="taskModalTitle">إضافة مهمة</h2><p>اكتب المهمة وحدد المسؤول وموعد التسليم.</p></div>
+<form class="meeting-modal__form" id="taskForm" novalidate>
+<div class="meeting-create-grid">
+<label class="meeting-create-wide"><span>اسم المهمة</span><input id="taskName" placeholder="مثال: مراجعة واجهة الإعدادات" required/><small class="field-error" hidden id="taskNameError">اسم المهمة مطلوب (3 أحرف على الأقل)</small></label>
+<label><span>المسؤول</span><select id="taskAssignee"></select></label> <label><span>المرحلة</span><select id="taskStage"></select></label>
+<label class="meeting-create-full"><span>الوصف</span><textarea id="taskDescription" placeholder="ما المطلوب في هذه المهمة؟" rows="3"></textarea></label>
+<label><span>الحالة</span><select id="taskStatus"><option value="TODO">لم تبدأ</option><option value="IN_PROGRESS">قيد التنفيذ</option></select></label> <label><span>الأولوية</span><select id="taskPriority"><option value="MEDIUM">متوسطة</option><option value="LOW">منخفضة</option><option value="HIGH">عالية</option><option value="CRITICAL">حرجة</option></select></label>
+<label><span>تاريخ التسليم</span><input id="taskDue" type="date"/></label>
+</div>
+<div class="meeting-modal__actions"><button class="meeting-modal__cancel" id="cancelTaskModal" type="button">إلغاء</button><button class="meeting-modal__submit" type="submit">إضافة المهمة</button></div>
+</form>
+</div>
+</div>
+<footer class="footer projects-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
+</main>
+</div>
+<script src="tasks.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

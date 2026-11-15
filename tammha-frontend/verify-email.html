@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تممها | تأكيد البريد الإلكتروني</title>
+  <link rel="stylesheet" href="style.css" />
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="auth-flow-page auth-page-changed">
+  <div class="auth-flow-shell">
+    <header class="auth-flow-header">
+      <a class="auth-flow-logo" href="login.html" aria-label="تممها"><img src="assets/tammha-auth-logo.png" alt="شعار تممها" /></a>
+    </header>
+    <main class="auth-flow-main">
+      <section class="auth-flow-card auth-flow-card--center auth-flow-card--compact" id="verifyState" aria-live="polite">
+        <div class="auth-flow-visual auth-flow-visual--small"><img src="assets/reset-email.png" alt="" /></div>
+        <h1 class="auth-flow-title" id="verifyTitle">تأكيد البريد الإلكتروني</h1>
+        <p class="auth-flow-subtitle" id="verifyText"></p>
+        <div class="auth-flow-actions auth-flow-actions--single" id="verifyActions"></div>
+        <p class="auth-flow-note" id="verifyNote" role="status"></p>
+      </section>
+    </main>
+    <footer class="auth-flow-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
+  </div>
+<script src="config.js"></script><script src="api.js"></script><script src="auth-flow.js"></script>
+</body>
+</html>

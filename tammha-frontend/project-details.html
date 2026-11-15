@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="تفاصيل مشروع تممها - المراحل" name="description"/>
+<title>تممها | تفاصيل المشروع</title>
+<link href="style.css" rel="stylesheet"/>
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="project-details-page" data-app-role="STUDENT">
+<div class="app-shell">
+<aside aria-label="التنقل الرئيسي" class="sidebar">
+<a class="sidebar__brand" href="dashboard.html" title="تممها — الرئيسية">
+<img alt="شعار تممها" src="assets/tammha-mini.png"/>
+</a>
+<nav aria-label="القائمة الرئيسية" class="sidebar__nav">
+<a class="nav-item" data-page="home" href="dashboard.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/application-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/application-filled.png"/>
+</span>
+<span class="nav-item__label">الرئيسية</span>
+</a>
+<a aria-current="page" class="nav-item is-active" data-page="projects" href="projects.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/project-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/project-filled.png"/>
+</span>
+<span class="nav-item__label">المشاريع</span>
+</a>
+<a class="nav-item" data-page="tasks" href="tasks.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/task-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/task-filled.png"/>
+</span>
+<span class="nav-item__label">المهام</span>
+</a>
+<a class="nav-item" data-page="meetings" href="meetings.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/meeting-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
+</span>
+<span class="nav-item__label">الاجتماعات</span>
+</a>
+<a class="nav-item" data-page="files" href="files.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M8 3.5h7l4 4v11.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"></path>
+<path d="M15 3.5v5h4"></path>
+<path d="M10 12h5.5M10 15.5h5.5"></path>
+<path d="M4 7.5v10a3 3 0 0 0 3 3"></path>
+</svg>
+</span>
+<span class="nav-item__label">الملفات</span>
+</a>
+<a class="nav-item" data-page="guide" href="guide.html">
+<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
+<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24">
+<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"></path>
+<path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"></path>
+<path d="M8.5 7.5h7M8.5 11h5"></path>
+</svg>
+</span>
+<span class="nav-item__label">دليل المشروع</span>
+</a>
+</nav>
+<div class="sidebar__bottom">
+<a class="nav-item" data-page="settings" href="profile.html">
+<span aria-hidden="true" class="nav-item__icon-wrap">
+<img alt="" class="nav-item__icon icon-outline" src="assets/settings-outline.png"/>
+<img alt="" class="nav-item__icon icon-filled" src="assets/settings-filled.png"/>
+</span>
+<span class="nav-item__label">الإعدادات</span>
+</a>
+</div>
+</aside>
+<main class="main-content project-details-main">
+<header class="topbar">
+<div class="search-box">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"></path></svg>
+<input aria-label="البحث" id="globalSearch" placeholder="البحث في المشاريع أو الملفات..." type="search"/>
+</div>
+<a aria-label="الملف الشخصي" class="profile" href="profile.html">
+<span aria-hidden="true" class="profile__avatar"></span>
+<span class="profile__text">
+<strong></strong>
+<small></small>
+</span>
+</a>
+</header>
+<section aria-labelledby="projectName" class="project-detail-hero">
+<div class="project-detail-hero__content">
+<h1 id="projectName"></h1>
+</div>
+</section>
+<section aria-label="ملخص المشروع" class="project-summary"></section>
+<nav aria-label="تبويبات المشروع" class="project-tabs">
+<a class="project-tab" href="project-overview.html">نظرة عامة</a>
+<a aria-current="page" class="project-tab is-active" href="project-details.html">المراحل</a>
+<a class="project-tab" href="project-files.html">الملفات</a>
+</nav>
+<div class="stages-toolbar"><div><h2>مراحل المشروع</h2><p class="stages-toolbar__desc">توضح المراحل التسلسل الذي يمر به مشروع التخرج، وتساعد على تحديد مستوى التقدم ومدى توافق سير العمل مع الخطة الموضوعة.</p></div><button class="tasks-add" id="openStageModal" type="button">+ إضافة مرحلة</button></div>
+<section aria-label="مراحل المشروع" class="stages-table" id="stagesTable" role="table"><div class="stages-row stages-row--head" role="row"><span role="columnheader">المرحلة</span><span role="columnheader">الحالة</span><span role="columnheader">الفترة</span><span role="columnheader">المهام</span><span role="columnheader"><span class="visually-hidden">الإجراء</span></span></div><div id="stagesBody"></div></section>
+<div class="meeting-modal" hidden="" id="stageModal">
+<div aria-labelledby="stageModalTitle" aria-modal="true" class="meeting-modal__dialog stage-modal" role="dialog">
+<button aria-label="إغلاق" class="meeting-modal__close" id="closeStageModal" type="button">×</button>
+<div class="meeting-modal__heading"><h2 id="stageModalTitle">إضافة مرحلة</h2><p>اكتب اسم المرحلة وتاريخ انتهائها كما يناسب مشروعك.</p></div>
+<form class="meeting-modal__form" id="stageForm" novalidate="">
+<div class="meeting-create-grid stage-form-grid">
+<label class="meeting-create-full"><span>اسم المرحلة</span><input id="stageName" placeholder="مثال: التوثيق" type="text"/><small class="field-error" hidden="" id="stageNameError">اسم المرحلة مطلوب</small></label>
+<label class="meeting-create-full"><span>وصف مختصر (اختياري)</span><input id="stageDescription" placeholder="ما الذي يتم في هذه المرحلة؟" type="text"/></label>
+<label><span>تاريخ الانتهاء</span><input id="stageDue" type="date"/><small class="field-error" hidden="" id="stageDueError">تاريخ الانتهاء مطلوب</small></label>
+<label><span>الحالة</span><select id="stageStatus"><option value="PENDING">لم تبدأ</option><option value="IN_PROGRESS">جارية</option><option value="COMPLETED">مكتملة</option></select></label>
+</div>
+<p class="app-field-error" id="stageFormError" role="alert"></p><div class="meeting-modal__actions"><button class="meeting-modal__cancel" id="cancelStageModal" type="button">إلغاء</button><button class="meeting-modal__submit" type="submit">إضافة المرحلة</button></div>
+</form>
+</div>
+</div>
+<footer class="footer project-details-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
+</main>
+</div>
+<script src="script.js"></script>
+<script src="pages/project-details.js"></script>
+
+</body>
+</html>

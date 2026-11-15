@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تممها | الانضمام إلى فريق</title>
+  <link rel="stylesheet" href="style.css" />
+<link href="ltr.css" rel="stylesheet"/>
+<link href="loader.css" rel="stylesheet"/>
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="loader.js"></script>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="session.js"></script>
+<script src="domain.js"></script>
+<link href="app.css" rel="stylesheet"/>
+</head>
+<body class="auth-flow-page auth-page-changed" data-app-role="STUDENT">
+  <div class="auth-flow-shell">
+    <header class="auth-flow-header">
+      <a class="auth-flow-logo" href="index.html" aria-label="تممها"><img src="assets/tammha-auth-logo.png" alt="شعار تممها" /></a>
+    </header>
+    <main class="auth-flow-main">
+      <section class="auth-flow-card auth-flow-card--compact">
+        <h1 class="auth-flow-title">الانضمام إلى فريق مشروع</h1>
+        <p class="auth-flow-subtitle">أدخل رمز الدعوة الذي أرسله قائد الفريق، أو افتح رابط الدعوة مباشرة.</p>
+        <form class="auth-flow-form" id="joinForm" novalidate>
+          <div class="auth-field">
+            <label for="joinCode">رمز الدعوة</label>
+            <input class="auth-input" id="joinCode" autocomplete="off" dir="ltr" placeholder="K7QX-M2PA" />
+            <p class="auth-error" id="joinError" aria-live="polite"></p>
+          </div>
+          <div id="joinPreview" class="auth-flow-note" aria-live="polite"></div>
+          <button class="auth-primary-button" id="joinButton" type="submit">عرض الدعوة</button>
+        </form>
+        <div class="auth-helper-row"><a class="auth-text-link" href="projects.html">العودة إلى المشاريع</a></div>
+      </section>
+    </main>
+    <footer class="auth-flow-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
+  </div>
+<script src="pages/join.js"></script>
+</body>
+</html>
