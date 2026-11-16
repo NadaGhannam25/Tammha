@@ -262,3 +262,48 @@ body.has-wizard{overflow:hidden}
 #tasksBody > .app-state{min-height:200px;display:grid;align-content:center}
 .stages-table:has(#stagesBody > .app-state) .stages-row--head{display:none}
 #stagesBody > .app-state{min-height:200px;display:grid;align-content:center}
+
+/* ===== TAMMHA 2026 review batch: flat, compact, RTL/LTR-safe ===== */
+/* Header bell: icon only, immediately beside account name (no button frame). */
+.app-topbar-end{gap:10px}
+.app-bell__button{width:34px;height:36px;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.app-bell__button:hover{background:transparent!important;color:#008bbf}
+.app-bell__panel{inset-inline-end:auto;inset-inline-start:0}
+.app-bell__empty{margin:0;padding:20px 14px;text-align:center;color:#597487;font-size:13px}
+/* Equal size for the two project-list actions. */
+.projects-page .app-inline-form:has(#openProjectWizard){align-items:center;gap:10px}
+.projects-page .app-inline-form:has(#openProjectWizard)>a,
+.projects-page .app-inline-form:has(#openProjectWizard)>button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;height:44px;box-sizing:border-box;margin:0;border-radius:11px;padding:0 18px;font:inherit;font-weight:800;line-height:1.3}
+/* Replace the project selector in the hero with a small progress indication. */
+.app-project-progress{display:flex;flex-direction:column;gap:5px;max-width:240px;margin-block-start:9px;color:#fff;font-size:13px}
+.app-project-progress>span{display:flex;gap:8px;align-items:center}
+.app-project-progress__bar{overflow:hidden;height:7px;border-radius:30px;background:rgba(255,255,255,.4)}
+.app-project-progress__bar>span{display:block;height:100%;border-radius:30px;background:#fff;transition:width .3s}
+/* Invite panel and member list: compact rather than stacked tall blocks. */
+#ovTeam .team-member{gap:7px;min-height:54px;padding:9px 11px}
+#ovTeam .team-member__avatar{width:34px;height:34px;min-width:34px;font-size:13px}
+#ovTeam .team-member__role{font-size:11px;white-space:nowrap}
+#ovTeamTools .invite-panel{gap:10px;padding:12px;border-radius:12px}
+#ovTeamTools .invite-panel h2{font-size:15px}
+#ovTeamTools .invite-code{padding:8px;background:transparent;border:0;gap:6px}
+#ovTeamTools .invite-code__value{flex-basis:100%;font-size:13px;letter-spacing:.08em;text-align:start}
+#ovTeamTools .invite-code__actions{flex-basis:100%;justify-content:flex-start}
+#ovTeamTools .invite-code__actions .app-btn{flex:0 0 auto;min-height:30px;padding:4px 8px;font-size:12px}
+/* Statuses are text only: no shaded labels or highlighted strips. */
+.project-status,.stage-state,.stage-current-tag,.app-chip,.project-setup-note{background:transparent!important;box-shadow:none!important;border:0!important;padding-inline:0!important}
+.stages-row--progress{background:transparent!important}
+.stages-row--progress::before{display:none!important}
+/* Empty tables must not display a row of column labels. */
+.tasks-table.is-empty>.tasks-row--head,.project-files-table.is-empty>.project-files-row--head{display:none!important}
+/* Stage rows visually follow the clean five-column reference. */
+.project-details-page .stages-row{grid-template-columns:minmax(230px,2.5fr) minmax(128px,.85fr) minmax(160px,1.05fr) minmax(140px,1fr) minmax(85px,.65fr);gap:12px;min-height:78px;padding:12px 18px}
+.project-details-page .stages-row--head{min-height:48px}
+.project-details-page .stages-row__stage small{white-space:normal;line-height:1.4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.project-details-page .stages-row__status{display:block;margin:5px 0 0;max-width:142px;background:#fff}
+.project-details-page .stages-row__link{font-weight:800}
+.project-details-page [data-stage-delete]{padding:3px 5px;min-height:24px;font-size:11px}
+@media(max-width:1100px){.project-details-page .stages-table{overflow-x:auto}.project-details-page .stages-row{min-width:800px}}
+
+#ovTeamTools .invite-panel__add summary{cursor:pointer;color:#0875ab;font-size:13px;font-weight:800;padding:5px 0;list-style:none}
+#ovTeamTools .invite-panel__add summary::-webkit-details-marker{display:none}
+#ovTeamTools .invite-panel__add[open] .invite-panel__group{margin-block-start:9px}

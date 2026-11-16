@@ -35,7 +35,7 @@
       return { kind: 'UNIVERSITY', key: v.universityKey, fileName: v.fileName, pageCount: v.pageCount, title: v.title, universityName: v.universityName, ready: true };
     }
     const a = state.active || state.latest;
-    if (a) return { kind: 'UPLOAD', fileName: a.fileName || a.title, pageCount: a.pageCount, fileSize: a.fileSize, status: a.status || state.state, ready: state.state === 'READY', failed: state.state === 'FAILED', error: a.errorCode || a.failureReason };
+    if (a) return { kind: 'UPLOAD', fileName: a.fileName || a.title, pageCount: a.pageCount, fileSize: a.fileSize, uploadedBy: a.uploadedBy, status: a.status || state.state, ready: state.state === 'READY', failed: state.state === 'FAILED', error: a.errorCode || a.failureReason };
     return null;
   }
 
@@ -47,7 +47,7 @@
       return;
     }
     const uni = sel.kind === 'UNIVERSITY' ? universities.find((u) => u.key === sel.key) : null;
-    const source = sel.kind === 'UNIVERSITY' ? T(`الدليل الرسمي — ${uName(uni) || sel.universityName}`, `Official handbook — ${uName(uni) || sel.universityName}`) : T('دليل خاص مرفوع للمشروع', 'Handbook uploaded for the project');
+    const source = sel.kind === 'UNIVERSITY' ? T(`الدليل الرسمي — ${uName(uni) || sel.universityName}`, `Official handbook — ${uName(uni) || sel.universityName}`) : T(`دليل خاص مرفوع بواسطة ${sel.uploadedBy ? UI.personName(sel.uploadedBy) : 'الفريق'} (خارج مكتبة الأدلة الرسمية)`, `Uploaded by ${sel.uploadedBy ? UI.personName(sel.uploadedBy) : 'the team'} (outside the official handbook library)`);
     const statusText = sel.kind === 'UPLOAD' && !sel.ready ? (sel.failed ? T('تعذّرت قراءة نص الدليل. ارفع ملف PDF يحتوي على نص قابل للتحديد.', 'The handbook text could not be read. Upload a PDF with selectable text.') : T('جارٍ استخراج نص الدليل…', 'Extracting the handbook text…')) : '';
     const myUni = universities.find((u) => u.isMyUniversity);
     body.innerHTML = `<div class="hb-file">
@@ -88,7 +88,7 @@
     box.innerHTML = `<div class="hb-file hb-file--option"><img alt="" src="assets/file-pdf.png"/>
       <div class="hb-file__text"><strong dir="auto">${esc(h.fileName)}</strong><small>${esc(UI.fmtSize(h.fileSize))}${h.pageCount ? ` · ${esc(h.pageCount)} ${esc(T('صفحة', 'pages'))}` : ''} · ${esc(T('أُضيف في', 'added'))} ${esc(UI.fmtDate(h.uploadedAt))}</small></div></div>
       <div class="hb-actions"><button class="hb-btn hb-btn--ghost" data-view-university type="button">${esc(T('عرض الملف', 'View file'))}</button>
-      ${inUse ? `<span class="hb-in-use">${esc(T('معتمد للمشروع', 'In use for the project'))}</span>` : `<button class="hb-btn" data-use-university ${isLeader() ? '' : 'disabled'} type="button">${esc(T('اعتماد الدليل للمشروع', 'Use for the project'))}</button>`}</div>
+      ${inUse ? '' : `<button class="hb-btn" data-use-university ${isLeader() ? '' : 'disabled'} type="button">${esc(T('اعتماد الدليل للمشروع', 'Use for the project'))}</button>`}</div>
       ${isLeader() ? '' : `<p class="hb-note">${esc(T('يعتمد دليل المشروع قائد الفريق.', 'The Team Leader sets the project handbook.'))}</p>`}`;
   }
   uniSelect.addEventListener('change', renderUniversity);
@@ -187,7 +187,9 @@
       const result = await Api.post(`/projects/${projectId}/handbook/summary`, { language: lang, regenerate: !!regenerate }, { timeout: Api.aiTimeout, loader: { target: panel, label: T('جارٍ إعداد ملخص الدليل…', 'Preparing the handbook summary…') } });
       showSummary(result);
     } catch (error) {
-      panel.innerHTML = `<div class="hb-error" role="alert"><strong>${esc(T('تعذّر إنشاء الملخص', 'The summary could not be created'))}</strong><p>${esc(Api.message(error))}</p><p>${esc(T('لم يُعرض أي محتوى غير موثّق.', 'No unverified content is shown.'))}</p><button class="hb-btn" data-summary type="button">${esc(T('إعادة المحاولة', 'Try again'))}</button></div>`;
+      const wait = Number(error?.details?.retryAfterSeconds || 0);
+      const extra = wait > 0 ? T(` يمكن إعادة المحاولة بعد ${Math.ceil(wait / 60)} دقيقة تقريبًا.`, ` You can retry in about ${Math.ceil(wait / 60)} minute(s).`) : '';
+      panel.innerHTML = `<div class="hb-error" role="alert"><strong>${esc(T('تعذّر إنشاء الملخص', 'The summary could not be created'))}</strong><p>${esc(Api.message(error) + extra)}</p><p>${esc(T('لم يُعرض أي محتوى غير موثّق.', 'No unverified content is shown.'))}</p><button class="hb-btn" data-summary type="button">${esc(T('إعادة المحاولة', 'Try again'))}</button></div>`;
     }
   }
   $('hbSummaryPanel').addEventListener('click', (e) => { const b = e.target.closest('[data-summary]'); if (b) createSummary(b.dataset.summary === 'regenerate'); });
@@ -244,7 +246,11 @@
       const r = await Api.post(`/projects/${projectId}/handbook/task-suggestions`, { language: lang }, { timeout: Api.aiTimeout, loader: { target: panel, label: T('جارٍ استخراج المهام من الدليل…', 'Extracting tasks from the handbook…') } });
       suggestions = { projectId, aiRequestId: r.aiRequestId, list: r.suggestions || [], canApply: r.canApply, dropped: r.dropped, applied: new Set() };
       renderTasks();
-    } catch (error) { renderTasks(Api.message(error)); }
+    } catch (error) {
+      const wait = Number(error?.details?.retryAfterSeconds || 0);
+      const extra = wait > 0 ? T(` يمكن إعادة المحاولة بعد ${Math.ceil(wait / 60)} دقيقة تقريبًا.`, ` You can retry in about ${Math.ceil(wait / 60)} minute(s).`) : '';
+      renderTasks(Api.message(error) + extra);
+    }
   }
   async function addSelected(btn) {
     if (!isLeader()) return;

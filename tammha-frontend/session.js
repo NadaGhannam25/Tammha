@@ -188,20 +188,32 @@
     let end = bar.querySelector('.app-topbar-end, .sv-topbar-end');
     if (!end) { end = document.createElement('div'); end.className = 'app-topbar-end'; bar.append(end); }
     const profile = bar.querySelector('.profile'); if (profile) end.append(profile);
-    end.append(wrap);
+    end.prepend(wrap);
     const btn = wrap.querySelector('.app-bell__button');
     const panel = wrap.querySelector('.app-bell__panel');
     const list = wrap.querySelector('.app-bell__list');
+    let cachedNotifications = null;
+    let fetchInFlight = null;
     async function load() {
-      state(list, 'loading');
+      if (cachedNotifications !== null) renderNotifications(cachedNotifications);
+      if (fetchInFlight) return fetchInFlight;
+      fetchInFlight = (async () => {
       try {
         const page = await Api.get('/notifications', { query: { limit: 20 } });
         const items = Array.isArray(page) ? page : page.items || page.data || [];
-        if (!items.length) { state(list, 'empty', { title: T('لا توجد إشعارات', 'No notifications') }); return; }
-        list.innerHTML = items.map((n) => { const v = notificationText(n); return `<button class="app-bell__item${n.isRead || n.readAt ? '' : ' is-unread'}" type="button" data-id="${esc(n.id)}" data-href="${esc(notificationLink(n))}">
-            <strong>${esc(v.title)}</strong><span>${esc(v.text)}</span><small>${esc(fmtDateTime(n.createdAt))}</small></button>`; }).join('');
-      } catch (e) { state(list, 'error', { error: e, retry: load }); }
+        cachedNotifications = items;
+        if (!panel.hidden) renderNotifications(items);
+      } catch (e) { if (!panel.hidden) state(list, 'error', { error: e, retry: load }); }
+      finally { fetchInFlight = null; }
+      })();
+      return fetchInFlight;
     }
+    function renderNotifications(items) {
+      if (!items.length) { list.innerHTML = `<p class="app-bell__empty">${esc(T('لا توجد إشعارات', 'No notifications'))}</p>`; return; }
+      list.innerHTML = items.map((n) => { const v = notificationText(n); return `<button class="app-bell__item${n.isRead || n.readAt ? '' : ' is-unread'}" type="button" data-id="${esc(n.id)}" data-href="${esc(notificationLink(n))}">
+        <strong>${esc(v.title)}</strong><span>${esc(v.text)}</span><small>${esc(fmtDateTime(n.createdAt))}</small></button>`; }).join('');
+    }
+    load(); // Preload the list without a blocking spinner; the click opens immediately.
     btn.addEventListener('click', () => {
       const open = panel.hidden;
       panel.hidden = !open; btn.setAttribute('aria-expanded', String(open));
@@ -211,11 +223,14 @@
     list.addEventListener('click', async (e) => {
       const item = e.target.closest('.app-bell__item'); if (!item) return;
       try { await Api.patch(`/notifications/${encodeURIComponent(item.dataset.id)}/read`); } catch (err) { /* ignore */ }
-      item.classList.remove('is-unread'); refreshBadge();
+      item.classList.remove('is-unread');
+      const cached = cachedNotifications?.find((n) => n.id === item.dataset.id);
+      if (cached) cached.isRead = true;
+      refreshBadge();
       if (item.dataset.href) location.href = item.dataset.href;
     });
     wrap.querySelector('[data-read-all]').addEventListener('click', async () => {
-      try { await Api.patch('/notifications/read-all'); list.querySelectorAll('.is-unread').forEach((x) => x.classList.remove('is-unread')); refreshBadge(); } catch (e) { toast(Api.message(e), 'error'); }
+      try { await Api.patch('/notifications/read-all'); list.querySelectorAll('.is-unread').forEach((x) => x.classList.remove('is-unread')); cachedNotifications?.forEach((n) => { n.isRead = true; }); refreshBadge(); } catch (e) { toast(Api.message(e), 'error'); }
     });
   }
 
@@ -282,11 +297,12 @@
   function setCurrentProject(id) { try { localStorage.setItem(projectKey(), id); } catch (e) { /* ignore */ } }
   /** project selector for users with several projects; calls onChange(id) */
   function projectSwitcher(host, list, current, onChange) {
-    if (!host || list.length < 2) return;
-    const wrap = document.createElement('label');
-    wrap.className = 'app-project-switch';
-    wrap.innerHTML = `<span>${esc(T('المشروع', 'Project'))}</span><select>${list.map((p) => `<option value="${esc(p.id)}"${p.id === current ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>`;
-    wrap.querySelector('select').addEventListener('change', (e) => { setCurrentProject(e.target.value); onChange(e.target.value); });
+    if (!host) return;
+    const workspace = list.find((p) => p.id === current);
+    const percent = Math.max(0, Math.min(100, Math.round(Number(workspace?.progress?.percent ?? 0))));
+    const wrap = document.createElement('div');
+    wrap.className = 'app-project-progress';
+    wrap.innerHTML = `<span>${esc(T('نسبة الإنجاز', 'Completion'))} <strong>${percent}%</strong></span><div class="app-project-progress__bar" role="progressbar" aria-label="${esc(T('نسبة إنجاز المشروع', 'Project completion'))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><span style="width:${percent}%"></span></div>`;
     host.append(wrap);
   }
 

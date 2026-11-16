@@ -8,7 +8,7 @@
   const { T, L, esc } = UI;
   const $ = (id) => document.getElementById(id);
   const body = $('stagesBody');
-  let w = null; let stages = [];
+  let w = null; let stages = []; let stageOwners = {};
   const CLS = { COMPLETED: 'completed', IN_PROGRESS: 'progress', PENDING: 'pending', OVERDUE: 'pending', CANCELLED: 'pending' };
   const stateLabel = (s) => L((D.STAGE_STATUSES && D.STAGE_STATUSES[s] && D.STAGE_STATUSES[s].label) || [s, s]);
 
@@ -33,13 +33,15 @@
     body.innerHTML = head + stages.map((s, i) => {
       const status = s.isOverdue && s.status !== 'COMPLETED' ? 'OVERDUE' : s.status;
       const pr = s.progress || {};
-      const tools = isLeader ? `<select class="stages-row__status" data-stage-status="${esc(s.id)}" aria-label="${esc(T('حالة المرحلة', 'Stage status'))}">${['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((c) => `<option value="${c}"${c === s.status ? ' selected' : ''}>${esc(stateLabel(c))}</option>`).join('')}</select><button class="app-btn app-btn--ghost" type="button" data-stage-delete="${esc(s.id)}">${esc(T('حذف', 'Delete'))}</button>` : '';
+      const edit = isLeader ? `<select class="stages-row__status" data-stage-status="${esc(s.id)}" aria-label="${esc(T('تغيير حالة المرحلة', 'Change stage status'))}">${['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((c) => `<option value="${c}"${c === s.status ? ' selected' : ''}>${esc(stateLabel(c))}</option>`).join('')}</select>` : '';
+      const del = isLeader ? `<button class="app-btn app-btn--ghost" type="button" data-stage-delete="${esc(s.id)}">${esc(T('حذف', 'Delete'))}</button>` : '';
+      const responsible = (stageOwners[s.id] || []).join(T('، ', ', ')) || T('غير محدد', 'Not assigned');
       return `<div class="stages-row stages-row--${CLS[status] || 'pending'}" role="row"${s.status === 'IN_PROGRESS' ? ' aria-current="step"' : ''}>
-        <div class="stages-row__stage" role="cell"><span class="stages-row__step">${s.status === 'COMPLETED' ? '' : i + 1}</span><div><strong>${esc(s.title)}${current && s.id === current.id ? ` <span class="stage-current-tag">${esc(T('الحالية', 'Current'))}</span>` : ''}</strong><small>${esc(s.description || '')}</small></div></div>
-        <span role="cell"><span class="stage-state stage-state--${CLS[status] || 'pending'}">${esc(stateLabel(status))}</span>${pr.totalTasks ? `<small>${esc(String(pr.percent ?? 0))}%</small>` : ''}</span>
-        <span role="cell">${esc(T('حتى', 'Due'))} ${esc(UI.fmtDate(s.dueDate))}</span>
-        <span role="cell">${esc(T(`${pr.completedTasks || 0} من ${pr.totalTasks || 0}`, `${pr.completedTasks || 0} of ${pr.totalTasks || 0}`))}</span>
-        <span role="cell"><a class="stages-row__link" href="tasks.html?project=${encodeURIComponent(w.id)}">${esc(T('المهام', 'Tasks'))}</a>${tools}</span></div>`;
+        <div class="stages-row__stage" role="cell"><span class="stages-row__step">${s.status === 'COMPLETED' ? '✓' : i + 1}</span><div><strong>${esc(s.title)}${current && s.id === current.id ? ` <span class="stage-current-tag">${esc(T('الحالية', 'Current'))}</span>` : ''}</strong><small>${esc(s.description || '')}</small></div></div>
+        <span role="cell"><span class="stage-state stage-state--${CLS[status] || 'pending'}">${esc(stateLabel(status))}</span>${pr.totalTasks ? `<small>${esc(String(pr.percent ?? 0))}%</small>` : ''}${edit}</span>
+        <span role="cell">${esc(UI.fmtDate(s.dueDate))}</span>
+        <span role="cell">${esc(responsible)}</span>
+        <span role="cell"><a class="stages-row__link" href="tasks.html?project=${encodeURIComponent(w.id)}">${esc(T('المهام', 'Tasks'))}</a>${del}</span></div>`;
     }).join('');
   }
   async function load() {
@@ -47,6 +49,18 @@
     try {
       const r = await Api.get('/milestones', { query: { projectId: w.id, limit: 100 } });
       stages = (r.items || r || []).sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || String(a.dueDate).localeCompare(String(b.dueDate)));
+      // Milestones do not have a separate responsible person. Infer names from assigned tasks only.
+      stageOwners = {};
+      try {
+        const page = await Api.get('/tasks', { query: { projectId: w.id, limit: 100 } });
+        (page.items || page || []).forEach((task) => {
+          const id = task.milestoneId || task.milestone?.id;
+          if (!id || !task.assignedStudent) return;
+          const names = stageOwners[id] || (stageOwners[id] = []);
+          const name = UI.personName(task.assignedStudent);
+          if (name && !names.includes(name)) names.push(name);
+        });
+      } catch (e) { /* Stage data remains available if task lookup fails. */ }
       render();
     } catch (e) { UI.state(body, 'error', { error: e, retry: load }); }
   }

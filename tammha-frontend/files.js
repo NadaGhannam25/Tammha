@@ -19,7 +19,7 @@
     tableBody.innerHTML = files.map((d) => {
       const name = d.fileName || d.title;
       return `<div class="project-files-row" data-doc="${esc(d.id)}" role="row">
-        <div class="file-name-cell" role="cell"><img alt="${esc(Docs.type(name))}" src="${Docs.icon(name)}"/><div><strong title="${esc(name)}">${esc(d.title)}</strong><small>${esc(name)} ${Docs.reviewChip(d.reviewStatus)}</small></div></div>
+        <div class="file-name-cell" role="cell"><img alt="${esc(Docs.type(name))}" src="${Docs.icon(name)}"/><div><strong title="${esc(name)}">${esc(d.title)}</strong><small>${esc(name)}</small></div></div>
         <span class="file-project" role="cell">${esc(names[d.projectId] || '')}</span>
         <span class="file-type" role="cell">${esc(Docs.type(name))}</span>
         <span role="cell">${esc(UI.fmtDate(d.createdAt))}</span>
@@ -89,6 +89,7 @@
       const [projects, list] = await Promise.all([S.projects(true), Api.get('/documents')]);
       names = Object.fromEntries(projects.map((p) => [p.id, p.name]));
       files = (Array.isArray(list) ? list : list.items || []).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+      tableBody.closest('.project-files-table')?.classList.toggle('is-empty', files.length === 0);
       if (!files.length) {
         UI.state(tableBody, 'empty', { title: T('لا توجد ملفات بعد', 'No files yet'), text: T('تُرفع الملفات من صفحة ملفات المشروع، وتظهر هنا ملفات جميع مشاريعك.', 'Files are uploaded on each project’s Files page; the files of all your projects appear here.'), action: projects.length ? { href: 'project-files.html', label: T('ملفات المشروع', 'Project files') } : null });
         UI.state(cardsGrid, 'empty', { title: T('لا توجد ملفات بعد', 'No files yet') });

@@ -321,15 +321,21 @@
       createdProjectId = pid;
       $('wizardOpenProject').href = `project-overview.html?project=${encodeURIComponent(pid)}`;
       panels.forEach((p) => p.querySelectorAll('input,select,textarea,button').forEach((el) => { el.disabled = true; }));
-      if (problems.length) showAlert('warning', setupDone ? T('أُنشئ المشروع مع ملاحظات:', 'The project was created, with notes:') : T('أُنشئ المشروع، وبقيت خطوات تُكمل من صفحة المشروع:', 'The project was created; some steps remain on the project page:'), problems);
-      else showAlert('success', T('أُنشئ المشروع واكتمل إعداده.', 'The project was created and its setup is complete.'), [T(`أُنشئت ${names.length} مراحل، والمرحلة الحالية: ${names[0]}.`, `${names.length} stages were created; the current stage is ${names[0]}.`)]);
       S.invalidateProjects(); S.setCurrentProject(pid);
-      render(); $('wizardOpenProject').focus();
-      loadProjects();
+      // Keep partial-setup failures visible after navigation; never claim completion if setup failed.
+      try {
+        if (problems.length) sessionStorage.setItem('tammha-project-create-issues', problems.join(' • '));
+        else sessionStorage.removeItem('tammha-project-create-issues');
+      } catch (e) { /* optional */ }
+      location.assign('projects.html');
     } finally { loader.done(); createBtn.disabled = false; }
   });
 
   S.ready.then(() => {
+    try {
+      const issues = sessionStorage.getItem('tammha-project-create-issues');
+      if (issues) { sessionStorage.removeItem('tammha-project-create-issues'); UI.toast(issues, 'error'); }
+    } catch (e) { /* optional */ }
     loadProjects(); loadInvitations();
     if (new URLSearchParams(location.search).get('new') === '1') open();
   });

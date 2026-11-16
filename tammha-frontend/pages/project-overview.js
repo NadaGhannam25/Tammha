@@ -28,9 +28,8 @@
       [T('الإنجاز المتوقع', 'Expected completion'), UI.fmtDate(p.expectedCompletionDate || p.endDate)],
       [T('عدد أعضاء الفريق', 'Team members'), String(members.length)],
       [T('المشرف الأكاديمي', 'Academic supervisor'), sup ? UI.personName(sup) : T('لم يُحدد بعد', 'Not assigned yet')],
-      [T('نسبة الإنجاز', 'Completion'), `${Math.round(w.progress?.percent ?? 0)}%`],
-      [T('حالة المشروع', 'Project status'), statusLabel(p.status)]
-    ].map(([k, v], i) => `<div class="overview-stat${i === 5 ? ' overview-stat--status' : ''}"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
+      [T('نسبة الإنجاز', 'Completion'), `${Math.round(w.progress?.percent ?? 0)}%`]
+    ].map(([k, v]) => `<div class="overview-stat"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
     // team
     const me = S.user;
     $('ovTeam').innerHTML = members.map((m) => {
@@ -38,12 +37,12 @@
       const actions = isLeader && !lead ? `<span class="app-inline-form"><button class="app-btn app-btn--ghost" type="button" data-make-leader="${esc(m.userId)}">${esc(T('تعيين قائدًا', 'Make leader'))}</button><button class="app-btn app-btn--ghost" type="button" data-remove="${esc(m.userId)}">${esc(T('إزالة', 'Remove'))}</button></span>` : '';
       return `<div class="team-member"><span class="team-member__avatar">${esc(UI.initial(name))}</span><span class="team-member__name">${esc(name)}${m.userId === me.id ? ` <small class="app-muted">(${esc(T('أنت', 'you'))})</small>` : ''}</span><span class="team-member__role">${esc(lead ? T('قائد الفريق', 'Team Leader') : T('عضو', 'Member'))}</span>${actions}</div>`;
     }).join('');
-    $('ovTeamTools').innerHTML = isLeader ? `<div class="app-panel invite-panel"><h2>${esc(T('دعوة زملاء', 'Invite classmates'))}</h2>
+    $('ovTeamTools').innerHTML = isLeader ? `<div class="app-panel invite-panel"><details class="invite-panel__add"><summary>${esc(T('+ إضافة عضو', '+ Add member'))}</summary>
         <form class="invite-panel__group" id="ovInviteForm" novalidate>
           <label class="invite-panel__label" for="ovInviteValue">${esc(T('دعوة بالرقم الجامعي أو البريد الجامعي', 'Invite by student number or university email'))}</label>
           <div class="invite-panel__row"><input id="ovInviteValue" autocomplete="off" placeholder="${esc(T('مثال: 441234567', 'e.g. 441234567'))}"/><button class="app-btn app-btn--primary" type="submit">${esc(T('إرسال دعوة', 'Send invitation'))}</button></div>
           <small class="app-field-error" id="ovInviteError" role="alert"></small>
-        </form>
+        </form></details>
         <div class="invite-panel__group" id="ovInviteCode" aria-live="polite"></div>
         <ul class="app-list invite-panel__sent" id="ovSentInvites"></ul></div>`
       : `<button class="app-btn app-btn--ghost" type="button" data-leave>${esc(T('مغادرة الفريق', 'Leave the team'))}</button>`;
@@ -54,7 +53,7 @@
   async function loadInvitationCode() {
     try {
       const inv = await Api.get(`/teams/${w.team.id}/invitation`);
-      $('ovInviteCode').innerHTML = `<span class="invite-panel__label">${esc(T('أو شارك رمز الدعوة', 'Or share the invitation code'))}</span>
+      $('ovInviteCode').innerHTML = `<span class="invite-panel__label">${esc(T('رمز الدعوة', 'Invitation code'))}</span>
         <div class="invite-code"><code class="invite-code__value" dir="ltr">${esc(inv.code)}</code>
           <div class="invite-code__actions"><button class="app-btn" type="button" data-copy="${esc(inv.link)}">${esc(T('نسخ رابط الدعوة', 'Copy invitation link'))}</button><button class="app-btn app-btn--ghost" type="button" data-regenerate>${esc(T('إنشاء رمز جديد', 'Generate new code'))}</button></div></div>
         <small class="app-muted">${esc(T('الرمز الجديد يُبطل الرمز والرابط السابقين.', 'A new code makes the previous code and link stop working.'))}</small>`;

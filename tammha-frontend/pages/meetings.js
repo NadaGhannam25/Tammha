@@ -79,8 +79,12 @@
     const pid = $('meetingCreateProject').value; if (!pid) return;
     try {
       const w = await Api.get(`/projects/${pid}`);
-      const people = [...(w.team?.members || []).map((m) => m.user), ...(w.supervisors || []).map((x) => x.user || x)];
-      box.innerHTML = people.map((u) => `<label class="meeting-participants__item"><input type="checkbox" value="${esc(u.id)}" checked ${u.id === S.user.id ? 'disabled' : ''}/><span>${esc(UI.personName(u))}${u.role === 'SUPERVISOR' ? ` (${esc(T('المشرف', 'Supervisor'))})` : ''}</span></label>`).join('');
+      const people = [S.user, ...(w.team?.members || []).map((m) => m.user || m), ...(w.supervisors || []).map((x) => x.user || x)];
+      const unique = [...new Map(people.filter((u) => u && (u.id || u.userId)).map((u) => [u.id || u.userId, u])).values()];
+      box.innerHTML = unique.map((u) => {
+        const id = u.id || u.userId;
+        return `<label class="meeting-participants__item"><input type="checkbox" value="${esc(id)}" checked ${id === S.user.id ? 'disabled' : ''}/><span>${esc(UI.personName(u))}${id === S.user.id ? ` (${esc(T('أنت، منظم الاجتماع', 'You, organiser'))})` : ''}${u.role === 'SUPERVISOR' ? ` (${esc(T('المشرف', 'Supervisor'))})` : ''}</span></label>`;
+      }).join('');
     } catch (err) { box.textContent = Api.message(err); }
   }
   const showModal = () => { modal.hidden = false; $('meetingCreateError').textContent = ''; fillParticipants(); };
@@ -102,9 +106,12 @@
     const ids = [...$('meetingCreateParticipants').querySelectorAll('input:checked:not(:disabled)')].map((i) => i.value);
     UI.busy(form.querySelector('[type="submit"]'), async () => {
       try {
-        await Api.post('/meetings', { projectId: $('meetingCreateProject').value, title, description: $('meetingCreateGoals').value.trim() || undefined, scheduledAt: when.toISOString(), durationMinutes: Number($('meetingCreateDuration').value), participantIds: ids });
+        const payload = { projectId: $('meetingCreateProject').value, title, description: $('meetingCreateGoals').value.trim() || undefined, scheduledAt: when.toISOString(), durationMinutes: Number($('meetingCreateDuration').value) };
+        // An empty array violates the backend's ArrayMinSize(1). Omission lets it include the organiser by default.
+        if (ids.length) payload.participantIds = ids;
+        await Api.post('/meetings', payload);
         hideModal(); UI.toast(T('جُدول الاجتماع وأُبلغ المدعوون.', 'The meeting is scheduled and the participants were notified.'), 'success'); load();
-      } catch (er) { err.textContent = Api.message(er); }
+      } catch (er) { err.textContent = Api.message(er); console.warn('Meeting create failed:', er.code || er.status || 'unknown'); }
     });
   });
 

@@ -11,8 +11,8 @@
   const meetingsBox = document.getElementById('dashMeetings');
   const ICON_ARROW = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"></path></svg>';
 
-  async function projects() {
-    UI.state(box, 'loading');
+  async function projects(showInlineLoader = true) {
+    if (showInlineLoader) UI.state(box, 'loading');
     try {
       const items = await S.projects(true);
       if (!items.length) {
@@ -31,8 +31,8 @@
     } catch (e) { UI.state(box, 'error', { error: e, retry: projects }); }
   }
 
-  async function meetings() {
-    UI.state(meetingsBox, 'loading');
+  async function meetings(showInlineLoader = true) {
+    if (showInlineLoader) UI.state(meetingsBox, 'loading');
     try {
       const page = await Api.get('/meetings/upcoming', { query: { limit: 3 } });
       const items = page.items || page;
@@ -71,5 +71,10 @@
     } catch (e) { /* ignore */ }
   }
 
-  S.ready.then(() => { projects(); meetings(); calendar(); invitations(); });
+  S.ready.then(async () => {
+    const loader = window.TammhaLoader?.show({ label: T('جارٍ تحميل لوحة التحكم…', 'Loading dashboard…'), showSlow: false });
+    try {
+      await Promise.allSettled([projects(false), meetings(false), calendar(), invitations()]);
+    } finally { loader?.done(); }
+  });
 })();

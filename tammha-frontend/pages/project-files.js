@@ -29,7 +29,6 @@
         <div class="file-action-menu" data-file-menu-panel="d${esc(d.id)}" hidden role="menu">
           <button class="file-action-menu__item" data-doc-action="view" role="menuitem" type="button">${esc(T('عرض الملف', 'View file'))}</button>
           <button class="file-action-menu__item" data-doc-action="download" role="menuitem" type="button">${esc(T('تنزيل الملف', 'Download file'))}</button>
-          <button class="file-action-menu__item" data-doc-action="versions" role="menuitem" type="button">${esc(T('الإصدارات', 'Versions'))}</button>
           ${canEdit(d) && d.reviewStatus === 'UPLOADED' && (w.supervisors || []).length ? `<button class="file-action-menu__item" data-doc-action="review" role="menuitem" type="button">${esc(T('إرسال للمراجعة', 'Send for review'))}</button>` : ''}
           ${canEdit(d) ? `<button class="file-action-menu__item" data-doc-action="delete" role="menuitem" type="button">${esc(T('حذف الملف', 'Delete file'))}</button>` : ''}
         </div></div></div>`;
@@ -40,6 +39,7 @@
       const list = await Api.get('/documents', { query: { projectId: w.id } });
       docs = Array.isArray(list) ? list : list.items || [];
       body.innerHTML = docs.map(row).join('');
+      body.closest('.project-files-table')?.classList.toggle('is-empty', docs.length === 0);
       if (!docs.length) UI.state(body, 'empty', { title: T('لا توجد ملفات بعد', 'No files yet'), text: T('ارفع ملفات المشروع من زر «إضافة ملف».', 'Upload project files with “Add file”.') });
       filter();
     } catch (e) { UI.state(body, 'error', { error: e, retry: load }); }
