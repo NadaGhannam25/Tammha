@@ -159,8 +159,8 @@ describe('Integrations configuration (P10)', () => {
         enabled: false,
       });
       expect(read({ EMAIL_ENABLED: 'true' }).errors).toEqual([
-        'SMTP_HOST is required when EMAIL_ENABLED=true',
         'EMAIL_FROM is required when EMAIL_ENABLED=true',
+        'SMTP_HOST is required when EMAIL_ENABLED=true',
         'SMTP_USER is required when EMAIL_ENABLED=true',
         'SMTP_PASSWORD is required when EMAIL_ENABLED=true',
       ]);
@@ -200,13 +200,43 @@ describe('Integrations configuration (P10)', () => {
         EMAIL_REPLY_TO: 'nope',
       });
       expect(errors).toEqual([
-        'EMAIL_PROVIDER must be smtp (the only supported e-mail provider)',
+        'EMAIL_PROVIDER must be smtp or resend',
         'SMTP_PORT must be an integer between 1 and 65535',
         'SMTP_SECURE must be true or false',
         'EMAIL_FROM must be an address, e.g. "Tammha <support@tammha.site>"',
         'EMAIL_REPLY_TO must be an e-mail address',
       ]);
       expect(JSON.stringify(errors)).not.toContain('smtp-secret-value');
+    });
+  });
+
+  describe('Email (Resend)', () => {
+    it('requires a Resend API key and the sender address when enabled', () => {
+      expect(
+        read({ EMAIL_ENABLED: 'true', EMAIL_PROVIDER: 'resend' }).errors,
+      ).toEqual([
+        'EMAIL_FROM is required when EMAIL_ENABLED=true',
+        'RESEND_API_KEY is required when EMAIL_ENABLED=true',
+      ]);
+    });
+
+    it('reads Resend config without requiring SMTP credentials', () => {
+      const { config, errors } = read({
+        EMAIL_ENABLED: 'true',
+        EMAIL_PROVIDER: 'resend',
+        RESEND_API_KEY: 're_test_not_real',
+        EMAIL_FROM: 'Tammha <notifications@tammha.site>',
+        EMAIL_REPLY_TO: 'support@tammha.site',
+      });
+      expect(errors).toEqual([]);
+      expect(config.email).toEqual({
+        enabled: true,
+        provider: 'resend',
+        apiKey: 're_test_not_real',
+        from: 'Tammha <notifications@tammha.site>',
+        replyTo: 'support@tammha.site',
+        timeoutMs: 15000,
+      });
     });
   });
 
