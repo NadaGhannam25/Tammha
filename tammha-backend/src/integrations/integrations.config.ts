@@ -3,7 +3,7 @@
  *
  *  - LiveKit  (embedded meetings)        LIVEKIT_ENABLED
  *  - AI       (Gemini)                   AI_ENABLED (+ optional AI_PROVIDER=gemini)
- *  - Email    (SMTP, via the outbox)      EMAIL_ENABLED (+ optional EMAIL_PROVIDER=smtp)
+ *  - Email    (SMTP or Resend HTTPS API)   EMAIL_ENABLED + EMAIL_PROVIDER
  *
  * Rules
  *  - Every integration is OFF unless its *_ENABLED flag is "true".
@@ -47,15 +47,10 @@ export type AiConfig =
       timeoutMs: number;
     };
 
-/** SMTP is the e-mail provider (EMAIL_PROVIDER may be omitted). */
-export const EMAIL_PROVIDERS = ['smtp'] as const;
+/** SMTP remains the default; Resend uses HTTPS (works on Render Free). */
+export const EMAIL_PROVIDERS = ['smtp', 'resend'] as const;
 
-/**
- * E-mail: delivered through the EMAIL_SENDER port by SMTP (any mailbox provider:
- * e.g. the official project mailbox support@tammha.site). Notification e-mails go through
- * the P11 outbox (email_deliveries, retries); account e-mails (verification, password
- * reset) are sent after the request's database work. In-app notifications never depend on it.
- */
+/** E-mail sender is shared by account emails and the notification outbox. */
 export type EmailConfig =
   | { enabled: false }
   | {
@@ -68,6 +63,14 @@ export type EmailConfig =
       user: string;
       password: string;
       /** e.g. "Tammha <support@tammha.site>" */
+      from: string;
+      replyTo: string | null;
+      timeoutMs: number;
+    }
+  | {
+      enabled: true;
+      provider: 'resend';
+      apiKey: string;
       from: string;
       replyTo: string | null;
       timeoutMs: number;
@@ -84,13 +87,14 @@ export const INTEGRATION_DEFAULTS = {
   AI_REQUEST_TIMEOUT_MS: 30000,
   SMTP_PORT: 587,
   SMTP_TIMEOUT_MS: 15000,
+  RESEND_TIMEOUT_MS: 15000,
 } as const;
 
 /** Variables each provider needs once enabled (used in messages and docs). */
 export const REQUIRED_VARIABLES = {
   livekit: ['LIVEKIT_URL', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET'],
   ai: ['GEMINI_API_KEY', 'GEMINI_MODEL'],
-  email: ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD', 'EMAIL_FROM'],
+  email: ['EMAIL_FROM'],
 } as const;
 
 /** "support@tammha.site" or "Tammha <support@tammha.site>" */
@@ -207,16 +211,14 @@ export function readIntegrationsConfig(env: Env): {
     intInRange('AI_REQUEST_TIMEOUT_MS', 1000, 120000, 0); // format check only
   }
 
-  // ---- Email (SMTP) ---------------------------------------------------------
+  // ---- Email (SMTP or Resend) ----------------------------------------------
   let email: EmailConfig = { enabled: false };
   const emailProvider = str('EMAIL_PROVIDER').toLowerCase();
   if (
     emailProvider &&
     !EMAIL_PROVIDERS.includes(emailProvider as (typeof EMAIL_PROVIDERS)[number])
   ) {
-    errors.push(
-      'EMAIL_PROVIDER must be smtp (the only supported e-mail provider)',
-    );
+    errors.push('EMAIL_PROVIDER must be smtp or resend');
   }
   const smtpPort = intInRange(
     'SMTP_PORT',
@@ -239,10 +241,6 @@ export function readIntegrationsConfig(env: Env): {
   }
   if (flag('EMAIL_ENABLED')) {
     const why = 'EMAIL_ENABLED=true';
-    const host = required('SMTP_HOST', why);
-    if (host && !PLACEHOLDER.test(host) && !HOST_NAME.test(host)) {
-      errors.push('SMTP_HOST must be a host name, e.g. smtp.your-provider.com');
-    }
     const from = required('EMAIL_FROM', why);
     if (from && !PLACEHOLDER.test(from) && !FROM_ADDRESS.test(from)) {
       errors.push(
@@ -253,18 +251,42 @@ export function readIntegrationsConfig(env: Env): {
     if (replyTo && !PLAIN_ADDRESS.test(replyTo)) {
       errors.push('EMAIL_REPLY_TO must be an e-mail address');
     }
-    email = {
-      enabled: true,
-      provider: 'smtp',
-      host,
-      port: smtpPort,
-      secure,
-      user: required('SMTP_USER', why),
-      password: required('SMTP_PASSWORD', why),
-      from,
-      replyTo,
-      timeoutMs: smtpTimeout,
-    };
+    if (emailProvider === 'resend') {
+      const apiKey = required('RESEND_API_KEY', why);
+      // Do not log or echo the key. An incorrect key is rejected by Resend.
+      email = {
+        enabled: true,
+        provider: 'resend',
+        apiKey,
+        from,
+        replyTo,
+        timeoutMs: intInRange(
+          'RESEND_TIMEOUT_MS',
+          1000,
+          60000,
+          INTEGRATION_DEFAULTS.RESEND_TIMEOUT_MS,
+        ),
+      };
+    } else {
+      const host = required('SMTP_HOST', why);
+      if (host && !PLACEHOLDER.test(host) && !HOST_NAME.test(host)) {
+        errors.push(
+          'SMTP_HOST must be a host name, e.g. smtp.your-provider.com',
+        );
+      }
+      email = {
+        enabled: true,
+        provider: 'smtp',
+        host,
+        port: smtpPort,
+        secure,
+        user: required('SMTP_USER', why),
+        password: required('SMTP_PASSWORD', why),
+        from,
+        replyTo,
+        timeoutMs: smtpTimeout,
+      };
+    }
   }
 
   return { config: { livekit, ai, email }, errors };

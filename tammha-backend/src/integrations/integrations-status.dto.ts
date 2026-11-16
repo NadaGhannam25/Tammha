@@ -31,10 +31,10 @@ export class EmailStatusDto {
   state!: string;
   @ApiProperty({
     nullable: true,
-    enum: ['smtp'],
-    description: 'smtp when e-mail delivery is configured, otherwise null',
+    enum: ['smtp', 'resend'],
+    description: 'Configured e-mail delivery provider, otherwise null',
   })
-  provider!: 'smtp' | null;
+  provider!: 'smtp' | 'resend' | null;
   @ApiProperty({
     nullable: true,
     type: String,

@@ -18,6 +18,8 @@ const KEYS = [
   'GEMINI_MODEL',
   'EMAIL_ENABLED',
   'EMAIL_PROVIDER',
+  'RESEND_API_KEY',
+  'RESEND_TIMEOUT_MS',
   'SMTP_HOST',
   'SMTP_PORT',
   'SMTP_SECURE',
@@ -88,7 +90,7 @@ export class IntegrationsConfigService implements OnModuleInit {
     this.logger.log(
       `LiveKit: ${s.livekit.state.toLowerCase()} · ` +
         `AI: ${s.ai.enabled ? `${s.ai.provider} (${s.ai.model})` : 'disabled'} · ` +
-        `Email: ${s.email.enabled ? `smtp (from ${s.email.from})` : 'disabled (in-app notifications only)'}`,
+        `Email: ${s.email.enabled ? `${s.email.provider} (from ${s.email.from})` : 'disabled (in-app notifications only)'}`,
     );
   }
 }
