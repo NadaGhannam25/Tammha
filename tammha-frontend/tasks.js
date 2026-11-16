@@ -50,6 +50,7 @@
         <span class="${isOverdue(task) ? 'tasks-row__due--late' : ''}" role="cell">${esc(task.due ? UI.fmtDate(task.due) : '—')}</span>
         <span role="cell"><button class="tasks-row__open" data-task-open="${esc(task.id)}" type="button">${esc(T('عرض', 'View'))}<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"></path></svg></button></span>
       </div>`).join('');
+    body.closest('.tasks-table')?.classList.toggle('is-empty', visible.length === 0);
     $('tasksEmpty').hidden = visible.length !== 0;
     $('tasksEmpty').textContent = tasks.length ? T('لا توجد مهام في هذا القسم.', 'No tasks in this section.') : T('لا توجد مهام لهذا المشروع بعد.', 'This project has no tasks yet.');
     document.querySelectorAll('[data-count]').forEach((el) => { el.textContent = tasks.filter(FILTERS[el.dataset.count] || FILTERS.all).length; });

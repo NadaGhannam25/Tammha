@@ -188,12 +188,11 @@
     let end = bar.querySelector('.app-topbar-end, .sv-topbar-end');
     if (!end) { end = document.createElement('div'); end.className = 'app-topbar-end'; bar.append(end); }
     const profile = bar.querySelector('.profile'); if (profile) end.append(profile);
-    end.append(wrap);
+    end.prepend(wrap);
     const btn = wrap.querySelector('.app-bell__button');
     const panel = wrap.querySelector('.app-bell__panel');
     const list = wrap.querySelector('.app-bell__list');
     async function load() {
-      state(list, 'loading');
       try {
         const page = await Api.get('/notifications', { query: { limit: 20 } });
         const items = Array.isArray(page) ? page : page.items || page.data || [];
@@ -202,6 +201,7 @@
             <strong>${esc(v.title)}</strong><span>${esc(v.text)}</span><small>${esc(fmtDateTime(n.createdAt))}</small></button>`; }).join('');
       } catch (e) { state(list, 'error', { error: e, retry: load }); }
     }
+    load(); // Prefetch notifications.
     btn.addEventListener('click', () => {
       const open = panel.hidden;
       panel.hidden = !open; btn.setAttribute('aria-expanded', String(open));

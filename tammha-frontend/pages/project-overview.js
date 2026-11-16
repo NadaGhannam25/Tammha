@@ -28,9 +28,8 @@
       [T('الإنجاز المتوقع', 'Expected completion'), UI.fmtDate(p.expectedCompletionDate || p.endDate)],
       [T('عدد أعضاء الفريق', 'Team members'), String(members.length)],
       [T('المشرف الأكاديمي', 'Academic supervisor'), sup ? UI.personName(sup) : T('لم يُحدد بعد', 'Not assigned yet')],
-      [T('نسبة الإنجاز', 'Completion'), `${Math.round(w.progress?.percent ?? 0)}%`],
-      [T('حالة المشروع', 'Project status'), statusLabel(p.status)]
-    ].map(([k, v], i) => `<div class="overview-stat${i === 5 ? ' overview-stat--status' : ''}"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
+      [T('نسبة الإنجاز', 'Completion'), `${Math.round(w.progress?.percent ?? 0)}%`]
+    ].map(([k, v]) => `<div class="overview-stat"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
     // team
     const me = S.user;
     $('ovTeam').innerHTML = members.map((m) => {

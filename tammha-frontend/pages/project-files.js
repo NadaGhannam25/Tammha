@@ -40,6 +40,7 @@
       const list = await Api.get('/documents', { query: { projectId: w.id } });
       docs = Array.isArray(list) ? list : list.items || [];
       body.innerHTML = docs.map(row).join('');
+      body.closest('.project-files-table')?.classList.toggle('is-empty', docs.length === 0);
       if (!docs.length) UI.state(body, 'empty', { title: T('لا توجد ملفات بعد', 'No files yet'), text: T('ارفع ملفات المشروع من زر «إضافة ملف».', 'Upload project files with “Add file”.') });
       filter();
     } catch (e) { UI.state(body, 'error', { error: e, retry: load }); }

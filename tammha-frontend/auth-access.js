@@ -128,7 +128,7 @@
     try {
       if (form.dataset.authForm === 'login') {
         const [email, password] = [form.querySelector('input[type="email"]').value.trim(), form.querySelector('input[type="password"]').value];
-        const res = await Api.post('/auth/login', { email, password }, { auth: false, loader: { label: isEnglish() ? 'Signing in…' : 'جارٍ تسجيل الدخول…' } });
+        const res = await Api.post('/auth/login', { email, password }, { auth: false, loader: { label: isEnglish() ? 'Signing in…' : 'جارٍ تسجيل الدخول…', showSlow: false } });
         Api.saveTokens(res.tokens, res.user);
         if (res.user.emailVerified === false) { location.href = 'verify-email.html?pending=1'; return; }
         // the account decides the pages, whatever account type was ticked

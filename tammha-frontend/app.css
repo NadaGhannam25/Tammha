@@ -262,3 +262,43 @@ body.has-wizard{overflow:hidden}
 #tasksBody > .app-state{min-height:200px;display:grid;align-content:center}
 .stages-table:has(#stagesBody > .app-state) .stages-row--head{display:none}
 #stagesBody > .app-state{min-height:200px;display:grid;align-content:center}
+
+/* TAMMHA QA NOV 16 BATCH */
+.app-bell__button{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+}
+.app-bell__button:hover{background:transparent!important}
+.app-bell__panel{inset-inline-start:0;inset-inline-end:auto}
+.project-status,.stage-state,.stage-current-tag{
+  background:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+}
+.tasks-table.is-empty>.tasks-row--head,
+.project-files-table.is-empty>.project-files-row--head{
+  display:none!important;
+}
+#ovTeam .team-member{min-height:54px;padding:9px 11px;gap:8px}
+#ovTeam .team-member__avatar{
+  width:34px;height:34px;min-width:34px;
+}
+#ovTeamTools .invite-panel{padding:12px;gap:10px}
+#ovTeamTools .invite-code{
+  background:transparent;border:0;padding:8px;gap:6px;
+}
+#ovTeamTools .invite-code__value{
+  font-size:13px;letter-spacing:.07em;
+}
+.projects-page .app-inline-form:has(#openProjectWizard)>a,
+.projects-page .app-inline-form:has(#openProjectWizard)>button{
+  box-sizing:border-box;
+  min-height:44px;height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 18px;
+  margin:0;
+}

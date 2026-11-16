@@ -19,7 +19,7 @@
     tableBody.innerHTML = files.map((d) => {
       const name = d.fileName || d.title;
       return `<div class="project-files-row" data-doc="${esc(d.id)}" role="row">
-        <div class="file-name-cell" role="cell"><img alt="${esc(Docs.type(name))}" src="${Docs.icon(name)}"/><div><strong title="${esc(name)}">${esc(d.title)}</strong><small>${esc(name)} ${Docs.reviewChip(d.reviewStatus)}</small></div></div>
+        <div class="file-name-cell" role="cell"><img alt="${esc(Docs.type(name))}" src="${Docs.icon(name)}"/><div><strong title="${esc(name)}">${esc(d.title)}</strong><small>${esc(name)}</small></div></div>
         <span class="file-project" role="cell">${esc(names[d.projectId] || '')}</span>
         <span class="file-type" role="cell">${esc(Docs.type(name))}</span>
         <span role="cell">${esc(UI.fmtDate(d.createdAt))}</span>
