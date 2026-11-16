@@ -8,6 +8,7 @@ import {
 } from './meetings/meeting-video.provider';
 import { AiTextProvider, AiTextResult } from './ai/ai.provider';
 import { EmailSendResult, EmailSender } from './email/email.sender';
+import { ResendEmailSender } from './email/resend-email.sender';
 import {
   createSmtpTransport,
   SmtpEmailSender,
@@ -19,7 +20,7 @@ import {
  * Implementations of the three ports:
  *  - meetings: LiveKit (local token signing) when LIVEKIT_ENABLED=true
  *  - AI:       Gemini when AI_ENABLED=true
- *  - e-mail:   SMTP (nodemailer) when EMAIL_ENABLED=true; otherwise disabled and the outbox stays idle
+ *  - e-mail:   SMTP or Resend when EMAIL_ENABLED=true; otherwise disabled and the outbox stays idle
  * A disabled integration answers 503 INTEGRATION_DISABLED and never contacts a provider.
  */
 export function createMeetingVideoProvider(
@@ -55,7 +56,9 @@ export function createEmailSender(
     settings: SmtpSettings,
   ) => SmtpTransport = createSmtpTransport,
 ): EmailSender {
-  if (config.enabled)
+  if (config.enabled && config.provider === 'resend')
+    return new ResendEmailSender(config);
+  if (config.enabled && config.provider === 'smtp')
     return new SmtpEmailSender(config, transportFactory(config));
   return {
     name: 'disabled',

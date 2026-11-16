@@ -12,6 +12,7 @@
 import { config as loadEnv } from 'dotenv';
 import { resolve } from 'path';
 import { readIntegrationsConfig } from '../src/integrations/integrations.config';
+import { ResendEmailSender } from '../src/integrations/email/resend-email.sender';
 import {
   createSmtpTransport,
   SmtpEmailSender,
@@ -33,9 +34,33 @@ async function main() {
   }
   if (!email.enabled) {
     console.log(
-      'NOT RUN: EMAIL_ENABLED is not true. Set EMAIL_ENABLED, SMTP_HOST, SMTP_USER, SMTP_PASSWORD and EMAIL_FROM in .env.',
+      'NOT RUN: EMAIL_ENABLED is not true. Set EMAIL_ENABLED and the provider-specific credentials in .env.',
     );
     process.exit(2);
+  }
+  if (email.provider === 'resend') {
+    const to = arg('to');
+    if (!to) {
+      console.log(
+        'Resend configured. Specify --to to send ONE real test email.',
+      );
+      return;
+    }
+    const sender = new ResendEmailSender(email);
+    try {
+      const sent = await sender.send({
+        to,
+        subject: 'Tammha: e-mail delivery test',
+        text: 'This is a test email from Tammha using Resend HTTPS API.',
+      });
+      console.log(`Resend accepted message: ${sent.messageId ?? 'n/a'}`);
+    } catch (error) {
+      console.error(
+        `Resend test failed: ${(error as { code?: string }).code ?? 'EMAIL_SEND_FAILED'}`,
+      );
+      process.exitCode = 1;
+    }
+    return;
   }
   const sender = new SmtpEmailSender(email, createSmtpTransport(email));
   console.log(
