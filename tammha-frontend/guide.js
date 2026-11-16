@@ -47,7 +47,7 @@
       return;
     }
     const uni = sel.kind === 'UNIVERSITY' ? universities.find((u) => u.key === sel.key) : null;
-    const source = sel.kind === 'UNIVERSITY' ? T(`الدليل الرسمي — ${uName(uni) || sel.universityName}`, `Official handbook — ${uName(uni) || sel.universityName}`) : T('دليل خاص مرفوع للمشروع', 'Handbook uploaded for the project');
+    const source = sel.kind === 'UNIVERSITY' ? T(`الدليل الرسمي — ${uName(uni) || sel.universityName}`, `Official handbook — ${uName(uni) || sel.universityName}`) : T('دليل خاص رفعه الفريق (خارج مكتبة الأدلة الرسمية)', 'Team-uploaded handbook (outside the official library)');
     const statusText = sel.kind === 'UPLOAD' && !sel.ready ? (sel.failed ? T('تعذّرت قراءة نص الدليل. ارفع ملف PDF يحتوي على نص قابل للتحديد.', 'The handbook text could not be read. Upload a PDF with selectable text.') : T('جارٍ استخراج نص الدليل…', 'Extracting the handbook text…')) : '';
     const myUni = universities.find((u) => u.isMyUniversity);
     body.innerHTML = `<div class="hb-file">
@@ -88,7 +88,7 @@
     box.innerHTML = `<div class="hb-file hb-file--option"><img alt="" src="assets/file-pdf.png"/>
       <div class="hb-file__text"><strong dir="auto">${esc(h.fileName)}</strong><small>${esc(UI.fmtSize(h.fileSize))}${h.pageCount ? ` · ${esc(h.pageCount)} ${esc(T('صفحة', 'pages'))}` : ''} · ${esc(T('أُضيف في', 'added'))} ${esc(UI.fmtDate(h.uploadedAt))}</small></div></div>
       <div class="hb-actions"><button class="hb-btn hb-btn--ghost" data-view-university type="button">${esc(T('عرض الملف', 'View file'))}</button>
-      ${inUse ? `<span class="hb-in-use">${esc(T('معتمد للمشروع', 'In use for the project'))}</span>` : `<button class="hb-btn" data-use-university ${isLeader() ? '' : 'disabled'} type="button">${esc(T('اعتماد الدليل للمشروع', 'Use for the project'))}</button>`}</div>
+      ${inUse ? '' : `<button class="hb-btn" data-use-university ${isLeader() ? '' : 'disabled'} type="button">${esc(T('اعتماد الدليل للمشروع', 'Use for the project'))}</button>`}</div>
       ${isLeader() ? '' : `<p class="hb-note">${esc(T('يعتمد دليل المشروع قائد الفريق.', 'The Team Leader sets the project handbook.'))}</p>`}`;
   }
   uniSelect.addEventListener('change', renderUniversity);

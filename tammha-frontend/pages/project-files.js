@@ -29,7 +29,6 @@
         <div class="file-action-menu" data-file-menu-panel="d${esc(d.id)}" hidden role="menu">
           <button class="file-action-menu__item" data-doc-action="view" role="menuitem" type="button">${esc(T('عرض الملف', 'View file'))}</button>
           <button class="file-action-menu__item" data-doc-action="download" role="menuitem" type="button">${esc(T('تنزيل الملف', 'Download file'))}</button>
-          <button class="file-action-menu__item" data-doc-action="versions" role="menuitem" type="button">${esc(T('الإصدارات', 'Versions'))}</button>
           ${canEdit(d) && d.reviewStatus === 'UPLOADED' && (w.supervisors || []).length ? `<button class="file-action-menu__item" data-doc-action="review" role="menuitem" type="button">${esc(T('إرسال للمراجعة', 'Send for review'))}</button>` : ''}
           ${canEdit(d) ? `<button class="file-action-menu__item" data-doc-action="delete" role="menuitem" type="button">${esc(T('حذف الملف', 'Delete file'))}</button>` : ''}
         </div></div></div>`;
@@ -58,7 +57,6 @@
     const d = docs.find((x) => x.id === b.closest('[data-doc]').dataset.doc); if (!d) return;
     const a = b.dataset.docAction;
     if (a === 'view' || a === 'download') Docs.openDocument(d.id, a === 'download').catch((err) => UI.toast(Api.message(err), 'error'));
-    if (a === 'versions') Docs.versions(d, canEdit(d), load);
     if (a === 'review') UI.busy(b, async () => { await Api.post(`/documents/${encodeURIComponent(d.id)}/submit-for-review`, {}); UI.toast(T('أُرسل الملف إلى المشرف للمراجعة.', 'The file was sent to the supervisor for review.'), 'success'); load(); });
     if (a === 'delete' && window.confirm(T(`حذف «${d.title}» وجميع إصداراته؟`, `Delete “${d.title}” and all its versions?`))) {
       UI.busy(b, async () => { await Api.del(`/documents/${d.id}`); UI.toast(T('حُذف الملف.', 'File deleted.'), 'success'); load(); });

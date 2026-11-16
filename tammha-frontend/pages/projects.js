@@ -322,7 +322,7 @@
       $('wizardOpenProject').href = `project-overview.html?project=${encodeURIComponent(pid)}`;
       panels.forEach((p) => p.querySelectorAll('input,select,textarea,button').forEach((el) => { el.disabled = true; }));
       if (problems.length) showAlert('warning', setupDone ? T('أُنشئ المشروع مع ملاحظات:', 'The project was created, with notes:') : T('أُنشئ المشروع، وبقيت خطوات تُكمل من صفحة المشروع:', 'The project was created; some steps remain on the project page:'), problems);
-      else showAlert('success', T('أُنشئ المشروع واكتمل إعداده.', 'The project was created and its setup is complete.'), [T(`أُنشئت ${names.length} مراحل، والمرحلة الحالية: ${names[0]}.`, `${names.length} stages were created; the current stage is ${names[0]}.`)]);
+      else { S.invalidateProjects(); S.setCurrentProject(pid); location.assign('projects.html'); return; }
       S.invalidateProjects(); S.setCurrentProject(pid);
       render(); $('wizardOpenProject').focus();
       loadProjects();
