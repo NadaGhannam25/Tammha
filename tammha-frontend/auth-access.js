@@ -85,10 +85,54 @@
   // ----- University list (register) -----
   const uniSelect = form.querySelector('[data-university]');
   let universities = [];
+  const OTHER = '__other__';
+  let otherLabel = null;
+  let otherInput = null;
+  const clean = (s) => String(s == null ? '' : s).replace(/[<>&"]/g, '');
+  const uniLabel = (u) => (isEnglish() ? (u.nameEn || u.name) : (u.nameAr || u.name));
+  function syncOther() {
+    if (!otherLabel) return;
+    const on = uniSelect.value === OTHER;
+    otherLabel.hidden = !on;
+    otherInput.disabled = !on;
+    if (!on) setError(otherInput, '');
+  }
+  // Listed universities in the interface language (public, private, others), then "Other",
+  // which opens a field for the name of a university that is not listed.
+  function renderUniversities() {
+    if (!uniSelect) return;
+    const en = isEnglish();
+    const keep = uniSelect.value;
+    const collator = new Intl.Collator(en ? 'en' : 'ar');
+    const listed = universities.filter((u) => !u.isCustom).sort((a, b) => collator.compare(uniLabel(a), uniLabel(b)));
+    const groups = [['PUBLIC', en ? 'Public universities' : 'الجامعات الحكومية'], ['PRIVATE', en ? 'Private universities' : 'الجامعات الأهلية'], [null, en ? 'Other listed universities' : 'جامعات أخرى']];
+    let html = `<option value="">${en ? 'Select the university' : 'اختر الجامعة'}</option>`;
+    groups.forEach(([type, title]) => {
+      const list = listed.filter((u) => (u.type || null) === type);
+      if (list.length) html += `<optgroup label="${clean(title)}">${list.map((u) => `<option value="${clean(u.id)}">${clean(uniLabel(u))}</option>`).join('')}</optgroup>`;
+    });
+    html += `<option value="${OTHER}">${en ? 'Other (type the university name)' : 'أخرى (اكتب اسم الجامعة)'}</option>`;
+    uniSelect.innerHTML = html;
+    if (keep && [...uniSelect.options].some((o) => o.value === keep)) uniSelect.value = keep;
+    otherLabel.querySelector('span').textContent = en ? 'University name' : 'اسم الجامعة';
+    otherInput.placeholder = en ? 'Type the full name of your university' : 'اكتب الاسم الكامل لجامعتك';
+    syncOther();
+  }
+  if (uniSelect) {
+    otherLabel = document.createElement('label');
+    otherLabel.hidden = true;
+    otherLabel.setAttribute('data-university-other', '');
+    otherLabel.innerHTML = '<span></span><input type="text" maxlength="150" autocomplete="organization" data-university-name disabled>';
+    (uniSelect.closest('label') || uniSelect).after(otherLabel);
+    otherInput = otherLabel.querySelector('input');
+    uniSelect.addEventListener('change', syncOther);
+    renderUniversities();
+    new MutationObserver(renderUniversities).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  }
   if (uniSelect && window.TammhaApi) {
     window.TammhaApi.get('/universities', { auth: false }).then((list) => {
       universities = Array.isArray(list) ? list : [];
-      uniSelect.insertAdjacentHTML('beforeend', universities.map((u) => `<option value="${u.id}">${u.name.replace(/[<>&"]/g, '')}</option>`).join(''));
+      renderUniversities();
     }).catch((e) => showFormError(window.TammhaApi.message(e)));
   }
 
@@ -139,14 +183,14 @@
       // a supervisor has no student number. The e-mail is verified before full access.
       const isSupervisor = role() === 'supervisor';
       const inputs = form.querySelectorAll('input:not([type="radio"])');
-      const fullName = inputs[0].value.trim().split(/\s+/);
+      const fullName = form.querySelector('input[autocomplete="name"]').value.trim().split(/\s+/);
       const email = form.querySelector('[data-university-email]').value.trim();
       const body = {
         firstName: fullName[0],
         lastName: fullName.slice(1).join(' ') || undefined,
         email,
         password: form.querySelectorAll('input[type="password"]')[0].value,
-        universityId: uniSelect.value,
+        ...(uniSelect.value === OTHER ? { universityName: otherInput.value.trim() } : { universityId: uniSelect.value }),
         role: isSupervisor ? 'SUPERVISOR' : 'STUDENT',
         ...(isSupervisor ? {} : { studentNumber: form.querySelector('[data-student-number]').value.trim(), accountEmailIsUniversityEmail: true })
       };

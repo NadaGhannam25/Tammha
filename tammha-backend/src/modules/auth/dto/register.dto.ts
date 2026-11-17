@@ -78,14 +78,30 @@ export class RegisterDto {
   @IsIn(['ar', 'en'])
   preferredLanguage?: 'ar' | 'en';
 
-  @ApiProperty({
-    description: 'ID of an active university (see GET /universities)',
+  @ApiPropertyOptional({
+    description:
+      'ID of an active university (see GET /universities). Required unless universityName is given.',
     example: 'clvt7xyz9k000abcdef1g',
   })
+  @IsOptional()
   @Trim()
   @IsString()
   @IsNotEmpty()
-  universityId!: string;
+  universityId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Name of a university that is not listed by GET /universities ("Other"), used when universityId is absent. ' +
+      'The same name (any letter case or hamza spelling) links to the same university. Its e-mails are not ' +
+      'domain-restricted, but personal mailboxes are refused and the address must be verified.',
+    example: 'Example University',
+  })
+  @IsOptional()
+  @Trim()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(150)
+  universityName?: string;
 
   @ApiProperty({
     description:

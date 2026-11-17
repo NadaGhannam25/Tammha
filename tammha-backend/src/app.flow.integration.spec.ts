@@ -68,6 +68,10 @@ describe('Complete flow (AppModule integration)', () => {
       {
         id: universityId,
         name: 'Almaarefa University',
+        nameEn: 'Almaarefa University',
+        nameAr: 'جامعة المعرفة',
+        type: 'PRIVATE',
+        isCustom: false,
         code: 'UM',
         emailDomains: ['um.edu.sa'],
       },

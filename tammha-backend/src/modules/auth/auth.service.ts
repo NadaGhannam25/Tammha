@@ -25,6 +25,11 @@ import { AccountEmailService } from './account-email.service';
 import { UniversityIdentityService } from './university-identity.service';
 import { readEmailVerificationRequired } from './email-verification.config';
 import { emailDomainAllowed } from '@common/identity/university-email';
+import {
+  customUniversityCode,
+  findCatalogUniversity,
+  normalizeUniversityName,
+} from '@modules/universities/saudi-universities';
 
 /** Minimum time between two verification e-mails for one user. */
 const RESEND_COOLDOWN_MS = 60 * 1000;
@@ -94,7 +99,7 @@ export class AuthService {
    * (POST /admin/supervisors) and activated through an e-mailed link.
    */
   async register(registerDto: RegisterDto) {
-    const { email, password, firstName, lastName, universityId } = registerDto;
+    const { email, password, firstName, lastName } = registerDto;
     const role = registerDto.role ?? UserRole.STUDENT;
     if (role !== UserRole.STUDENT && role !== UserRole.SUPERVISOR) {
       throw new BadRequestException(
@@ -113,15 +118,7 @@ export class AuthService {
       });
     }
 
-    const university = await this.prisma.university.findUnique({
-      where: { id: universityId },
-      select: { id: true, isActive: true, emailDomains: true },
-    });
-    if (!university || !university.isActive) {
-      throw new BadRequestException(
-        'universityId does not match an active university',
-      );
-    }
+    const university = await this.resolveRegistrationUniversity(registerDto);
 
     // SUPERVISOR self-registration: the account e-mail must be a university address of the
     // chosen university (never a personal mailbox). Owning it is proven by the verification
@@ -161,7 +158,7 @@ export class AuthService {
         firstName,
         lastName,
         role,
-        universityId,
+        universityId: university.id,
         studentNumber,
         pendingUniversityEmail,
         preferredLanguage: registerDto.preferredLanguage ?? 'ar',
@@ -193,6 +190,74 @@ export class AuthService {
       tokens,
       emailVerificationRequired: this.emailVerificationRequired,
     };
+  }
+
+  /**
+   * The university of a new account: a listed university (universityId) or, when it is not
+   * listed, the name the user typed (universityName). A typed name that matches a listed
+   * university (English or Arabic) uses that row; otherwise one row per normalised name is
+   * created (code CUSTOM-…), so everyone who types the same university shares it and the
+   * same-university rules keep working. Such a university has no e-mail domains: any
+   * non-personal address is accepted and must still be verified.
+   */
+  private async resolveRegistrationUniversity(dto: RegisterDto) {
+    const select = { id: true, isActive: true, emailDomains: true } as const;
+    const inactive = () =>
+      new BadRequestException('universityId does not match an active university');
+    if (dto.universityId) {
+      const row = await this.prisma.university.findUnique({
+        where: { id: dto.universityId },
+        select,
+      });
+      if (!row || !row.isActive) throw inactive();
+      return row;
+    }
+    const name = normalizeUniversityName(dto.universityName ?? '');
+    if (name.length < 3) {
+      throw new BadRequestException({
+        code: 'UNIVERSITY_REQUIRED',
+        message: 'Select your university or type its name',
+      });
+    }
+    const listed = findCatalogUniversity(name);
+    if (listed) {
+      const row = await this.prisma.university.findUnique({
+        where: { code: listed.code },
+        select,
+      });
+      if (row?.isActive) return row;
+    }
+    const sameName = await this.prisma.university.findUnique({
+      where: { name },
+      select,
+    });
+    if (sameName) {
+      if (!sameName.isActive) throw inactive();
+      return sameName;
+    }
+    const code = customUniversityCode(name);
+    const existing = await this.prisma.university.findUnique({
+      where: { code },
+      select,
+    });
+    if (existing) {
+      if (!existing.isActive) throw inactive();
+      return existing;
+    }
+    try {
+      return await this.prisma.university.create({
+        data: { name, code, isActive: true },
+        select,
+      });
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) throw error;
+      const row = await this.prisma.university.findUnique({
+        where: { code },
+        select,
+      });
+      if (row?.isActive) return row;
+      throw inactive();
+    }
   }
 
   // ==========================================================

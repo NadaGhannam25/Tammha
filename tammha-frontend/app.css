@@ -302,3 +302,7 @@ body.has-wizard{overflow:hidden}
   padding:0 18px;
   margin:0;
 }
+
+/* E-mail addresses always read left to right, also on Arabic pages */
+input[type="email"]{direction:ltr;text-align:left}
+input[type="email"]::placeholder{direction:ltr;text-align:left}
