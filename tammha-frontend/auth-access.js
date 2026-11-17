@@ -97,7 +97,7 @@
     otherInput.disabled = !on;
     if (!on) setError(otherInput, '');
   }
-  // Listed universities in the interface language (public, private, others), then "Other",
+  // Listed universities in the interface language (alphabetical), then "Other",
   // which opens a field for the name of a university that is not listed.
   function renderUniversities() {
     if (!uniSelect) return;
@@ -105,13 +105,9 @@
     const keep = uniSelect.value;
     const collator = new Intl.Collator(en ? 'en' : 'ar');
     const listed = universities.filter((u) => !u.isCustom).sort((a, b) => collator.compare(uniLabel(a), uniLabel(b)));
-    const groups = [['PUBLIC', en ? 'Public universities' : 'الجامعات الحكومية'], ['PRIVATE', en ? 'Private universities' : 'الجامعات الأهلية'], [null, en ? 'Other listed universities' : 'جامعات أخرى']];
     let html = `<option value="">${en ? 'Select the university' : 'اختر الجامعة'}</option>`;
-    groups.forEach(([type, title]) => {
-      const list = listed.filter((u) => (u.type || null) === type);
-      if (list.length) html += `<optgroup label="${clean(title)}">${list.map((u) => `<option value="${clean(u.id)}">${clean(uniLabel(u))}</option>`).join('')}</optgroup>`;
-    });
-    html += `<option value="${OTHER}">${en ? 'Other (type the university name)' : 'أخرى (اكتب اسم الجامعة)'}</option>`;
+    html += listed.map((u) => `<option value="${clean(u.id)}">${clean(uniLabel(u))}</option>`).join('');
+    html += `<option value="${OTHER}">${en ? 'Other' : 'أخرى'}</option>`;
     uniSelect.innerHTML = html;
     if (keep && [...uniSelect.options].some((o) => o.value === keep)) uniSelect.value = keep;
     otherLabel.querySelector('span').textContent = en ? 'University name' : 'اسم الجامعة';
