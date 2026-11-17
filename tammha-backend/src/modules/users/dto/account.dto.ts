@@ -16,6 +16,10 @@ import {
   STUDENT_NUMBER_PATTERN,
 } from '@common/utils/student-number';
 
+/** Longest stored profile photo (a 256 px JPEG is about 20-40 KB as a data URL). */
+export const AVATAR_MAX_LENGTH = 80_000;
+const AVATAR_DATA_URL = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/;
+
 export class UpdateMyProfileDto {
   @ApiPropertyOptional({
     description: 'Preferred language for the interface and emails',
@@ -48,6 +52,25 @@ export class UpdateMyProfileDto {
   @IsString()
   @MaxLength(500)
   bio?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Profile photo as a small data URL (PNG, JPEG or WebP, base64; the interface resizes it to 256 px). ' +
+      `Up to ${AVATAR_MAX_LENGTH} characters. null removes the photo.`,
+    nullable: true,
+    type: String,
+    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRg...',
+  })
+  @IsOptional()
+  @ValidateIf((o) => o.avatar !== null)
+  @IsString()
+  @MaxLength(AVATAR_MAX_LENGTH, {
+    message: 'avatar is too large: choose a smaller image',
+  })
+  @Matches(AVATAR_DATA_URL, {
+    message: 'avatar must be a PNG, JPEG or WebP image',
+  })
+  avatar?: string | null;
 
   @ApiPropertyOptional({
     description:

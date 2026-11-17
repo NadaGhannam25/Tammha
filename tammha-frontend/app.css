@@ -263,45 +263,137 @@ body.has-wizard{overflow:hidden}
 .stages-table:has(#stagesBody > .app-state) .stages-row--head{display:none}
 #stagesBody > .app-state{min-height:200px;display:grid;align-content:center}
 
-/* TAMMHA QA NOV 16 BATCH */
-.app-bell__button{
-  border:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  border-radius:0!important;
-}
-.app-bell__button:hover{background:transparent!important}
-.app-bell__panel{inset-inline-start:0;inset-inline-end:auto}
-.project-status,.stage-state,.stage-current-tag{
-  background:transparent!important;
-  box-shadow:none!important;
-  border:0!important;
-}
+/* ===== QA review fixes (student interface) ===== */
+/* review status of a stage or a project: plain text, no coloured box */
+.project-status,.stage-state,.stage-current-tag{background:transparent!important;box-shadow:none!important;border:0!important}
 .tasks-table.is-empty>.tasks-row--head,
-.project-files-table.is-empty>.project-files-row--head{
-  display:none!important;
-}
-#ovTeam .team-member{min-height:54px;padding:9px 11px;gap:8px}
-#ovTeam .team-member__avatar{
-  width:34px;height:34px;min-width:34px;
-}
-#ovTeamTools .invite-panel{padding:12px;gap:10px}
-#ovTeamTools .invite-code{
-  background:transparent;border:0;padding:8px;gap:6px;
-}
-#ovTeamTools .invite-code__value{
-  font-size:13px;letter-spacing:.07em;
-}
+.project-files-table.is-empty>.project-files-row--head{display:none!important}
+
+/* 1. Projects: "Join with an invitation code" and "+ Add project" are the same size */
+.projects-page .app-inline-form:has(#openProjectWizard){gap:10px;align-items:stretch;flex-wrap:nowrap}
 .projects-page .app-inline-form:has(#openProjectWizard)>a,
-.projects-page .app-inline-form:has(#openProjectWizard)>button{
-  box-sizing:border-box;
-  min-height:44px;height:44px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:0 18px;
-  margin:0;
+.projects-page .app-inline-form:has(#openProjectWizard)>button{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:160px;height:44px;min-height:44px;margin:0;padding:0 18px;border:1px solid #cfe2ee;border-radius:10px;font-family:inherit;font-size:13.5px;font-weight:700;line-height:1;white-space:nowrap;text-decoration:none;box-shadow:none}
+.projects-page .app-inline-form:has(#openProjectWizard)>#openProjectWizard{border-color:#008bbf}
+@media (max-width:620px){
+  .projects-page .app-inline-form:has(#openProjectWizard){width:100%}
+  .projects-page .app-inline-form:has(#openProjectWizard)>a,
+  .projects-page .app-inline-form:has(#openProjectWizard)>button{flex:1 1 0;min-width:0;padding:0 10px}
 }
+
+/* 2. Dashboard: one loading screen over the whole page area until every section has its data */
+.main-content.is-page-loading{position:relative}
+.main-content.is-page-loading>:not(.tm-loader){visibility:hidden}
+.tm-loader--cover{position:absolute;inset:0;z-index:60;min-height:100vh;justify-content:flex-start;padding-top:min(34vh,300px);border-radius:0;background:#f8fafb}
+/* 4. Sign-in: a plain screen with the logo and "Signing in…" only */
+.tm-loader--solid{background:#fff}
+.tm-loader--solid .tm-loader__slow{display:none!important}
+
+/* 3. Header: the bell without a frame, right of the user's name in Arabic (reading order in
+   English); the menu opens inside the page, never past its edge */
+.app-bell__button{width:36px;height:36px;border:0!important;background:transparent!important;box-shadow:none!important;border-radius:50%!important}
+.app-bell__button:hover{background:#f1f6f9!important}
+.app-bell__button:focus-visible{outline:2px solid #0a6fdc;outline-offset:2px}
+.app-bell__panel{inset-inline-start:auto;inset-inline-end:auto;left:0;right:auto;max-width:calc(100vw - 24px)}
+[dir="ltr"] .app-bell__panel{left:auto;right:0}
+@media (max-width:620px){[dir] .app-bell__panel{position:fixed;inset-block-start:72px;left:auto;right:auto;inset-inline-start:86px;inset-inline-end:12px;width:auto;max-width:none}}
+
+/* avatars: the user's photo, or the first letter of the name */
+.app-avatar{display:inline-grid;place-items:center;overflow:hidden;color:#35617a;font-weight:700;line-height:1;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+.profile__avatar.app-avatar{font-size:17px}
+.app-avatar.has-photo{background-color:#eef3f6;color:transparent}
+.settings-v43-photo-card .profile-photo-placeholder.app-avatar{color:#fff;font-size:36px;font-weight:600}
+.settings-v43-photo-card .profile-photo-placeholder.has-photo{background-color:#eef3f6}
+.profile-photo-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.profile-photo-actions .settings-v43-secondary{display:inline-flex;align-items:center;cursor:pointer}
+.profile-photo-actions .settings-v43-secondary[hidden]{display:none}
+.profile-photo-pick:focus-within{outline:2px solid #0a6fdc;outline-offset:2px}
+.settings-v43-photo-card .app-field-error{margin:8px 0 0;font-size:12px}
+.settings-v43-photo-card .app-field-error:empty{display:none}
+
+/* 5. Project overview, team card: compact rows; the Team Leader first with a badge, the two
+   leader options (add a member, invitation code) small under the name; no large box */
+#ovTeam{gap:8px}
+#ovTeam .team-member{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:start;gap:10px;min-height:0;padding:9px 10px;border-radius:10px;box-shadow:none}
+#ovTeam .team-member__avatar{width:34px;height:34px;min-width:34px;border-radius:50%;border:1px solid #dbe5e9;background:#f2f7fa;font-size:14px}
+#ovTeam .team-member__info{display:grid;gap:4px;min-width:0}
+#ovTeam .team-member__line{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:34px}
+#ovTeam .team-member__name{color:#17384f;font-size:13px;font-weight:700;text-align:start;overflow-wrap:anywhere}
+.team-badge{display:inline-flex;align-items:center;padding:1px 8px;border-radius:999px;background:#eef6fd;color:#0a6fdc;font-size:11px;font-weight:700;white-space:nowrap}
+.team-member__tools{display:flex;flex-wrap:wrap;gap:4px 12px}
+.team-link{padding:2px 0;border:0;background:none;color:#0b6e99;font-family:inherit;font-size:12px;font-weight:700;line-height:1.5;cursor:pointer}
+.team-link:hover{text-decoration:underline}
+.team-link[aria-expanded="true"]{color:#173d57}
+.team-link--danger{color:#a8382b}
+.team-link:disabled{opacity:.55;cursor:not-allowed}
+#ovTeamTools{display:grid;gap:8px;margin-block-start:8px}
+#ovTeamTools:empty{display:none}
+.team-tool{display:grid;gap:6px;padding:10px;border:1px solid #e6eef3;border-radius:10px;background:#fbfdfe}
+.team-tool[hidden]{display:none}
+.team-tool__label{color:#4c6878;font-size:12px;font-weight:600}
+.team-tool__row{display:flex;gap:6px}
+.team-tool__row input{flex:1 1 auto;min-width:0;height:36px;padding:0 10px;border:1px solid #d7e4ec;border-radius:9px;background:#fff;font:inherit;font-size:13px}
+.team-tool__row .app-btn{min-height:36px;padding:0 12px;font-size:12.5px;white-space:nowrap}
+.team-tool .app-field-error:empty{display:none}
+.team-tool .app-muted{font-size:11.5px}
+.team-code{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.team-code__value{flex:1 1 auto;color:#173d57;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;font-weight:700;letter-spacing:.1em}
+.team-pending{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.team-pending:empty{display:none}
+.team-pending li{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#4c6878;font-size:12.5px}
+.team-pending__head{color:#274b61!important;font-weight:700}
+
+/* 6. Project pages: the completion in the title bar (no project list there) */
+.project-hero-progress{display:flex;align-items:center;gap:10px;max-width:420px;margin-block-start:8px;color:#fff;font-size:13px;font-weight:600}
+.project-hero-progress__track{flex:1 1 auto;min-width:80px;height:7px;border-radius:999px;background:rgba(255,255,255,.35);overflow:hidden}
+.project-hero-progress__track>span{display:block;height:100%;border-radius:inherit;background:#fff}
+.project-hero-progress strong{font-size:15px;font-weight:800}
+.project-summary:empty{display:none}
+#ovStats{grid-template-columns:repeat(2,minmax(0,1fr))}
+#ovStats .overview-stat{border-bottom:0}
+@media (min-width:981px){.project-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* 8. Files: the review status is plain text after the file name */
+.doc-review{display:inline;margin-inline-start:4px;padding:0;background:none;font-size:11.5px;font-weight:700}
+.doc-review::before{content:"· ";color:#9aabb5;font-weight:400}
+.doc-review--waiting{color:#8a5300}
+.doc-review--action{color:#b42318}
+.doc-review--done{color:#0b6e99}
+
+/* 10. Project handbook: ready university handbooks vs the team's own PDF */
+.hb-option__head{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.hb-option__tag{display:inline-flex;align-items:center;padding:1px 9px;border-radius:999px;background:#eef6fd;color:#0a6fdc;font-size:11.5px;font-weight:700}
+.hb-option__tag--custom{background:#f3f5f7;color:#4c6878}
+.hb-chosen{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding:10px 12px;border:1px solid #e3edf3;border-radius:10px;background:#fbfdfe}
+.hb-chosen[hidden]{display:none}
+.hb-chosen img{width:28px;height:28px;flex:none}
+.hb-chosen span{display:grid;gap:2px;min-width:0}
+.hb-chosen strong{color:#173d57;font-size:13px;overflow-wrap:anywhere}
+.hb-chosen small{color:#7d919c;font-size:12px}
+
+/* 11. Dashboard calendar: each task of the day with its status and details; opens the task */
+.calendar-agenda__item{display:flex;align-items:flex-start;gap:8px;text-decoration:none;color:inherit}
+a.calendar-agenda__item:hover{border-color:#cfe2ee;background:#f6fafc}
+.calendar-agenda__item div{text-align:start!important;min-width:0}
+.calendar-agenda__line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.calendar-agenda__line strong{overflow-wrap:anywhere}
+.calendar-agenda__status{font-style:normal;font-size:10.5px;font-weight:700;color:#56707d}
+.calendar-agenda__status--progress,.calendar-agenda__status--meeting{color:#0b6e99}
+.calendar-agenda__status--review{color:#6a4fb3}
+.calendar-agenda__status--completed{color:#2b7a57}
+.calendar-agenda__status--blocked,.calendar-agenda__status--overdue{color:#b42318}
+.calendar-agenda__empty:empty{display:none}
+
+/* 12. Task details: attachments and a clear "mark as completed" action */
+.task-file{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #edf2f5;border-radius:10px;background:#fff}
+.task-file img{width:26px;height:26px;flex:none}
+.task-file__name{display:grid;gap:2px;flex:1 1 auto;min-width:0}
+.task-file__name strong{color:#173d57;font-size:13px;overflow-wrap:anywhere}
+.task-file__name small{color:#7d919c;font-size:11.5px;overflow-wrap:anywhere}
+.task-attach-form{margin-block-start:10px}
+.task-attach-form select{flex:1 1 auto;min-width:0}
+.task-complete{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:40px;margin:0 0 10px;border:1px solid #0a6fdc;border-radius:10px;background:#0a6fdc;color:#fff;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+.task-complete[hidden]{display:none}
+.task-complete:disabled{opacity:.6;cursor:not-allowed}
 
 /* E-mail addresses always read left to right, also on Arabic pages */
 input[type="email"]{direction:ltr;text-align:left}

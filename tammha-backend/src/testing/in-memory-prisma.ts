@@ -648,6 +648,12 @@ export function createInMemoryPrisma() {
     },
   });
 
+  db.attachment = new Table('att', {
+    unique: [],
+    defaults: () => ({}),
+    relations: {},
+  });
+
   db.meetingNotes = new Table('mnote', {
     unique: ['meetingId'],
     defaults: () => ({ createdById: null, updatedById: null }),

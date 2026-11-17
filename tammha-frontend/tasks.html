@@ -142,8 +142,11 @@
 <div><dt>المرحلة</dt><dd id="taskDrawerStage"></dd></div>
 </dl>
 <section class="task-drawer__block"><h3>الوصف</h3><p id="taskDrawerDescription"></p></section>
-<section class="task-drawer__block" id="taskDrawerFilesBlock"><h3>المرفقات</h3><ul class="task-drawer__files" id="taskDrawerFiles"></ul></section>
+<section class="task-drawer__block" id="taskDrawerFilesBlock"><h3>المرفقات</h3><ul class="task-drawer__files" id="taskDrawerFiles"></ul>
+<form class="task-status-form task-attach-form" hidden id="taskAttachForm"><label class="visually-hidden" data-en="A project file" for="taskAttachSelect">ملف من ملفات المشروع</label><select id="taskAttachSelect"></select><button class="task-status-form__save" data-en="Attach" type="submit">إرفاق</button></form>
+<p class="task-drawer__hint" hidden id="taskAttachHint"></p></section>
 <section class="task-drawer__block"><h3>تغيير الحالة</h3>
+<button class="task-complete" data-en="Mark the task as completed" hidden id="taskComplete" type="button">تحديد المهمة كمكتملة</button>
 <form class="task-status-form" id="taskStatusForm"><label class="visually-hidden" for="taskStatusSelect">الحالة الجديدة</label><select id="taskStatusSelect"></select><button class="task-status-form__save" type="submit">حفظ</button></form>
 <p class="task-drawer__hint" id="taskStatusHint"></p>
 </section>

@@ -168,7 +168,17 @@
     try {
       if (form.dataset.authForm === 'login') {
         const [email, password] = [form.querySelector('input[type="email"]').value.trim(), form.querySelector('input[type="password"]').value];
-        const res = await Api.post('/auth/login', { email, password }, { auth: false, loader: { label: isEnglish() ? 'Signing in…' : 'جارٍ تسجيل الدخول…', showSlow: false } });
+        // from the click until the next page opens: only the Tammha logo and «جارٍ تسجيل الدخول»
+        // on a plain screen (no waiting messages); on an error the form comes back with the message
+        window.addEventListener('pageshow', (ev) => { if (ev.persisted) { document.querySelectorAll('.tm-loader--solid').forEach((n) => n.remove()); document.body.classList.remove('tm-loading'); } }, { once: true });
+        const signing = window.TammhaLoader ? window.TammhaLoader.show({ solid: true, showSlow: false, label: isEnglish() ? 'Signing in…' : 'جارٍ تسجيل الدخول…' }) : null;
+        let res;
+        try {
+          res = await Api.post('/auth/login', { email, password }, { auth: false });
+        } catch (err) {
+          if (signing) signing.fail();
+          throw err;
+        }
         Api.saveTokens(res.tokens, res.user);
         if (res.user.emailVerified === false) { location.href = 'verify-email.html?pending=1'; return; }
         // the account decides the pages, whatever account type was ticked

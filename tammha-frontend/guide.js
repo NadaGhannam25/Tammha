@@ -43,11 +43,11 @@
   function renderSelected() {
     const sel = selected(); const body = $('hbSelectedBody');
     if (!sel) {
-      body.innerHTML = `<p class="hb-empty">${esc(T('لم يُعتمد دليل لهذا المشروع بعد. اختر دليل إحدى الجامعات أو ارفع دليلًا خاصًا، علمًا بأن إعداد المشروع لا يكتمل دون دليل معتمد.', 'No handbook has been set for this project yet. Choose a university handbook or upload one; project setup cannot be completed without a handbook.'))}</p>`;
+      body.innerHTML = `<p class="hb-empty">${esc(T('لم يُعتمد دليل لهذا المشروع بعد. اختر أحد أدلة الجامعات الجاهزة أو ارفع دليلًا مخصصًا، علمًا بأن إعداد المشروع لا يكتمل دون دليل معتمد.', 'No handbook has been set for this project yet. Choose a university handbook or upload one; project setup cannot be completed without a handbook.'))}</p>`;
       return;
     }
     const uni = sel.kind === 'UNIVERSITY' ? universities.find((u) => u.key === sel.key) : null;
-    const source = sel.kind === 'UNIVERSITY' ? T(`الدليل الرسمي — ${uName(uni) || sel.universityName}`, `Official handbook — ${uName(uni) || sel.universityName}`) : T('دليل خاص رفعه الفريق (خارج مكتبة الأدلة الرسمية)', 'Team-uploaded handbook (outside the official library)');
+    const source = sel.kind === 'UNIVERSITY' ? T(`الدليل الرسمي — ${uName(uni) || sel.universityName}`, `Official handbook — ${uName(uni) || sel.universityName}`) : T('دليل مخصص رفعه الفريق لهذا المشروع', 'Custom handbook uploaded by the team for this project');
     const statusText = sel.kind === 'UPLOAD' && !sel.ready ? (sel.failed ? T('تعذّرت قراءة نص الدليل. ارفع ملف PDF يحتوي على نص قابل للتحديد.', 'The handbook text could not be read. Upload a PDF with selectable text.') : T('جارٍ استخراج نص الدليل…', 'Extracting the handbook text…')) : '';
     const myUni = universities.find((u) => u.isMyUniversity);
     body.innerHTML = `<div class="hb-file">
@@ -80,7 +80,7 @@
     const box = $('hbUniversityFile'); const uni = universities.find((u) => u.key === uniSelect.value);
     if (!uni) { box.innerHTML = ''; return; }
     if (!uni.handbook) {
-      box.innerHTML = `<div class="hb-unavailable"><strong>${esc(T('الدليل غير متاح حاليًا', 'Handbook not available'))}</strong><p>${esc(T(`لم يُضف الدليل الرسمي لـ${uName(uni)} إلى المنصة بعد. يمكن رفع الدليل يدويًا من خيار «رفع دليل خاص».`, `The official handbook of ${uName(uni)} has not been added to the platform yet. You can upload it with “Upload a handbook”.`))}</p></div>`;
+      box.innerHTML = `<div class="hb-unavailable"><strong>${esc(T('الدليل غير متاح حاليًا', 'Handbook not available'))}</strong><p>${esc(T(`لم يُضف الدليل الرسمي لـ${uName(uni)} إلى المنصة بعد. يمكن رفعه من خيار «رفع دليل مخصص (PDF)».`, `The official handbook of ${uName(uni)} has not been added to the platform yet. You can upload it with “Upload a custom handbook (PDF)”.`))}</p></div>`;
       return;
     }
     const h = uni.handbook; const sel = selected();
@@ -108,8 +108,16 @@
   const fileInput = $('hbFile'); const drop = $('hbDrop'); const fileError = $('hbFileError');
   const showFileError = (text) => { fileError.textContent = text; fileError.hidden = !text; };
   const readSignature = (file) => new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(String.fromCharCode(...new Uint8Array(reader.result))); reader.onerror = () => resolve(''); reader.readAsArrayBuffer(file.slice(0, 5)); });
+  // the chosen PDF is named under the drop area, with what happens to it
+  const chosen = $('hbChosen');
+  function showChosen(file, note) {
+    if (!file) { chosen.hidden = true; chosen.textContent = ''; return; }
+    chosen.hidden = false;
+    chosen.innerHTML = `<img alt="" src="assets/file-pdf.png"/><span><strong dir="auto">${esc(file.name)}</strong><small>${esc(UI.fmtSize(file.size))}${note ? ` · ${esc(note)}` : ''}</small></span>`;
+  }
   async function takeFile(file) {
     showFileError('');
+    showChosen(file, file ? T('الملف المختار', 'Chosen file') : '');
     if (!file) { showFileError(T('اختر ملف الدليل أولًا.', 'Choose the handbook file first.')); return; }
     if (!isLeader()) { showFileError(T('يرفع دليل المشروع قائد الفريق.', 'The Team Leader uploads the project handbook.')); return; }
     if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) { showFileError(T('صيغة الملف غير مدعومة، ويُقبل ملف PDF فقط.', 'Unsupported file type. Only PDF files are accepted.')); return; }
@@ -117,15 +125,16 @@
     if (file.size > MAX_FILE_BYTES) { showFileError(T('حجم الملف يتجاوز 20MB.', 'The file is larger than 20 MB.')); return; }
     if ((await readSignature(file)) !== '%PDF-') { showFileError(T('تعذّرت قراءة الملف بوصفه PDF. صدّر الدليل مجددًا بصيغة PDF قياسية.', 'The file could not be read as a PDF. Export the handbook again as a standard PDF.')); return; }
     const fd = new FormData(); fd.append('file', file);
+    showChosen(file, T('جارٍ الرفع والمعالجة…', 'Uploading and processing…'));
     try {
       await Api.upload('PUT', `/projects/${projectId}/handbook`, fd, { loader: { label: T('جارٍ رفع الدليل ومعالجته…', 'Uploading and processing the handbook…') } });
       // a university selection is replaced by the own upload
       try { await Api.del(`/projects/${projectId}/handbook/university-selection`); } catch (e) { /* not selected */ }
       await waitForProcessing();
       const sel = selected();
-      if (sel && sel.failed) showFileError(T('تعذّرت قراءة نص الدليل. ارفع ملف PDF يحتوي على نص قابل للتحديد.', 'The handbook text could not be read. Upload a PDF with selectable text.'));
-      else toast(T(`رُفع «${file.name}» واعتُمد دليلًا للمشروع.`, `“${file.name}” was uploaded and set as the project handbook.`));
-    } catch (error) { showFileError(Api.message(error)); }
+      if (sel && sel.failed) { showChosen(file, T('تعذّرت قراءة النص', 'Text could not be read')); showFileError(T('تعذّرت قراءة نص الدليل. ارفع ملف PDF يحتوي على نص قابل للتحديد.', 'The handbook text could not be read. Upload a PDF with selectable text.')); }
+      else { showChosen(file, T('رُفع واعتُمد دليلًا للمشروع', 'Uploaded and set as the project handbook')); toast(T(`رُفع «${file.name}» واعتُمد دليلًا للمشروع.`, `“${file.name}” was uploaded and set as the project handbook.`)); }
+    } catch (error) { showChosen(file, T('لم يُرفع', 'Not uploaded')); showFileError(Api.message(error)); }
     fileInput.value = '';
   }
   async function waitForProcessing() {

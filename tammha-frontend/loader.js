@@ -12,7 +12,9 @@
 //   - honours prefers-reduced-motion (no wave, static logo + text).
 // Usage:
 //   TammhaLoader.track(promise | () => promise, { label, target, delay, minVisible, timeout, signal })
-//     target = element for an inline loader inside a panel; omitted = full-page overlay.
+//     target = element for an inline loader inside a panel; omitted = full-page overlay;
+//     cover: true (with a target) = an opaque screen over the whole target (a page area);
+//     solid: true (no target) = an opaque full page with only the logo and the label.
 //   const h = TammhaLoader.show({ label }); ... h.done();   // manual control
 (function () {
   'use strict';
@@ -26,9 +28,9 @@
     constructor() { super('timeout'); this.name = 'TimeoutError'; }
   }
 
-  function build(label, inline) {
+  function build(label, inline, variant) {
     const box = document.createElement('div');
-    box.className = `tm-loader${inline ? ' tm-loader--inline' : ''}`;
+    box.className = `tm-loader${inline ? ' tm-loader--inline' : ''}${variant ? ` tm-loader--${variant}` : ''}`;
     box.setAttribute('role', 'status');
     box.setAttribute('aria-live', 'polite');
     box.innerHTML = `
@@ -57,7 +59,7 @@
 
   function show(options = {}) {
     const target = options.target || null;
-    const box = build(options.label, !!target);
+    const box = build(options.label, !!target, target && options.cover ? 'cover' : !target && options.solid ? 'solid' : '');
     const fill = box.querySelector('.tm-loader__fill');
     const startedAt = performance.now();
     let level = 0;

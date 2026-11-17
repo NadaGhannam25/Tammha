@@ -49,7 +49,7 @@ export class UsersController {
   @Patch('me')
   @ApiOperation({
     summary:
-      'Update my profile (name, bio, student number, preferred language)',
+      'Update my profile (name, bio, photo, student number, preferred language)',
     description:
       'studentNumber is for STUDENT accounts only and is unique within the university. A student must keep a ' +
       'student number or a verified university e-mail (POST /auth/university-email).',

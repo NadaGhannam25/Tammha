@@ -20,8 +20,10 @@
     GENERAL: ['عام', 'General'], PROPOSAL: ['مقترح المشروع', 'Proposal'], REPORT: ['تقرير', 'Report'], PRESENTATION: ['عرض تقديمي', 'Presentation'],
     DESIGN: ['تصميم', 'Design'], CODE: ['شيفرة برمجية', 'Code'], DOCUMENTATION: ['توثيق', 'Documentation'], MEETING_NOTES: ['محضر اجتماع', 'Meeting notes'], OTHER: ['أخرى', 'Other']
   };
-  // a regular file (UPLOADED) has no review status to show
-  const reviewChip = (s) => { if (!s || s === 'UPLOADED') return ''; const r = D.DOCUMENT_STATUSES && D.DOCUMENT_STATUSES[s]; return r ? `<span class="app-chip${s === 'CHANGES_REQUESTED' || s === 'REJECTED' ? ' app-chip--warn' : ''}">${esc(L(r.label))}</span>` : ''; };
+  // review status as plain text after the file name (no coloured box); a regular file (UPLOADED)
+  // has no review status to show. One colour of text per group: waiting, needs work, approved.
+  const REVIEW_TONE = { SUBMITTED: 'waiting', UNDER_REVIEW: 'waiting', CHANGES_REQUESTED: 'action', REJECTED: 'action', APPROVED: 'done' };
+  const reviewChip = (s) => { if (!s || s === 'UPLOADED') return ''; const r = D.DOCUMENT_STATUSES && D.DOCUMENT_STATUSES[s]; return r ? `<span class="doc-review doc-review--${REVIEW_TONE[s] || 'waiting'}">${esc(L(r.label))}</span>` : ''; };
 
   async function openDocument(id, download) {
     const d = await Api.get(`/documents/${encodeURIComponent(id)}`, { loader: { label: T('جارٍ تجهيز الملف…', 'Preparing the file…') } });

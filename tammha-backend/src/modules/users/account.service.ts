@@ -66,6 +66,7 @@ export class AccountService {
     if (dto.firstName !== undefined) data.firstName = dto.firstName;
     if (dto.lastName !== undefined) data.lastName = dto.lastName;
     if (dto.bio !== undefined) data.bio = dto.bio || null;
+    if (dto.avatar !== undefined) data.avatar = dto.avatar || null;
     if (dto.preferredLanguage !== undefined)
       data.preferredLanguage = dto.preferredLanguage;
     if (dto.studentNumber !== undefined) data.studentNumber = dto.studentNumber;

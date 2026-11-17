@@ -13,57 +13,72 @@
   const $ = (id) => document.getElementById(id);
   let w = null;
 
-  const statusLabel = (s) => (D && D.PROJECT_STATUSES[s] ? L(D.PROJECT_STATUSES[s].label) : s);
   function render() {
     const p = w.project; const isLeader = !!w.viewer?.isLeader;
     $('overviewProjectName').textContent = p.name;
     document.title = `${T('تممها', 'Tammha')} | ${p.name}`;
+    S.projectHeroProgress(w); // the completion, once, in the title bar
     $('ovOverview').textContent = p.overview || p.description || T('لم تُكتب نبذة المشروع بعد.', 'No overview yet.');
     const goals = (p.objectives || []).filter(Boolean);
     $('ovGoals').innerHTML = goals.length ? goals.map((g) => `<li>${esc(g)}</li>`).join('') : `<li class="app-muted">${esc(T('لم تُحدد الأهداف بعد.', 'No objectives yet.'))}</li>`;
-    const sup = ((w.supervisors || [])[0] || {}).user || (w.supervisors || [])[0]; // { userId, user } from the API
     const members = w.team?.members || [];
+    // the team and the supervisor have their own sections: only the dates are listed here
     $('ovStats').innerHTML = [
       [T('تاريخ بدء المشروع', 'Start date'), UI.fmtDate(p.startDate)],
-      [T('الإنجاز المتوقع', 'Expected completion'), UI.fmtDate(p.expectedCompletionDate || p.endDate)],
-      [T('عدد أعضاء الفريق', 'Team members'), String(members.length)],
-      [T('المشرف الأكاديمي', 'Academic supervisor'), sup ? UI.personName(sup) : T('لم يُحدد بعد', 'Not assigned yet')],
-      [T('نسبة الإنجاز', 'Completion'), `${Math.round(w.progress?.percent ?? 0)}%`]
+      [T('الإنجاز المتوقع', 'Expected completion'), UI.fmtDate(p.expectedCompletionDate || p.endDate)]
     ].map(([k, v]) => `<div class="overview-stat"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
-    // team
+    // team: the Team Leader (who created the project, or received the leadership) first with the
+    // badge; under the leader's name the leader sees two small options: add a member, invitation code
     const me = S.user;
-    $('ovTeam').innerHTML = members.map((m) => {
+    const sorted = [...members].sort((a, b) => (b.teamRole === 'LEADER') - (a.teamRole === 'LEADER'));
+    $('ovTeam').innerHTML = sorted.map((m) => {
       const name = UI.personName(m.user); const lead = m.teamRole === 'LEADER';
-      const actions = isLeader && !lead ? `<span class="app-inline-form"><button class="app-btn app-btn--ghost" type="button" data-make-leader="${esc(m.userId)}">${esc(T('تعيين قائدًا', 'Make leader'))}</button><button class="app-btn app-btn--ghost" type="button" data-remove="${esc(m.userId)}">${esc(T('إزالة', 'Remove'))}</button></span>` : '';
-      return `<div class="team-member"><span class="team-member__avatar">${esc(UI.initial(name))}</span><span class="team-member__name">${esc(name)}${m.userId === me.id ? ` <small class="app-muted">(${esc(T('أنت', 'you'))})</small>` : ''}</span><span class="team-member__role">${esc(lead ? T('قائد الفريق', 'Team Leader') : T('عضو', 'Member'))}</span>${actions}</div>`;
+      const you = m.userId === me.id ? ` <small class="app-muted">(${esc(T('أنت', 'you'))})</small>` : '';
+      const tools = isLeader && lead ? `<span class="team-member__tools">
+          <button class="team-link" type="button" data-team-tool="ovInviteForm" aria-controls="ovInviteForm" aria-expanded="false">${esc(T('+ إضافة عضو', '+ Add member'))}</button>
+          <button class="team-link" type="button" data-team-tool="ovInviteCode" aria-controls="ovInviteCode" aria-expanded="false">${esc(T('رمز الدعوة', 'Invitation code'))}</button></span>` : '';
+      const actions = isLeader && !lead ? `<span class="team-member__tools"><button class="team-link" type="button" data-make-leader="${esc(m.userId)}">${esc(T('تعيين قائدًا', 'Make leader'))}</button><button class="team-link team-link--danger" type="button" data-remove="${esc(m.userId)}">${esc(T('إزالة', 'Remove'))}</button></span>` : '';
+      return `<div class="team-member${lead ? ' is-leader' : ''}">${UI.avatarHtml(m.user, 'team-member__avatar')}
+        <div class="team-member__info"><span class="team-member__line"><span class="team-member__name">${esc(name)}${you}</span>${lead ? `<span class="team-badge">${esc(T('قائد الفريق', 'Team Leader'))}</span>` : ''}</span>${tools}${actions}</div></div>`;
     }).join('');
-    $('ovTeamTools').innerHTML = isLeader ? `<div class="app-panel invite-panel"><h2>${esc(T('دعوة زملاء', 'Invite classmates'))}</h2>
-        <form class="invite-panel__group" id="ovInviteForm" novalidate>
-          <label class="invite-panel__label" for="ovInviteValue">${esc(T('دعوة بالرقم الجامعي أو البريد الجامعي', 'Invite by student number or university email'))}</label>
-          <div class="invite-panel__row"><input id="ovInviteValue" autocomplete="off" placeholder="${esc(T('مثال: 441234567', 'e.g. 441234567'))}"/><button class="app-btn app-btn--primary" type="submit">${esc(T('إرسال دعوة', 'Send invitation'))}</button></div>
+    $('ovTeamTools').innerHTML = isLeader ? `<form class="team-tool" id="ovInviteForm" hidden novalidate>
+          <label class="team-tool__label" for="ovInviteValue">${esc(T('الرقم الجامعي أو البريد الجامعي للزميل', "Classmate's student number or university email"))}</label>
+          <div class="team-tool__row"><input id="ovInviteValue" autocomplete="off" placeholder="${esc(T('مثال: 441234567', 'e.g. 441234567'))}"/><button class="app-btn app-btn--primary" type="submit">${esc(T('إرسال دعوة', 'Send invitation'))}</button></div>
           <small class="app-field-error" id="ovInviteError" role="alert"></small>
         </form>
-        <div class="invite-panel__group" id="ovInviteCode" aria-live="polite"></div>
-        <ul class="app-list invite-panel__sent" id="ovSentInvites"></ul></div>`
-      : `<button class="app-btn app-btn--ghost" type="button" data-leave>${esc(T('مغادرة الفريق', 'Leave the team'))}</button>`;
-    if (isLeader) { loadInvitationCode(); loadSentInvitations(); }
+        <div class="team-tool" id="ovInviteCode" hidden aria-live="polite"></div>
+        <ul class="team-pending" id="ovSentInvites"></ul>`
+      : `<button class="team-link team-link--danger" type="button" data-leave>${esc(T('مغادرة الفريق', 'Leave the team'))}</button>`;
+    if (isLeader) loadSentInvitations();
     renderSetup(); loadSupervision();
   }
 
+  // the two leader options open one compact panel at a time under the team list
+  function toggleTool(id) {
+    document.querySelectorAll('[data-team-tool]').forEach((b) => {
+      const open = b.dataset.teamTool === id && b.getAttribute('aria-expanded') !== 'true';
+      b.setAttribute('aria-expanded', String(open));
+      const panel = $(b.dataset.teamTool); if (panel) panel.hidden = !open;
+      if (open && id === 'ovInviteForm') $('ovInviteValue').focus();
+      if (open && id === 'ovInviteCode') loadInvitationCode();
+    });
+  }
+
   async function loadInvitationCode() {
+    const box = $('ovInviteCode'); if (!box) return;
     try {
       const inv = await Api.get(`/teams/${w.team.id}/invitation`);
-      $('ovInviteCode').innerHTML = `<span class="invite-panel__label">${esc(T('أو شارك رمز الدعوة', 'Or share the invitation code'))}</span>
-        <div class="invite-code"><code class="invite-code__value" dir="ltr">${esc(inv.code)}</code>
-          <div class="invite-code__actions"><button class="app-btn" type="button" data-copy="${esc(inv.link)}">${esc(T('نسخ رابط الدعوة', 'Copy invitation link'))}</button><button class="app-btn app-btn--ghost" type="button" data-regenerate>${esc(T('إنشاء رمز جديد', 'Generate new code'))}</button></div></div>
+      box.innerHTML = `<span class="team-tool__label">${esc(T('شارك الرمز أو الرابط مع زميلك', 'Share the code or the link with your classmate'))}</span>
+        <div class="team-code"><code class="team-code__value" dir="ltr">${esc(inv.code)}</code>
+          <button class="team-link" type="button" data-copy="${esc(inv.link)}">${esc(T('نسخ الرابط', 'Copy link'))}</button><button class="team-link" type="button" data-regenerate>${esc(T('رمز جديد', 'New code'))}</button></div>
         <small class="app-muted">${esc(T('الرمز الجديد يُبطل الرمز والرابط السابقين.', 'A new code makes the previous code and link stop working.'))}</small>`;
-    } catch (e) { $('ovInviteCode').textContent = Api.message(e); }
+    } catch (e) { box.textContent = Api.message(e); }
   }
   async function loadSentInvitations() {
     try {
       const items = await Api.get(`/teams/${w.team.id}/student-invitations`);
       const pending = (items || []).filter((i) => i.status === 'PENDING');
-      $('ovSentInvites').innerHTML = (pending.length ? `<li class="invite-panel__sent-head">${esc(T('دعوات بانتظار الرد', 'Pending invitations'))}</li>` : '') + pending.map((i) => `<li><span>${esc(i.invitee?.displayName || '')} <span class="app-chip app-chip--muted">${esc(T('بانتظار الرد', 'Pending'))}</span></span><button class="app-btn app-btn--ghost" type="button" data-cancel-invite="${esc(i.id)}">${esc(T('سحب الدعوة', 'Withdraw'))}</button></li>`).join('');
+      $('ovSentInvites').innerHTML = (pending.length ? `<li class="team-pending__head">${esc(T('دعوات بانتظار الرد', 'Pending invitations'))}</li>` : '') + pending.map((i) => `<li><span>${esc(i.invitee?.displayName || '')}</span><button class="team-link" type="button" data-cancel-invite="${esc(i.id)}">${esc(T('سحب الدعوة', 'Withdraw'))}</button></li>`).join('');
     } catch (e) { /* the list is optional */ }
   }
 
@@ -123,6 +138,7 @@
   document.addEventListener('click', (e) => {
     const t = e.target.closest('button'); if (!t) return;
     const d = t.dataset;
+    if (d.teamTool) { toggleTool(d.teamTool); return; }
     if (d.copy) { navigator.clipboard?.writeText(d.copy).then(() => UI.toast(T('نُسخ الرابط.', 'Link copied.'), 'success'), () => UI.toast(d.copy)); }
     if ('regenerate' in d) UI.busy(t, async () => { await Api.post(`/teams/${w.team.id}/invitation/regenerate`, {}); loadInvitationCode(); });
     if (d.cancelInvite) UI.busy(t, async () => { await Api.post(`/team-invitations/${d.cancelInvite}/cancel`, {}); loadSentInvitations(); });
@@ -140,8 +156,6 @@
     try {
       w = await S.currentWorkspace();
       if (!w) { UI.state(main, 'empty', { title: T('لا توجد مشاريع بعد', 'No projects yet'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } }); return; }
-      const list = await S.projects();
-      S.projectSwitcher(document.querySelector('.project-detail-hero__content'), list, w.id, (id) => { location.href = `project-overview.html?project=${encodeURIComponent(id)}`; });
       render();
     } catch (e) { UI.state(main, 'error', { error: e, retry: () => location.reload() }); }
   });

@@ -115,6 +115,9 @@ const arabicMonths = [
   'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
   'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
 ];
+const englishMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const calendarEn = () => document.documentElement.lang === 'en';
+const monthName = (i) => (calendarEn() ? englishMonths[i] : arabicMonths[i]);
 // The calendar opens on today; its items come from the API (pages/dashboard.js → TammhaCalendar.setItems).
 const calendarToday = new Date();
 let visibleDate = new Date(calendarToday.getFullYear(), calendarToday.getMonth(), 1);
@@ -126,7 +129,7 @@ function createDayCell(day, muted = false) {
   button.type = 'button';
   button.className = `calendar-day${muted ? ' is-muted' : ''}`;
   button.textContent = day;
-  button.setAttribute('aria-label', `اليوم ${day}`);
+  button.setAttribute('aria-label', calendarEn() ? `Day ${day}` : `اليوم ${day}`);
   return button;
 }
 
@@ -134,7 +137,7 @@ function renderCalendar() {
   if (!calendarTitle || !calendarDays) return;
   const year = visibleDate.getFullYear();
   const month = visibleDate.getMonth();
-  calendarTitle.textContent = `${arabicMonths[month]} ${year}`;
+  calendarTitle.textContent = `${monthName(month)} ${year}`;
   calendarDays.innerHTML = '';
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -154,49 +157,57 @@ function renderCalendar() {
   for (let day = 1; day <= remaining; day += 1) calendarDays.appendChild(createDayCell(day, true));
 }
 
-prevMonthButton?.addEventListener('click', () => {
-  visibleDate = new Date(visibleDate.getFullYear(), visibleDate.getMonth() - 1, 1);
+function changeMonth(step) {
+  visibleDate = new Date(visibleDate.getFullYear(), visibleDate.getMonth() + step, 1);
   const y = visibleDate.getFullYear(), m = visibleDate.getMonth() + 1;
-  selectedDateKey = `${y}-${m}-1`;
+  // today when it is in the shown month, otherwise the first day
+  selectedDateKey = calendarToday.getFullYear() === y && calendarToday.getMonth() + 1 === m ? `${y}-${m}-${calendarToday.getDate()}` : `${y}-${m}-1`;
   renderCalendar();
   renderCalendarAgenda(selectedDateKey);
-});
-nextMonthButton?.addEventListener('click', () => {
-  visibleDate = new Date(visibleDate.getFullYear(), visibleDate.getMonth() + 1, 1);
-  const y = visibleDate.getFullYear(), m = visibleDate.getMonth() + 1;
-  selectedDateKey = `${y}-${m}-1`;
-  renderCalendar();
-  renderCalendarAgenda(selectedDateKey);
-});
+  if (window.TammhaCalendar && window.TammhaCalendar.onMonthChange) window.TammhaCalendar.onMonthChange(new Date(visibleDate));
+}
+prevMonthButton?.addEventListener('click', () => changeMonth(-1));
+nextMonthButton?.addEventListener('click', () => changeMonth(1));
 const calendarAgendaDate = document.getElementById('calendarAgendaDate');
 const calendarAgendaContent = document.getElementById('calendarAgendaContent');
-// day key "yyyy-m-d" → [{ type: 'task' | 'meeting', title, meta }] (filled from the API)
+// day key "yyyy-m-d" → [{ type: 'task' | 'meeting', title, status, statusCls, meta, href }] (filled from the API)
 const calendarAgendaItems = {};
+let calendarLoaded = false;
+let calendarError = '';
 const escapeCalendar = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 window.TammhaCalendar = {
   setItems(map) {
+    calendarLoaded = true; calendarError = '';
     Object.keys(calendarAgendaItems).forEach((k) => delete calendarAgendaItems[k]);
     eventDates.clear();
     Object.entries(map).forEach(([k, v]) => { calendarAgendaItems[k] = v; if (v.length) eventDates.add(k); });
     renderCalendar();
     renderCalendarAgenda(selectedDateKey);
-  }
+  },
+  setError(text) { calendarError = text || ''; renderCalendarAgenda(selectedDateKey); },
+  visibleMonth() { return new Date(visibleDate); },
+  onMonthChange: null
 };
 
 function renderCalendarAgenda(key) {
   if (!calendarAgendaContent || !calendarAgendaDate) return;
   const [year, month, day] = key.split('-').map(Number);
-  calendarAgendaDate.textContent = `${day} ${arabicMonths[month - 1]} ${year}`;
+  calendarAgendaDate.textContent = calendarEn() ? `${englishMonths[month - 1]} ${day}, ${year}` : `${day} ${arabicMonths[month - 1]} ${year}`;
   const items = calendarAgendaItems[key] || [];
-  if (!items.length) {
-    calendarAgendaContent.innerHTML = '<div class="calendar-agenda__empty">لا توجد مهام أو اجتماعات خلال اليوم</div>';
+  if (calendarError) {
+    calendarAgendaContent.innerHTML = `<div class="calendar-agenda__empty" role="alert">${escapeCalendar(calendarError)}</div>`;
     return;
   }
+  if (!items.length) {
+    calendarAgendaContent.innerHTML = `<div class="calendar-agenda__empty">${calendarLoaded || !document.getElementById('dashProjects') ? (calendarEn() ? 'No tasks or meetings on this day.' : 'لا توجد مهام أو اجتماعات في هذا اليوم.') : ''}</div>`;
+    return;
+  }
+  // each item: name, status and the basic details; it opens the task (or the meetings page)
   calendarAgendaContent.innerHTML = items.map((item) => `
-    <div class="calendar-agenda__item calendar-agenda__item--${item.type}">
+    <a class="calendar-agenda__item calendar-agenda__item--${escapeCalendar(item.type)}" href="${escapeCalendar(item.href || '#')}">
       <span class="calendar-agenda__dot"></span>
-      <div><strong>${escapeCalendar(item.title)}</strong><small>${escapeCalendar(item.meta)}</small></div>
-    </div>`).join('');
+      <div><span class="calendar-agenda__line"><strong>${escapeCalendar(item.title)}</strong>${item.status ? `<em class="calendar-agenda__status calendar-agenda__status--${escapeCalendar(item.statusCls || 'idle')}">${escapeCalendar(item.status)}</em>` : ''}</span><small>${escapeCalendar(item.meta)}</small></div>
+    </a>`).join('');
 }
 
 calendarDays?.addEventListener('click', (event) => {

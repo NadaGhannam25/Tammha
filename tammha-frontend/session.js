@@ -60,6 +60,24 @@
   const setupRequirement = (code) => (SETUP_REQUIREMENTS[code] ? L(SETUP_REQUIREMENTS[code]) : code);
   const personName = (u) => (u ? [u.firstName, u.lastName].filter(Boolean).join(' ') || u.name || u.displayName || u.email || '' : '');
   const initial = (name) => (String(name || '').trim()[0] || '؟').toUpperCase();
+  // profile photo: a small data URL saved on the account (PATCH /users/me { avatar }); without one
+  // the first letter of the name is shown
+  const avatarUrl = (u) => (u && typeof u.avatar === 'string' && /^data:image\/(png|jpeg|webp);base64,/.test(u.avatar) ? u.avatar : '');
+  /** <span> avatar of a person: the photo when there is one, otherwise the first letter */
+  function avatarHtml(u, cls = '') {
+    const url = avatarUrl(u); const name = personName(u);
+    return url ? `<span class="${esc(cls)} app-avatar has-photo" style="background-image:url('${url}')" role="img" aria-label="${esc(name)}"></span>`
+      : `<span class="${esc(cls)} app-avatar" aria-hidden="true">${esc(initial(name))}</span>`;
+  }
+  /** shows the photo (or first letter) of the user in an existing avatar element */
+  function paintAvatar(el, u) {
+    if (!el) return;
+    const url = avatarUrl(u);
+    el.classList.add('app-avatar');
+    el.classList.toggle('has-photo', !!url);
+    el.style.backgroundImage = url ? `url('${url}')` : '';
+    el.textContent = url ? '' : initial(personName(u));
+  }
 
   function toast(text, type = 'info') {
     let box = document.querySelector('.app-toasts');
@@ -122,6 +140,7 @@
     document.querySelectorAll('.profile__text strong, [data-me-name]').forEach((el) => { el.textContent = name; });
     document.querySelectorAll('.profile__text small, [data-me-title]').forEach((el) => { el.textContent = roleLabel(u); });
     document.querySelectorAll('[data-me-email]').forEach((el) => { el.textContent = u.email; });
+    document.querySelectorAll('.profile .profile__avatar, [data-me-avatar]').forEach((el) => paintAvatar(el, u));
   }
 
   async function logout() {
@@ -159,7 +178,7 @@
   function notificationLink(n) {
     const d = n.data || {};
     if (n.type === 'TEAM_INVITATION') return 'projects.html#invitations';
-    if (d.taskId) return 'tasks.html' + (d.projectId ? `?project=${encodeURIComponent(d.projectId)}` : '');
+    if (d.taskId) return `tasks.html?${d.projectId ? `project=${encodeURIComponent(d.projectId)}&` : ''}task=${encodeURIComponent(d.taskId)}`;
     if (d.meetingId) return 'meetings.html';
     if (d.documentId) return 'project-files.html' + (d.projectId ? `?project=${encodeURIComponent(d.projectId)}` : '');
     if (d.projectId) return `project-overview.html?project=${encodeURIComponent(d.projectId)}`;
@@ -192,16 +211,24 @@
     const btn = wrap.querySelector('.app-bell__button');
     const panel = wrap.querySelector('.app-bell__panel');
     const list = wrap.querySelector('.app-bell__list');
+    // the list is read once when the page opens and refreshed quietly each time the menu opens:
+    // what is already known shows at once, without a loading screen
+    let loading = null;
     async function load() {
+      if (loading) return loading;
+      loading = fetchList().finally(() => { loading = null; });
+      return loading;
+    }
+    async function fetchList() {
       try {
-        const page = await Api.get('/notifications', { query: { limit: 20 } });
+        const page = await Api.get('/notifications', { query: { limit: 20 }, redirectOn401: false });
         const items = Array.isArray(page) ? page : page.items || page.data || [];
         if (!items.length) { state(list, 'empty', { title: T('لا توجد إشعارات', 'No notifications') }); return; }
         list.innerHTML = items.map((n) => { const v = notificationText(n); return `<button class="app-bell__item${n.isRead || n.readAt ? '' : ' is-unread'}" type="button" data-id="${esc(n.id)}" data-href="${esc(notificationLink(n))}">
             <strong>${esc(v.title)}</strong><span>${esc(v.text)}</span><small>${esc(fmtDateTime(n.createdAt))}</small></button>`; }).join('');
-      } catch (e) { state(list, 'error', { error: e, retry: load }); }
+      } catch (e) { if (!list.children.length) state(list, 'error', { error: e, retry: load }); }
     }
-    load(); // Prefetch notifications.
+    load();
     btn.addEventListener('click', () => {
       const open = panel.hidden;
       panel.hidden = !open; btn.setAttribute('aria-expanded', String(open));
@@ -290,6 +317,17 @@
     host.append(wrap);
   }
 
+  /** project pages: the completion of the project in the title bar (instead of a project list) */
+  function projectHeroProgress(w) {
+    const host = document.querySelector('.project-detail-hero__content'); if (!host || !w) return;
+    const pct = Math.max(0, Math.min(100, Math.round(w.progress?.percent ?? 0)));
+    let el = host.querySelector('.project-hero-progress');
+    if (!el) { el = document.createElement('div'); el.className = 'project-hero-progress'; host.append(el); }
+    el.innerHTML = `<span class="project-hero-progress__label">${esc(T('نسبة الإنجاز', 'Completion'))}</span>
+      <span class="project-hero-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${esc(T(`نسبة إنجاز المشروع ${pct} بالمئة`, `Project completion ${pct} percent`))}"><span style="width:${pct}%"></span></span>
+      <strong dir="ltr">${pct}%</strong>`;
+  }
+
   // ---------- start ----------
   async function start() {
     const role = document.body.dataset.appRole;
@@ -350,11 +388,14 @@
     }).sort((a, b) => (b.isLeader - a.isLeader) || a.label.localeCompare(b.label));
   }
 
-  window.TammhaUI = Object.freeze({ setupRequirement, T, L, esc, lang, isEn, fmtDate, fmtShortDate, fmtTime, fmtDateTime, isoDay, fmtSize, personName, initial, toast, state, busy, roleLabel });
+  /** tells other open pages (dashboard calendar) that tasks changed */
+  function tasksChanged() { try { localStorage.setItem('tammha-tasks-changed', String(Date.now())); } catch (e) { /* ignore */ } }
+
+  window.TammhaUI = Object.freeze({ setupRequirement, T, L, esc, lang, isEn, fmtDate, fmtShortDate, fmtTime, fmtDateTime, isoDay, fmtSize, personName, initial, avatarUrl, avatarHtml, paintAvatar, toast, state, busy, roleLabel, tasksChanged });
   window.TammhaSession = Object.freeze({
     ready, notificationText, notificationLink,
     get user() { return user; },
-    projects, currentProjectId, currentWorkspace, setCurrentProject, projectSwitcher, refreshBadge, logout, assignees,
+    projects, currentProjectId, currentWorkspace, setCurrentProject, projectSwitcher, projectHeroProgress, refreshBadge, logout, assignees,
     invalidateProjects() { projectsCache = null; }
   });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

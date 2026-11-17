@@ -15,8 +15,51 @@
     $('profileFirst').value = u.firstName || ''; $('profileLast').value = u.lastName || '';
     $('profileEmail').value = u.email || ''; $('profileNumber').value = u.studentNumber || '';
     $('profileUniversity').value = uniName || '';
-    $('profileInitial').textContent = UI.initial(UI.personName(u));
+    paintPhoto(u);
   }
+
+  // ----- profile photo: resized here to a 256 px square JPEG, saved on the account -----
+  const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+  function paintPhoto(u) {
+    document.querySelectorAll('.profile .profile__avatar, [data-me-avatar]').forEach((el) => UI.paintAvatar(el, u));
+    $('profilePhotoRemove').hidden = !UI.avatarUrl(u);
+  }
+  async function squarePhoto(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((resolve, reject) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = url; });
+      const size = 256; const side = Math.min(img.naturalWidth, img.naturalHeight);
+      if (!side) throw new Error('empty');
+      const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, size, size);
+      for (const q of [0.86, 0.75, 0.62, 0.5]) { const data = canvas.toDataURL('image/jpeg', q); if (data.length <= 78000) return data; }
+      throw new Error('too-large');
+    } finally { URL.revokeObjectURL(url); }
+  }
+  async function savePhoto(avatar, button) {
+    const err = $('profilePhotoError'); err.textContent = '';
+    await UI.busy(button, async () => {
+      try {
+        const u = await Api.patch('/users/me', { avatar }, { loader: { target: err, label: T('جارٍ حفظ الصورة…', 'Saving the photo…') } });
+        const merged = Object.assign(S.user, { avatar: u.avatar ?? null });
+        Api.saveUser(merged); paintPhoto(merged);
+        UI.toast(avatar ? T('حُفظت الصورة الشخصية.', 'Profile photo saved.') : T('أُزيلت الصورة الشخصية.', 'Profile photo removed.'), 'success');
+      } catch (er) { err.textContent = Api.message(er); }
+    });
+  }
+  $('profilePhotoFile').addEventListener('change', async (e) => {
+    const file = e.target.files[0]; e.target.value = '';
+    const err = $('profilePhotoError'); err.textContent = '';
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { err.textContent = T('اختر صورة بصيغة PNG أو JPG أو WebP.', 'Choose a PNG, JPG or WebP image.'); return; }
+    if (file.size > MAX_PHOTO_BYTES) { err.textContent = T('حجم الصورة يتجاوز 5MB. اختر صورة أصغر.', 'The image is larger than 5 MB. Choose a smaller image.'); return; }
+    let data;
+    try { data = await squarePhoto(file); } catch (er) { err.textContent = T('تعذّرت قراءة الصورة. جرّب صورة أخرى.', 'The image could not be read. Try another image.'); return; }
+    await savePhoto(data, document.querySelector('.profile-photo-pick'));
+  });
+  $('profilePhotoRemove').addEventListener('click', () => savePhoto(null, $('profilePhotoRemove')));
   $('profileForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const first = $('profileFirst').value.trim(); const err = $('profileError'); err.textContent = '';

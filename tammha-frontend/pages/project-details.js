@@ -13,12 +13,13 @@
   const stateLabel = (s) => L((D.STAGE_STATUSES && D.STAGE_STATUSES[s] && D.STAGE_STATUSES[s].label) || [s, s]);
 
   function summary() {
-    const p = w.project; const sup = ((w.supervisors || [])[0] || {}).user || (w.supervisors || [])[0]; /* { userId, user } from the API */ const pct = Math.round(w.progress?.percent ?? 0);
+    const p = w.project; const sup = ((w.supervisors || [])[0] || {}).user || (w.supervisors || [])[0]; /* { userId, user } from the API */
     $('projectName').textContent = p.name;
     document.querySelector('.project-summary').innerHTML = `<div class="summary-item"><span>${esc(T('تاريخ البدء', 'Start date'))}</span><strong>${esc(UI.fmtDate(p.startDate))}</strong></div>
       <div class="summary-item"><span>${esc(T('أعضاء الفريق', 'Team members'))}</span><strong>${esc(String((w.team?.members || []).length))}</strong></div>
-      <div class="summary-item"><span>${esc(T('المشرف الأكاديمي', 'Academic supervisor'))}</span><strong>${esc(sup ? UI.personName(sup) : T('لم يُحدد بعد', 'Not assigned yet'))}</strong></div>
-      <div class="summary-item summary-item--progress"><span>${esc(T('نسبة الإنجاز', 'Completion'))}</span><strong>${pct}%</strong><div aria-label="${esc(T(`نسبة إنجاز المشروع ${pct} بالمئة`, `Project completion ${pct} percent`))}" class="summary-progress"><span style="width:${pct}%"></span></div></div>`;
+      <div class="summary-item"><span>${esc(T('المشرف الأكاديمي', 'Academic supervisor'))}</span><strong>${esc(sup ? UI.personName(sup) : T('لم يُحدد بعد', 'Not assigned yet'))}</strong></div>`;
+    // the completion is shown once, in the title bar
+    S.projectHeroProgress(w);
   }
   function render() {
     const isLeader = !!w.viewer?.isLeader;
@@ -88,7 +89,6 @@
       w = await S.currentWorkspace();
       if (!w) { UI.state(body, 'empty', { title: T('لا توجد مشاريع بعد', 'No projects yet'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } }); $('openStageModal').hidden = true; return; }
       $('openStageModal').hidden = !w.viewer?.isLeader;
-      S.projectSwitcher(document.querySelector('.project-detail-hero__content'), await S.projects(), w.id, (id) => { location.href = `project-details.html?project=${encodeURIComponent(id)}`; });
       summary(); load();
     } catch (e) { UI.state(body, 'error', { error: e, retry: () => location.reload() }); }
   });

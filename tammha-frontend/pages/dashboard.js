@@ -5,8 +5,18 @@
 // Invitations waiting: GET /team-invitations/incoming (a short notice links to the projects page)
 (function () {
   'use strict';
-  const Api = window.TammhaApi; const UI = window.TammhaUI; const S = window.TammhaSession;
-  const { T, esc } = UI;
+  const Api = window.TammhaApi; const UI = window.TammhaUI; const S = window.TammhaSession; const D = window.TammhaDomain;
+  const { T, L, esc } = UI;
+  // one loading screen over the whole dashboard (header, projects, meetings and calendar) from the
+  // first moment until every section has its data; then all sections appear together
+  const main = document.querySelector('.main-content');
+  const pageLoader = main && window.TammhaLoader ? window.TammhaLoader.show({ target: main, cover: true, label: T('جارٍ تحميل لوحة التحكم…', 'Loading dashboard…'), showSlow: false }) : null;
+  if (pageLoader) main.classList.add('is-page-loading');
+  function revealPage() {
+    if (!pageLoader) return;
+    main.classList.remove('is-page-loading');
+    pageLoader.done();
+  }
   const box = document.getElementById('dashProjects');
   const meetingsBox = document.getElementById('dashMeetings');
   const ICON_ARROW = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"></path></svg>';
@@ -15,6 +25,7 @@
     if (inline) UI.state(box, 'loading');
     try {
       const items = await S.projects(true);
+      projectNames = Object.fromEntries(items.map((w) => [w.id, w.name]));
       if (!items.length) {
         UI.state(box, 'empty', { title: T('لا توجد مشاريع بعد', 'No projects yet'), text: T('أنشئ مشروعًا جديدًا بصفتك قائد الفريق، أو انضم إلى مشروع زميلك برمز الدعوة.', 'Create a new project as Team Leader, or join a classmate’s project with an invitation code.'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } });
         return;
@@ -43,22 +54,50 @@
     } catch (e) { UI.state(meetingsBox, 'error', { error: e, retry: meetings }); }
   }
 
-  async function calendar() {
-    const now = new Date();
-    const from = new Date(now.getFullYear(), now.getMonth() - 2, 1); const to = new Date(now.getFullYear(), now.getMonth() + 4, 0);
+  // Calendar: tasks (with their status, project and owner) and meetings, per day. The visible
+  // month and the months around it are read; a change of month reads the new range.
+  const TASK_STATUS = (t) => {
+    const late = D && D.isOverdue(t.status, t.dueDate ? UI.isoDay(t.dueDate) : '', UI.isoDay(new Date()));
+    const st = (D && D.TASK_STATUSES[t.status]) || { label: [t.status, t.status], cls: 'idle' };
+    return late ? { label: T('متأخرة', 'Overdue'), cls: 'overdue' } : { label: L(st.label), cls: st.cls };
+  };
+  let range = null;
+  let projectNames = {};
+  let namesReady = Promise.resolve();
+  async function calendar(around) {
+    const base = around || new Date();
+    const from = new Date(base.getFullYear(), base.getMonth() - 1, 1); const to = new Date(base.getFullYear(), base.getMonth() + 2, 0, 23, 59, 59);
+    range = { from, to };
     const key = (d) => { const x = new Date(d); return `${x.getFullYear()}-${x.getMonth() + 1}-${x.getDate()}`; };
     const map = {};
     const add = (d, item) => { (map[key(d)] = map[key(d)] || []).push(item); };
     try {
-      const [tasks, mts] = await Promise.all([
-        Api.get('/tasks', { query: { dueFrom: UI.isoDay(from), dueTo: UI.isoDay(to), limit: 100 } }),
-        Api.get('/meetings', { query: { from: from.toISOString(), to: to.toISOString(), limit: 100 } })
-      ]);
-      (tasks.items || []).filter((t) => t.dueDate && !['COMPLETED', 'CANCELLED'].includes(t.status)).forEach((t) => add(t.dueDate, { type: 'task', title: t.title, meta: T('موعد التسليم', 'Due date') }));
-      (mts.items || mts || []).forEach((m) => add(m.scheduledAt, { type: 'meeting', title: m.title, meta: `${UI.fmtTime(m.scheduledAt)} - ${UI.fmtTime(m.endsAt)}` }));
+      const tasks = []; let page = 1; let pages = 1;
+      do {
+        const r = await Api.get('/tasks', { query: { dueFrom: UI.isoDay(from), dueTo: UI.isoDay(to), limit: 100, page } });
+        tasks.push(...(r.items || [])); pages = r.meta?.totalPages || 1; page += 1;
+      } while (page <= pages && page < 10);
+      const mts = await Api.get('/meetings', { query: { from: from.toISOString(), to: to.toISOString(), limit: 100 } });
+      await namesReady;
+      if (range.from !== from) return; // a newer month was asked for meanwhile
+      tasks.filter((t) => t.dueDate && t.status !== 'CANCELLED').forEach((t) => {
+        const st = TASK_STATUS(t);
+        add(t.dueDate, {
+          type: 'task', title: t.title, status: st.label, statusCls: st.cls,
+          meta: [projectNames[t.projectId], t.assignedStudent ? UI.personName(t.assignedStudent) : T('غير مُسنَدة', 'Unassigned')].filter(Boolean).join(' · '),
+          href: `tasks.html?project=${encodeURIComponent(t.projectId)}&task=${encodeURIComponent(t.id)}`
+        });
+      });
+      (mts.items || mts || []).forEach((m) => add(m.scheduledAt, { type: 'meeting', title: m.title, status: T('اجتماع', 'Meeting'), statusCls: 'meeting', meta: `${UI.fmtTime(m.scheduledAt)} - ${UI.fmtTime(m.endsAt)}`, href: 'meetings.html' }));
       window.TammhaCalendar?.setItems(map);
-    } catch (e) { /* the calendar stays empty; the rest of the page still works */ }
+    } catch (e) { window.TammhaCalendar?.setError(Api.message(e)); }
   }
+  // a new month in the calendar reads its tasks; tasks added or moved on another page show here too
+  if (window.TammhaCalendar) window.TammhaCalendar.onMonthChange = (d) => { if (!range || d < range.from || d > range.to) calendar(d); };
+  const refreshCalendar = () => calendar(window.TammhaCalendar?.visibleMonth());
+  window.addEventListener('storage', (e) => { if (e.key === 'tammha-tasks-changed') refreshCalendar(); });
+  window.addEventListener('pageshow', (e) => { if (e.persisted) refreshCalendar(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && range) refreshCalendar(); });
 
   async function invitations() {
     try {
@@ -72,16 +111,11 @@
   }
 
   S.ready.then(async () => {
-    const loader = window.TammhaLoader?.show({
-      label: T('جارٍ تحميل لوحة التحكم…', 'Loading dashboard…'),
-      showSlow: false
-    });
     try {
-      await Promise.allSettled([
-        projects(false), meetings(false), calendar(), invitations()
-      ]);
+      namesReady = projects(false); // also gives the calendar the project names
+      await Promise.allSettled([namesReady, meetings(false), calendar(), invitations()]);
     } finally {
-      loader?.done();
+      revealPage();
     }
-  });
+  }, () => revealPage());
 })();

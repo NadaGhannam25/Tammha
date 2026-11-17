@@ -75,6 +75,7 @@ window.TAMMHA_EN = {
  "خميس": "Thu",
  "جمعة": "Fri",
  "مهام ومواعيد اليوم": "Today's tasks and appointments",
+ "المهام والمواعيد": "Tasks and meetings",
  "تممها | تسجيل الدخول": "Tammha | Sign in",
  "تسجيل الدخول": "Sign in",
  "أدخل بيانات الحساب الجامعي لتسجيل الدخول.": "Enter your university account details to sign in.",

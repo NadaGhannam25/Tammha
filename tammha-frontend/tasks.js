@@ -5,6 +5,8 @@
 //   POST   /tasks                        new task (Team Leader)          DELETE /tasks/:id (Team Leader)
 //   GET/POST /tasks/:id/comments, PATCH/DELETE /tasks/:id/comments/:commentId
 //   GET    /tasks/:id/feedback           written supervisor feedback (read-only here)
+//   GET/POST /tasks/:id/attachments, DELETE /tasks/:id/attachments/:id  project files linked to the task
+//          (Team Leader or the task's owner link them; everyone in the project opens them)
 // The rules shown here (allowed status changes, who may change what) mirror the backend, which
 // checks them again: an error from the server is shown and nothing is changed locally.
 (function () {
@@ -86,6 +88,8 @@
     $('taskDrawerStatus').innerHTML = drawerPill(task);
     const canChange = task.assigneeId === me.id || isLeader;
     const options = canChange ? D.nextTaskStatuses(task.status, isLeader) : [];
+    // one clear action to finish the task, next to the full status list
+    $('taskComplete').hidden = !options.includes('COMPLETED');
     statusForm.hidden = options.length === 0;
     statusSelect.innerHTML = `<option disabled selected value="">${esc(T('اختر الحالة الجديدة', 'Choose the new status'))}</option>` + options.map((code) => `<option value="${code}">${esc(label(code))}</option>`).join('');
     statusHint.textContent = !canChange ? T(`يغيّر الحالة المسؤول عن المهمة (${task.assignee}) أو قائد الفريق.`, `The task owner (${task.assignee}) or the Team Leader changes the status.`)
@@ -127,6 +131,58 @@
     try { const r = await Api.get(`/tasks/${task.id}/comments`, { query: { limit: 100 } }); comments = r.items || r || []; renderComments(); }
     catch (e) { $('taskDrawerComments').innerHTML = `<li class="task-drawer__none">${esc(Api.message(e))}</li>`; }
   }
+  // ----- attachments: files of the project linked to the task -----
+  const canEditTask = (task) => isLeader || task.assigneeId === me.id;
+  let projectDocs = null;
+  async function renderAttachments(task) {
+    const list = $('taskDrawerFiles'); const form = $('taskAttachForm'); const hint = $('taskAttachHint');
+    list.innerHTML = `<li class="task-drawer__none">${esc(T('جارٍ التحميل…', 'Loading…'))}</li>`;
+    form.hidden = true; hint.hidden = true;
+    let items = [];
+    try { items = await Api.get(`/tasks/${encodeURIComponent(task.id)}/attachments`); }
+    catch (e) { if (current === task) list.innerHTML = `<li class="task-drawer__none">${esc(Api.message(e))}</li>`; return; }
+    if (current !== task) return;
+    const edit = canEditTask(task);
+    list.innerHTML = items.length ? items.map((a) => `<li class="task-file"><img alt="" src="assets/${/\.pdf$/i.test(a.fileName) ? 'file-pdf' : 'file-txt'}.png"/><span class="task-file__name"><strong dir="auto">${esc(a.title)}</strong><small dir="auto">${esc(a.fileName)} · ${esc(UI.fmtSize(a.fileSize))}</small></span>
+        <button class="team-link" type="button" data-open-doc="${esc(a.documentId)}">${esc(T('فتح', 'Open'))}</button>${edit ? `<button class="team-link team-link--danger" type="button" data-detach="${esc(a.id)}">${esc(T('إزالة', 'Remove'))}</button>` : ''}</li>`).join('')
+      : `<li class="task-drawer__none">${esc(T('لا توجد مرفقات لهذه المهمة.', 'This task has no attachments.'))}</li>`;
+    if (!edit) return;
+    try {
+      if (!projectDocs) { const r = await Api.get('/documents', { query: { projectId: w.id } }); projectDocs = Array.isArray(r) ? r : r.items || []; }
+    } catch (e) { projectDocs = null; return; }
+    if (current !== task) return;
+    const linked = new Set(items.map((a) => a.documentId));
+    const free = projectDocs.filter((d) => !linked.has(d.id));
+    form.hidden = free.length === 0;
+    $('taskAttachSelect').innerHTML = `<option value="">${esc(T('اختر ملفًا من ملفات المشروع', 'Choose a project file'))}</option>` + free.map((d) => `<option value="${esc(d.id)}">${esc(d.title)} — ${esc(d.fileName || '')}</option>`).join('');
+    hint.hidden = free.length !== 0;
+    hint.innerHTML = projectDocs.length ? esc(T('أُرفقت كل ملفات المشروع بهذه المهمة.', 'Every project file is already attached.'))
+      : `${esc(T('لإرفاق ملف، ارفعه أولًا في ملفات المشروع.', 'To attach a file, first upload it to the project files.'))} <a href="project-files.html?project=${encodeURIComponent(w.id)}">${esc(T('ملفات المشروع', 'Project files'))}</a>`;
+  }
+  async function openDocument(id, button) {
+    // the tab opens at the click (no pop-up blocker), the signed link is set when it arrives
+    const tab = window.open('', '_blank');
+    await UI.busy(button, async () => {
+      try {
+        const d = await Api.get(`/documents/${encodeURIComponent(id)}`);
+        if (!d.signedUrl) throw new Api.ApiError({ code: 'STORAGE_ERROR' });
+        if (tab) { tab.opener = null; tab.location.href = d.signedUrl; } else window.location.href = d.signedUrl;
+      } catch (e) { if (tab) tab.close(); throw e; }
+    });
+  }
+  $('taskDrawerFiles').addEventListener('click', (event) => {
+    const task = current; if (!task) return;
+    const open = event.target.closest('[data-open-doc]'); const detach = event.target.closest('[data-detach]');
+    if (open) openDocument(open.dataset.openDoc, open);
+    if (detach) UI.busy(detach, async () => { await Api.del(`/tasks/${encodeURIComponent(task.id)}/attachments/${encodeURIComponent(detach.dataset.detach)}`); UI.toast(T('أُزيل المرفق.', 'Attachment removed.'), 'success'); renderAttachments(task); });
+  });
+  $('taskAttachForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const task = current; const documentId = $('taskAttachSelect').value;
+    if (!task || !documentId) { $('taskAttachSelect').focus(); return; }
+    UI.busy(event.target.querySelector('button'), async () => { await Api.post(`/tasks/${encodeURIComponent(task.id)}/attachments`, { documentId }); UI.toast(T('أُرفق الملف بالمهمة.', 'File attached to the task.'), 'success'); renderAttachments(task); });
+  });
+
   function openTask(id) {
     const task = tasks.find((t) => t.id === id); if (!task) return;
     current = task; editing = null; comments = [];
@@ -136,8 +192,7 @@
     $('taskDrawerDue').textContent = task.due ? UI.fmtDate(task.due) : '—';
     $('taskDrawerStage').textContent = task.stage || (task.source === 'AI_SUGGESTION' ? T('من دليل المشروع', 'From the project handbook') : '—');
     $('taskDrawerDescription').textContent = task.description || T('لا يوجد وصف.', 'No description.');
-    $('taskDrawerFilesBlock').hidden = true;
-    renderStatus(task); renderLeaderTools(task); renderFeedback(task); loadComments(task);
+    renderStatus(task); renderLeaderTools(task); renderFeedback(task); loadComments(task); renderAttachments(task);
     commentText.value = ''; setCommentError(false);
     drawer.hidden = false;
     $('closeTaskDrawer').focus();
@@ -154,19 +209,28 @@
     if (!task || !to || !D.canChangeTaskStatus(task.status, to, isLeader)) { statusSelect.focus(); return; }
     UI.busy(statusForm.querySelector('button'), async () => {
       const v = replace(await Api.patch(`/tasks/${task.id}`, { status: to }));
-      renderStatus(v); render(); UI.toast(T('حُفظت الحالة.', 'Status saved.'), 'success');
+      renderStatus(v); render(); UI.tasksChanged(); UI.toast(T('حُفظت الحالة.', 'Status saved.'), 'success');
+    });
+  });
+  // "mark as completed": saved on the server, then the panel, the list and the counters update at once
+  $('taskComplete').addEventListener('click', () => {
+    const task = current;
+    if (!task || !D.canChangeTaskStatus(task.status, 'COMPLETED', isLeader)) return;
+    UI.busy($('taskComplete'), async () => {
+      const v = replace(await Api.patch(`/tasks/${task.id}`, { status: 'COMPLETED' }));
+      renderStatus(v); render(); UI.tasksChanged(); UI.toast(T('اكتملت المهمة.', 'Task completed.'), 'success');
     });
   });
   $('taskLeaderForm').addEventListener('submit', (event) => {
     event.preventDefault(); const task = current; if (!task) return;
     UI.busy(event.target.querySelector('[type="submit"]'), async () => {
       const v = replace(await Api.patch(`/tasks/${task.id}`, { assignedStudentId: $('taskEditAssignee').value || null, milestoneId: $('taskEditStage').value || null, dueDate: $('taskEditDue').value || null }));
-      openTask(v.id); render(); UI.toast(T('حُفظت المهمة.', 'Task saved.'), 'success');
+      openTask(v.id); render(); UI.tasksChanged(); UI.toast(T('حُفظت المهمة.', 'Task saved.'), 'success');
     });
   });
   $('taskDelete').addEventListener('click', () => {
     const task = current; if (!task || !window.confirm(T(`حذف المهمة «${task.name}»؟`, `Delete the task “${task.name}”?`))) return;
-    UI.busy($('taskDelete'), async () => { await Api.del(`/tasks/${task.id}`); tasks = tasks.filter((t) => t.id !== task.id); closeDrawer(); render(); UI.toast(T('حُذفت المهمة.', 'Task deleted.'), 'success'); });
+    UI.busy($('taskDelete'), async () => { await Api.del(`/tasks/${task.id}`); tasks = tasks.filter((t) => t.id !== task.id); closeDrawer(); render(); UI.tasksChanged(); UI.toast(T('حُذفت المهمة.', 'Task deleted.'), 'success'); });
   });
 
   function setCommentError(on) { commentText.classList.toggle('is-invalid', on); commentText.setAttribute('aria-invalid', String(on)); commentError.hidden = !on; }
@@ -224,7 +288,7 @@
         assignedStudentId: $('taskAssignee').value || undefined, milestoneId: $('taskStage').value || undefined,
         status: $('taskStatus').value, priority: $('taskPriority').value, dueDate: due
       });
-      replace(t); hideModal(); render(); UI.toast(T('أُضيفت المهمة.', 'Task added.'), 'success');
+      replace(t); hideModal(); render(); UI.tasksChanged(); UI.toast(T('أُضيفت المهمة.', 'Task added.'), 'success');
     });
   });
   document.addEventListener('keydown', (event) => { if (event.key !== 'Escape') return; if (!modal.hidden) hideModal(); else closeDrawer(); });
