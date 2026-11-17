@@ -71,3 +71,50 @@ export class ConfirmAccountDeletionDto {
   @Matches(/^\s*\d{6}\s*$/, { message: 'code must be 6 digits' })
   code!: string;
 }
+
+/** P17: verify the account e-mail with the 6-digit code. */
+export class VerifyEmailCodeDto {
+  @ApiProperty({ example: 'student@university.edu' })
+  @NormalizeEmail()
+  @IsEmail()
+  @MaxLength(254)
+  email!: string;
+
+  @ApiProperty({
+    example: '483920',
+    description: 'The 6-digit code from the e-mail',
+  })
+  @IsString()
+  @Matches(/^\s*\d{6}\s*$/, { message: 'code must be 6 digits' })
+  code!: string;
+}
+
+/** P17: send a new code. */
+export class ResendVerificationCodeDto {
+  @ApiProperty({ example: 'student@university.edu' })
+  @NormalizeEmail()
+  @IsEmail()
+  @MaxLength(254)
+  email!: string;
+}
+
+/** P17: an unverified account moves to another address and gets a new code there. */
+export class ChangeUnverifiedEmailDto {
+  @ApiProperty({ example: 'student@pnu.edu.sa' })
+  @NormalizeEmail()
+  @IsEmail()
+  @MaxLength(254)
+  currentEmail!: string;
+
+  @ApiProperty({ description: 'The account password' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(128)
+  password!: string;
+
+  @ApiProperty({ example: 'student@gmail.com' })
+  @NormalizeEmail()
+  @IsEmail()
+  @MaxLength(254)
+  newEmail!: string;
+}

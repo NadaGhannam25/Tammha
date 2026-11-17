@@ -18,6 +18,7 @@ import { SupabaseStorageService } from '@modules/documents/supabase-storage.serv
 import { AI_TEXT_PROVIDER } from '@/integrations/ai/ai.provider';
 import { EMAIL_SENDER } from '@/integrations/email/email.sender';
 import { ProjectHandbookService } from '@modules/ai-support/handbook/project-handbook.service';
+import { verificationCodeIn } from '@/testing/verification-code';
 
 /**
  * P16 END-TO-END FLOW on the real AppModule (all modules, guards, pipes, Swagger).
@@ -60,6 +61,12 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
       new RegExp(`/${kind}\\.html\\?token=([A-Za-z0-9_-]{43})`).exec(msg.text);
     return match?.[1] ?? null;
   };
+  /** P17: the latest verification code e-mailed to this address */
+  const lastCode = (to: string) =>
+    [...mail.sent]
+      .reverse()
+      .map((m) => (m.to === to ? verificationCodeIn(m.text) : null))
+      .find((c) => !!c) ?? null;
   const notificationsOf = (k: string, type?: string) =>
     db.notification.rows.filter(
       (n: any) => n.userId === ids[k] && (!type || n.type === type),
@@ -181,12 +188,14 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
         onboardingCompleted: false,
       });
       expect(body.user).not.toHaveProperty('password');
-      expect(lastLink('leila@uni.test', 'verify-email')).toMatch(
-        /^[A-Za-z0-9_-]{43}$/,
-      );
-      // only the digest is stored
-      const raw = lastLink('leila@uni.test', 'verify-email')!;
-      expect(JSON.stringify(db.authToken.rows)).not.toContain(raw);
+      // P17: a 6-digit code (no link); only its digest is stored
+      const code = lastCode('leila@uni.test');
+      expect(code).toMatch(/^\d{6}$/);
+      const sentMail = [...mail.sent]
+        .reverse()
+        .find((m) => m.to === 'leila@uni.test')!;
+      expect(sentMail.text).not.toContain('http');
+      expect(JSON.stringify(db.authToken.rows)).not.toContain(`"${code}"`);
     });
 
     it('studentNumber is unique per university; students only', async () => {
@@ -225,11 +234,11 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
       await register('supB', 'SUPERVISOR');
     });
 
-    it('verify-email: valid token verifies once; reused or malformed token is rejected', async () => {
-      const token = lastLink('leila@uni.test', 'verify-email')!;
+    it('verify-email/code: the right code verifies once; reused or malformed code is rejected', async () => {
+      const code = lastCode('leila@uni.test')!;
       const res = await http()
-        .post(`${API}/auth/verify-email`)
-        .send({ token })
+        .post(`${API}/auth/verify-email/code`)
+        .send({ email: 'leila@uni.test', code })
         .expect(200);
       expect(res.body.emailVerified).toBe(true);
       const me = await http()
@@ -239,26 +248,26 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
       expect(me.body).toMatchObject({ emailVerified: true });
       expect(me.body.emailVerifiedAt).not.toBeNull();
 
-      const again = await http()
-        .post(`${API}/auth/verify-email`)
-        .send({ token })
-        .expect(400);
-      expect(again.body.code).toBe('VERIFICATION_TOKEN_INVALID');
+      // already verified: answered as verified, the code is not needed again
       await http()
-        .post(`${API}/auth/verify-email`)
-        .send({ token: 'short' })
+        .post(`${API}/auth/verify-email/code`)
+        .send({ email: 'leila@uni.test', code })
+        .expect(200);
+      await http()
+        .post(`${API}/auth/verify-email/code`)
+        .send({ email: 'leila@uni.test', code: '12' })
         .expect(400);
     });
 
-    it('resend-verification: cooldown, new link replaces the old one, 409 once verified', async () => {
-      const first = lastLink('noor@uni.test', 'verify-email')!;
+    it('resend-verification: cooldown, a new code replaces the old one, 409 once verified', async () => {
+      const first = lastCode('noor@uni.test')!;
       const wait = await http()
         .post(`${API}/auth/resend-verification`)
         .set(as('noor'))
         .expect(429);
       expect(wait.body.code).toBe('VERIFICATION_RECENTLY_SENT');
 
-      // move the previous link out of the cooldown window
+      // move the previous code out of the cooldown window
       for (const t of db.authToken.rows as any[]) {
         if (t.userId === ids.noor) t.createdAt = new Date(Date.now() - 120_000);
       }
@@ -267,15 +276,17 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
         .set(as('noor'))
         .expect(200);
       expect(res.body.emailDelivery).toBe('ENABLED');
-      const second = lastLink('noor@uni.test', 'verify-email')!;
-      expect(second).not.toBe(first);
+      const second = lastCode('noor@uni.test')!;
+      if (second !== first) {
+        const old = await http()
+          .post(`${API}/auth/verify-email/code`)
+          .send({ email: 'noor@uni.test', code: first })
+          .expect(400);
+        expect(old.body.code).toBe('VERIFICATION_CODE_INVALID');
+      }
       await http()
-        .post(`${API}/auth/verify-email`)
-        .send({ token: first })
-        .expect(400);
-      await http()
-        .post(`${API}/auth/verify-email`)
-        .send({ token: second })
+        .post(`${API}/auth/verify-email/code`)
+        .send({ email: 'noor@uni.test', code: second })
         .expect(200);
       const done = await http()
         .post(`${API}/auth/resend-verification`)
@@ -1473,6 +1484,9 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
     const doc = createSwaggerDocument(app);
     for (const path of [
       '/api/v1/auth/verify-email',
+      '/api/v1/auth/verify-email/code',
+      '/api/v1/auth/verify-email/resend',
+      '/api/v1/auth/verify-email/change-email',
       '/api/v1/auth/resend-verification',
       '/api/v1/auth/forgot-password',
       '/api/v1/auth/reset-password',

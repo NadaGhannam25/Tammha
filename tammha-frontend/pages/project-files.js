@@ -1,7 +1,7 @@
 // ===== Project files (project-files.html) — connected to the API =====
 // Summary: GET /projects/:id. Files: GET /documents?projectId=…. Upload: POST /documents/upload.
 // Row menu: view / download (signed URLs), versions (+ new version), delete (uploader or Team Leader).
-// Storage indicator: GET /users/me/storage. Review status chips come from the supervisor's decisions.
+// Files are shown as cards (no table, no storage bar). Review status chips come from the supervisor's decisions.
 (function () {
   'use strict';
   const Api = window.TammhaApi; const UI = window.TammhaUI; const S = window.TammhaSession; const Docs = window.TammhaDocs;
@@ -23,16 +23,19 @@
   }
   function row(d) {
     const name = d.fileName || d.title;
-    return `<div class="project-files-row" data-doc="${esc(d.id)}" data-file-name="${esc(`${d.title} ${name}`.toLowerCase())}" role="row">
-      <div class="file-name-cell"><img alt="${esc(Docs.type(name))}" src="${Docs.icon(name)}"/><div><strong title="${esc(name)}">${esc(d.title)}</strong><small>${esc(name)} · v${esc(d.currentVersion || 1)} ${Docs.reviewChip(d.reviewStatus)}</small></div></div>
-      <span class="file-type">${esc(Docs.type(name))}</span><span>${esc(UI.fmtDate(d.createdAt))}</span><span dir="ltr">${esc(UI.fmtSize(d.fileSize))}</span><span>${esc(UI.personName(d.uploadedBy))}</span>
-      <div class="file-actions"><button aria-expanded="false" aria-haspopup="menu" aria-label="${esc(T('خيارات الملف', 'File options'))}" class="file-more" data-file-menu="d${esc(d.id)}" type="button">${ICON_MORE}</button>
-        <div class="file-action-menu" data-file-menu-panel="d${esc(d.id)}" hidden role="menu">
-          <button class="file-action-menu__item" data-doc-action="view" role="menuitem" type="button">${esc(T('عرض الملف', 'View file'))}</button>
-          <button class="file-action-menu__item" data-doc-action="download" role="menuitem" type="button">${esc(T('تنزيل الملف', 'Download file'))}</button>
-          ${canEdit(d) && d.reviewStatus === 'UPLOADED' && (w.supervisors || []).length ? `<button class="file-action-menu__item" data-doc-action="review" role="menuitem" type="button">${esc(T('إرسال للمراجعة', 'Send for review'))}</button>` : ''}
-          ${canEdit(d) ? `<button class="file-action-menu__item" data-doc-action="delete" role="menuitem" type="button">${esc(T('حذف الملف', 'Delete file'))}</button>` : ''}
-        </div></div></div>`;
+    return `<article class="pfile-card" data-doc="${esc(d.id)}" data-file-name="${esc(`${d.title} ${name}`.toLowerCase())}">
+      <div class="pfile-card__top"><img alt="${esc(Docs.type(name))}" src="${Docs.icon(name)}"/>
+        <div class="file-actions"><button aria-expanded="false" aria-haspopup="menu" aria-label="${esc(T('خيارات الملف', 'File options'))}" class="file-more" data-file-menu="d${esc(d.id)}" type="button">${ICON_MORE}</button>
+          <div class="file-action-menu" data-file-menu-panel="d${esc(d.id)}" hidden role="menu">
+            <button class="file-action-menu__item" data-doc-action="view" role="menuitem" type="button">${esc(T('عرض الملف', 'View file'))}</button>
+            <button class="file-action-menu__item" data-doc-action="download" role="menuitem" type="button">${esc(T('تنزيل الملف', 'Download file'))}</button>
+            ${canEdit(d) && d.reviewStatus === 'UPLOADED' && (w.supervisors || []).length ? `<button class="file-action-menu__item" data-doc-action="review" role="menuitem" type="button">${esc(T('إرسال للمراجعة', 'Send for review'))}</button>` : ''}
+            ${canEdit(d) ? `<button class="file-action-menu__item" data-doc-action="delete" role="menuitem" type="button">${esc(T('حذف الملف', 'Delete file'))}</button>` : ''}
+          </div></div></div>
+      <button class="pfile-card__open" type="button" data-doc-action="view"><strong title="${esc(name)}">${esc(d.title)}</strong><small dir="auto">${esc(name)}</small></button>
+      <div class="pfile-card__chips"><span class="pfile-card__type">${esc(Docs.type(name))}</span><span>v${esc(d.currentVersion || 1)}</span>${Docs.reviewChip(d.reviewStatus)}</div>
+      <div class="pfile-card__meta"><span>${esc(UI.personName(d.uploadedBy))}</span><span>${esc(UI.fmtDate(d.createdAt))} · <bdi dir="ltr">${esc(UI.fmtSize(d.fileSize))}</bdi></span></div>
+    </article>`;
   }
   async function load() {
     UI.state(body, 'loading'); $('projectFilesEmpty').hidden = true;
@@ -40,18 +43,14 @@
       const list = await Api.get('/documents', { query: { projectId: w.id } });
       docs = Array.isArray(list) ? list : list.items || [];
       body.innerHTML = docs.map(row).join('');
-      body.closest('.project-files-table')?.classList.toggle('is-empty', docs.length === 0);
       if (!docs.length) UI.state(body, 'empty', { title: T('لا توجد ملفات بعد', 'No files yet'), text: T('ارفع ملفات المشروع من زر «إضافة ملف».', 'Upload project files with “Add file”.') });
       filter();
     } catch (e) { UI.state(body, 'error', { error: e, retry: load }); }
-    Docs.storageBar($('projectStorage'));
   }
   function filter() {
     const q = ($('projectFilesSearch').value || '').trim().toLowerCase(); let v = 0;
-    body.querySelectorAll('.project-files-row').forEach((r) => { const ok = !q || r.dataset.fileName.includes(q) || r.textContent.toLowerCase().includes(q); r.hidden = !ok; if (ok) v += 1; });
+    body.querySelectorAll('.pfile-card').forEach((r) => { const ok = !q || r.dataset.fileName.includes(q) || r.textContent.toLowerCase().includes(q); r.hidden = !ok; if (ok) v += 1; });
     $('projectFilesEmpty').hidden = !(docs.length && v === 0);
-    // no column titles over an empty result
-    body.closest('.project-files-table')?.classList.toggle('is-empty', v === 0);
   }
   $('projectFilesSearch').addEventListener('input', filter);
 

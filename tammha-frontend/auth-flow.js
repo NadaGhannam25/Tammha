@@ -3,7 +3,10 @@
 // reset-link-sent.html   → resend: POST /auth/forgot-password again (60 s apart)
 // reset-password.html    → POST /auth/reset-password { token, newPassword }
 //   ?mode=activate        → POST /auth/activate-account { token, newPassword } (supervisor accounts)
-// verify-email.html      → POST /auth/verify-email { token }; ?pending=1 → resend link (signed in)
+// verify-email.html      → P17: 6-digit code. POST /auth/verify-email/code { email, code },
+//                          POST /auth/verify-email/resend { email } (60 s countdown),
+//                          POST /auth/verify-email/change-email { currentEmail, password, newEmail };
+//                          ?token=… (links sent before P17) → POST /auth/verify-email { token }
 // verify-university-email.html → POST /auth/verify-university-email { token }
 // Password rule = backend: 8–128 characters with at least one letter and one digit.
 (() => {
@@ -148,32 +151,147 @@
           set(T('تم تأكيد البريد', 'Email verified'), university ? T('تم تأكيد بريدك الجامعي.', 'Your university email is verified.') : T('تم تأكيد بريدك الإلكتروني، ويمكنك الآن استخدام المنصة.', 'Your email is verified. You can now use the platform.'),
             `<a class="auth-primary-button" href="${signedIn ? continueTo() : 'login.html'}">${signedIn ? T('المتابعة', 'Continue') : T('تسجيل الدخول', 'Sign in')}</a>`);
         })
-        .catch((e) => stop() || set(T('تعذّر تأكيد البريد', 'The email could not be verified'), Api.message(e), signedIn ? `<button class="auth-primary-button" type="button" data-resend>${T('إرسال رابط جديد', 'Send a new link')}</button>` : `<a class="auth-primary-button" href="login.html">${T('تسجيل الدخول', 'Sign in')}</a>`));
+        .catch((e) => stop() || set(T('تعذّر تأكيد البريد', 'The email could not be verified'), Api.message(e), `<a class="auth-primary-button" href="verify-email.html?pending=1">${T('إدخال رمز التحقق', 'Enter a verification code')}</a>`));
+    } else if (!university) {
+      codeScreen();
     } else {
-      const email = params.get('email') || Api.session()?.user?.email || '';
-      set(T('أكّد بريدك الإلكتروني', 'Verify your email'), T(`أرسلنا رابط التأكيد إلى ${email || 'بريدك الجامعي'}. افتح الرابط لتفعيل الحساب، وتحقق من مجلد الرسائل غير المرغوب فيها إن لم تجد الرسالة.`, `A verification link was sent to ${email || 'your university email'}. Open it to activate the account; check the spam folder if it is not in the inbox.`),
-        signedIn ? `<button class="auth-primary-button" type="button" data-check>${T('أكّدت البريد، المتابعة', 'I have verified it, continue')}</button><button class="auth-secondary-button" type="button" data-resend>${T('إعادة إرسال الرابط', 'Resend the link')}</button>` : `<a class="auth-primary-button" href="login.html">${T('تسجيل الدخول', 'Sign in')}</a>`);
+      set(T('تأكيد البريد الجامعي', 'Verify your university email'), T('افتح الرابط المرسل إلى بريدك الجامعي.', 'Open the link sent to your university email.'), `<a class="auth-primary-button" href="login.html">${T('تسجيل الدخول', 'Sign in')}</a>`);
     }
     const note = document.getElementById('verifyNote');
-    actions.addEventListener('click', async (e) => {
-      const btn = e.target.closest('[data-resend], [data-check]');
-      if (!btn || btn.disabled) return;
-      btn.disabled = true; btn.setAttribute('aria-busy', 'true');
-      try { await handle(btn); } finally { btn.disabled = false; btn.removeAttribute('aria-busy'); }
-    });
-    async function handle(btn) {
-      if (btn.matches('[data-resend]')) {
-        try { await Api.post('/auth/resend-verification', {}); note.textContent = T('أُرسل رابط جديد.', 'A new link was sent.'); }
-        catch (err) { note.textContent = Api.message(err); }
-      }
-      if (btn.matches('[data-check]')) {
+
+    // ----- P17: verification code screen -----
+    function codeScreen() {
+      let email = params.get('email') || Api.session()?.user?.email || '';
+      const card = verifyBox;
+      const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      title.textContent = T('أدخل رمز التحقق', 'Enter the verification code');
+      text.innerHTML = '';
+      actions.className = 'auth-flow-actions vcode';
+      actions.innerHTML = `
+        <p class="vcode__sent">${esc(T('أرسلنا رمزًا من 6 أرقام إلى', 'We sent a 6-digit code to'))} <b dir="ltr" id="vcodeEmail"></b></p>
+        <form class="vcode__form" id="vcodeForm" novalidate>
+          <div class="vcode__boxes" dir="ltr" role="group" aria-label="${esc(T('رمز التحقق', 'Verification code'))}">
+            ${[0, 1, 2, 3, 4, 5].map((i) => `<input class="vcode__digit" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="${i === 0 ? 'one-time-code' : 'off'}" aria-label="${esc(T(`الرقم ${i + 1}`, `Digit ${i + 1}`))}">`).join('')}
+          </div>
+          <p class="vcode__error" id="vcodeError" role="alert"></p>
+          <button class="auth-primary-button vcode__submit" type="submit">${esc(T('تأكيد', 'Verify'))}</button>
+        </form>
+        <div class="vcode__resend"><button class="vcode__link" type="button" id="vcodeResend" disabled></button></div>
+        <p class="vcode__hint">${esc(T('لم تجد الرسالة؟ تحقق من مجلد Junk أو Other. قد تحجب بعض صناديق البريد الجامعي الرسائل، والبريد الشخصي يصل عادة.', 'Not in your inbox? Check the Junk or Other folder. Some university mailboxes block messages; a personal email usually works.'))}</p>
+        <button class="vcode__link vcode__other" type="button" id="vcodeOther">${esc(T('ما وصلك الرمز؟ جرّب بريدًا آخر', 'No code? Try another email'))}</button>
+        <form class="vcode__change" id="vcodeChange" hidden novalidate>
+          <label><span>${esc(T('البريد الجديد', 'New email'))}</span><input type="email" id="vcodeNewEmail" dir="ltr" autocomplete="email" required></label>
+          <label><span>${esc(T('كلمة المرور', 'Password'))}</span><input type="password" id="vcodePassword" autocomplete="current-password" required></label>
+          <p class="vcode__error" id="vcodeChangeError" role="alert"></p>
+          <div class="vcode__change-actions"><button class="auth-secondary-button" type="button" id="vcodeChangeCancel">${esc(T('إلغاء', 'Cancel'))}</button><button class="auth-primary-button" type="submit">${esc(T('إرسال الرمز', 'Send code'))}</button></div>
+        </form>`;
+      const digits = [...actions.querySelectorAll('.vcode__digit')];
+      const errEl = actions.querySelector('#vcodeError');
+      const resend = actions.querySelector('#vcodeResend');
+      const showEmail = () => { actions.querySelector('#vcodeEmail').textContent = email || T('بريدك الإلكتروني', 'your email'); };
+      showEmail();
+      card.classList.add('auth-flow-card--code');
+
+      // digit boxes: auto-advance, backspace goes back, paste the whole code
+      const fill = (str, from = 0) => { str.replace(/\D/g, '').slice(0, 6 - from).split('').forEach((d, k) => { digits[from + k].value = d; }); };
+      const code = () => digits.map((d) => d.value).join('');
+      digits.forEach((input, i) => {
+        input.addEventListener('input', () => {
+          const v = input.value.replace(/\D/g, '');
+          if (v.length > 1) { fill(v, i); } else input.value = v;
+          errEl.textContent = '';
+          const next = digits.findIndex((d) => !d.value);
+          if (input.value && i < 5) digits[Math.min(next < 0 ? 5 : next, 5)].focus();
+          if (code().length === 6) actions.querySelector('#vcodeForm').requestSubmit();
+        });
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !input.value && i > 0) { digits[i - 1].value = ''; digits[i - 1].focus(); e.preventDefault(); }
+          if (e.key === 'ArrowLeft' && i > 0) digits[i - 1].focus();
+          if (e.key === 'ArrowRight' && i < 5) digits[i + 1].focus();
+        });
+        input.addEventListener('paste', (e) => {
+          const t = (e.clipboardData || window.clipboardData).getData('text');
+          if (!/\d/.test(t)) return;
+          e.preventDefault(); fill(t, 0);
+          (digits.find((d) => !d.value) || digits[5]).focus();
+          if (code().length === 6) actions.querySelector('#vcodeForm').requestSubmit();
+        });
+      });
+      digits[0].focus();
+
+      // resend with a visible countdown
+      let timer = 0;
+      const countdown = (sec) => {
+        clearInterval(timer);
+        let left = Math.max(0, Math.round(sec));
+        const paint = () => {
+          resend.disabled = left > 0;
+          resend.textContent = left > 0 ? T(`إعادة إرسال الرمز خلال ${left} ث`, `Resend code in ${left}s`) : T('إعادة إرسال الرمز', 'Resend code');
+        };
+        paint();
+        timer = setInterval(() => { left -= 1; paint(); if (left <= 0) clearInterval(timer); }, 1000);
+      };
+      countdown(60);
+      resend.addEventListener('click', async () => {
+        if (!email) { location.href = 'login.html'; return; }
+        resend.disabled = true;
         try {
-          const me = await Api.get('/auth/me');
-          Api.saveUser(me);
-          if (me.emailVerified) location.href = continueTo();
-          else note.textContent = T('لم يُؤكَّد البريد بعد. افتح الرابط من رسالة البريد أولًا.', 'The email is not verified yet. Open the link from the email first.');
-        } catch (err) { note.textContent = Api.message(err); }
-      }
+          const r = await Api.post('/auth/verify-email/resend', { email }, { auth: false });
+          note.textContent = T('إذا كان الحساب بحاجة للتأكيد فقد أرسلنا رمزًا جديدًا.', 'If the account still needs verifying, a new code was sent.');
+          countdown(r && r.retryAfterSeconds ? r.retryAfterSeconds : 60);
+        } catch (err) { note.textContent = Api.message(err); countdown(30); }
+      });
+
+      // verify
+      actions.querySelector('#vcodeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const value = code();
+        if (value.length !== 6) { errEl.textContent = T('اكتب الرمز المكوّن من 6 أرقام.', 'Type the 6-digit code.'); (digits.find((d) => !d.value) || digits[0]).focus(); return; }
+        if (!email) { errEl.textContent = T('سجّل الدخول أولًا ثم أدخل الرمز.', 'Sign in first, then enter the code.'); return; }
+        const btn = actions.querySelector('.vcode__submit'); btn.disabled = true;
+        try {
+          await Api.post('/auth/verify-email/code', { email, code: value }, { auth: false, loader: { label: T('جارٍ التحقق…', 'Verifying…') } });
+          clearInterval(timer);
+          if (signedIn) { try { Api.saveUser(await Api.get('/auth/me', { redirectOn401: false })); } catch (x) { /* ignore */ } }
+          card.classList.remove('auth-flow-card--code');
+          set(T('تم تأكيد البريد', 'Email verified'), T('تم تأكيد بريدك الإلكتروني، ويمكنك الآن استخدام المنصة.', 'Your email is verified. You can now use the platform.'),
+            `<a class="auth-primary-button" href="${signedIn ? continueTo() : 'login.html'}">${signedIn ? T('المتابعة', 'Continue') : T('تسجيل الدخول', 'Sign in')}</a>`);
+          actions.className = 'auth-flow-actions auth-flow-actions--single';
+          note.textContent = '';
+        } catch (err) {
+          errEl.textContent = err.code === 'VERIFICATION_CODE_INVALID' ? T('الرمز غير صحيح أو انتهت صلاحيته. اطلب رمزًا جديدًا إذا لزم.', 'The code is incorrect or has expired. Ask for a new code if needed.') : Api.message(err);
+          digits.forEach((d) => { d.value = ''; }); digits[0].focus();
+        } finally { btn.disabled = false; }
+      });
+
+      // another address (unverified accounts): new e-mail + password
+      const change = actions.querySelector('#vcodeChange');
+      const other = actions.querySelector('#vcodeOther');
+      other.addEventListener('click', () => { change.hidden = false; other.hidden = true; actions.querySelector('#vcodeNewEmail').focus(); });
+      actions.querySelector('#vcodeChangeCancel').addEventListener('click', () => { change.hidden = true; other.hidden = false; });
+      change.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const cErr = actions.querySelector('#vcodeChangeError'); cErr.textContent = '';
+        const newEmail = actions.querySelector('#vcodeNewEmail').value.trim();
+        const password = actions.querySelector('#vcodePassword').value;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) { cErr.textContent = T('اكتب بريدًا إلكترونيًا صحيحًا.', 'Enter a valid email address.'); return; }
+        if (!password) { cErr.textContent = T('اكتب كلمة المرور.', 'Enter your password.'); return; }
+        if (!email) { cErr.textContent = T('سجّل الدخول أولًا.', 'Sign in first.'); return; }
+        const btn = change.querySelector('[type="submit"]'); btn.disabled = true;
+        try {
+          const r = await Api.post('/auth/verify-email/change-email', { currentEmail: email, password, newEmail }, { auth: false, loader: { label: T('جارٍ الإرسال…', 'Sending…') } });
+          email = r.email || newEmail;
+          const u = Api.session()?.user; if (u) Api.saveUser(Object.assign({}, u, { email }));
+          const url = new URL(location.href); url.searchParams.set('email', email); history.replaceState(null, '', url);
+          showEmail(); change.hidden = true; other.hidden = false; change.reset();
+          digits.forEach((d) => { d.value = ''; }); digits[0].focus();
+          note.textContent = T('أرسلنا رمزًا جديدًا إلى البريد الجديد.', 'A new code was sent to the new email.');
+          countdown(r.retryAfterSeconds || 60);
+        } catch (err) {
+          const map = { EMAIL_TAKEN: T('هذا البريد مستخدم في حساب آخر.', 'This email is used by another account.'), EMAIL_UNCHANGED: T('اكتب بريدًا مختلفًا عن الحالي.', 'Enter a different email.'), EMAIL_ALREADY_VERIFIED: T('بريدك مؤكَّد مسبقًا.', 'Your email is already verified.'), SUPERVISOR_UNIVERSITY_EMAIL_REQUIRED: T('حساب المشرف يستخدم البريد الجامعي فقط.', 'Supervisor accounts use a university email only.') };
+          cErr.textContent = err.status === 401 ? T('كلمة المرور غير صحيحة.', 'The password is incorrect.') : (map[err.code] || Api.message(err));
+        } finally { btn.disabled = false; }
+      });
     }
   }
 

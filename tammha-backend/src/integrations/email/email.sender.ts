@@ -14,6 +14,8 @@ export interface EmailMessage {
   /** Optional HTML body */
   html?: string;
   replyTo?: string;
+  /** Sender address for this message (default: the configured EMAIL_FROM) */
+  from?: string;
   /** Free-form tags for provider analytics, e.g. ['feedback'] */
   tags?: string[];
 }

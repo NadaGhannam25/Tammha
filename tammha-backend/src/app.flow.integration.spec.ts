@@ -278,6 +278,10 @@ describe('Complete flow (AppModule integration)', () => {
       'post /api/v1/auth/refresh',
       // P16 account recovery (token in the body, no session)
       'post /api/v1/auth/verify-email',
+      // P17: verification by code (e-mail + code / password in the body, no session)
+      'post /api/v1/auth/verify-email/code',
+      'post /api/v1/auth/verify-email/resend',
+      'post /api/v1/auth/verify-email/change-email',
       'post /api/v1/auth/verify-university-email',
       'post /api/v1/auth/forgot-password',
       'post /api/v1/auth/reset-password',

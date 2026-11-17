@@ -69,10 +69,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw new ForbiddenException({
         code: 'EMAIL_NOT_VERIFIED',
         message:
-          'Please verify your e-mail address first. Use the link we sent you, or ask for a new one.',
+          'Please verify your e-mail address first. Enter the code we sent you, or ask for a new one.',
         details: {
-          verifyWith: 'POST /auth/verify-email',
-          resendWith: 'POST /auth/resend-verification',
+          verifyWith: 'POST /auth/verify-email/code',
+          resendWith: 'POST /auth/verify-email/resend',
         },
       });
     }

@@ -129,7 +129,10 @@
     btn.setAttribute('data-lang-toggle', '');
     btn.setAttribute('data-i18n-skip', '');
     btn.setAttribute('lang', isEn ? 'ar' : 'en');
-    btn.textContent = isEn ? 'العربية' : 'English';
+    // sign-in / sign-up pages: the short EN / AR mark of the landing page
+    const short = document.body && document.body.classList.contains('auth-access-page');
+    btn.textContent = short ? (isEn ? 'AR' : 'EN') : (isEn ? 'العربية' : 'English');
+    if (short) btn.classList.add('lang-toggle--short');
     btn.setAttribute('aria-label', isEn ? 'التبديل إلى العربية' : 'Switch to English');
     btn.addEventListener('click', () => setLanguage(isEn ? 'ar' : 'en'));
     // Application pages (with the dashboard header) change the language in Settings; the header

@@ -12,6 +12,7 @@ import {
 import { FakeEmailSender } from './testing/fake-email-sender';
 import { EMAIL_SENDER } from '@/integrations/email/email.sender';
 import { SupervisorAccountsService } from '@modules/auth/supervisor-accounts.service';
+import { verificationCodeIn } from '@/testing/verification-code';
 
 /**
  * Student university identity on the real AppModule (in-memory store, fake e-mail sender).
@@ -52,6 +53,13 @@ describe('Student university identity (AppModule integration)', () => {
     to: string,
     kind: 'verify-email' | 'verify-university-email',
   ) => linksTo(to, kind).pop() ?? null;
+  /** P17: the latest verification code e-mailed to this address */
+  const lastCode = (to: string) =>
+    mail.sent
+      .filter((m) => m.to === to)
+      .map((m) => verificationCodeIn(m.text))
+      .filter((c): c is string => !!c)
+      .pop() ?? null;
   const me = async (k: string) =>
     (await http().get(`${API}/auth/me`).set(as(k)).expect(200)).body;
 
@@ -196,7 +204,7 @@ describe('Student university identity (AppModule integration)', () => {
         emailVerified: false,
         universityIdentity: { complete: true, satisfiedBy: ['STUDENT_NUMBER'] },
       });
-      expect(lastLink('sami@gmail.test', 'verify-email')).not.toBeNull();
+      expect(lastCode('sami@gmail.test')).not.toBeNull();
       expect(
         lastLink('sami.q@um.edu.sa', 'verify-university-email'),
       ).not.toBeNull();
@@ -219,7 +227,7 @@ describe('Student university identity (AppModule integration)', () => {
         universityIdentity: { complete: false, satisfiedBy: [] },
       });
       // two different mailboxes, two links
-      expect(lastLink('hala@gmail.test', 'verify-email')).not.toBeNull();
+      expect(lastCode('hala@gmail.test')).not.toBeNull();
       expect(
         lastLink('hala.r@um.edu.sa', 'verify-university-email'),
       ).not.toBeNull();
@@ -251,8 +259,11 @@ describe('Student university identity (AppModule integration)', () => {
       expect(user.pendingUniversityEmail).toBe('ziad@student.um.edu.sa');
       expect(mail.sent.length).toBe(before + 1); // only the account verification e-mail
       await http()
-        .post(`${API}/auth/verify-email`)
-        .send({ token: lastLink('ziad@student.um.edu.sa', 'verify-email') })
+        .post(`${API}/auth/verify-email/code`)
+        .send({
+          email: 'ziad@student.um.edu.sa',
+          code: lastCode('ziad@student.um.edu.sa'),
+        })
         .expect(200);
       expect(await me('ziad')).toMatchObject({
         emailVerified: true,
@@ -278,8 +289,8 @@ describe('Student university identity (AppModule integration)', () => {
       );
       // verifying the account e-mail verifies both
       await http()
-        .post(`${API}/auth/verify-email`)
-        .send({ token: lastLink('mona@other.edu', 'verify-email') })
+        .post(`${API}/auth/verify-email/code`)
+        .send({ email: 'mona@other.edu', code: lastCode('mona@other.edu') })
         .expect(200);
       expect((await me('mona')).profileComplete).toBe(true);
 

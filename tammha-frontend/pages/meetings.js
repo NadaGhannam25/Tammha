@@ -33,7 +33,7 @@
     list.querySelectorAll('.meeting-list-card, .app-state').forEach((n) => n.remove());
     const visible = meetings.filter((m) => filter === 'all' || (filter === 'invitations' ? statusOf(m) === 'invitation' : filter === 'upcoming' ? !isPast(m) : isPast(m)));
     header.insertAdjacentHTML('afterend', visible.map((m) => `<article class="meeting-list-card meeting-list-card--table" data-meeting-status="${statusOf(m)}">
-      <div class="meeting-list-card__kind"><span class="meeting-kind-line"></span><span class="meeting-kind-icon"></span></div>
+      <div class="meeting-list-card__kind"><span class="meeting-kind-line"></span><span class="meeting-kind-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"></rect><path d="m16 10 5-3v10l-5-3"></path></svg></span></div>
       <div class="meeting-list-card__name">${esc(m.title)}${m.description ? `<small class="app-muted"> · ${esc(m.description)}</small>` : ''}</div>
       <div class="meeting-list-card__supervisor">${esc(projectName(m.projectId))}</div>
       <div class="meeting-list-card__date">${esc(UI.fmtDate(m.scheduledAt))}</div>
@@ -94,12 +94,15 @@
     e.preventDefault();
     const title = $('meetingCreateTitle').value.trim();
     const date = $('meetingCreateDate').dataset.iso || $('meetingCreateDate').value;
-    const time = $('meetingCreateTime').dataset.value || $('meetingCreateTime').value;
+    // the time picker keeps the 24-hour value in data-time (the visible text is "02:30 م")
+    const time = $('meetingCreateTime').dataset.time || $('meetingCreateTime').value;
     const err = $('meetingCreateError');
     if (title.length < 3) { err.textContent = T('اكتب عنوان الاجتماع (3 أحرف على الأقل).', 'Enter the meeting title (at least 3 characters).'); return; }
     if (!date || !time) { err.textContent = T('حدّد التاريخ والوقت.', 'Choose the date and time.'); return; }
-    const when = new Date(`${date}T${time.length === 5 ? time : time.slice(0, 5)}:00`);
-    if (isNaN(when) || when < new Date()) { err.textContent = T('اختر موعدًا لاحقًا.', 'Choose a time in the future.'); return; }
+    let when = new Date(`${date}T${time.slice(0, 5)}:00`);
+    // the current minute counts as "now" (the meeting can be joined at once)
+    if (isNaN(when) || when.getTime() < Date.now() - 60_000) { err.textContent = T('اختر موعدًا لاحقًا.', 'Choose a time in the future.'); return; }
+    if (when.getTime() < Date.now() + 5000) when = new Date(Date.now() + 5000);
     const ids = [...$('meetingCreateParticipants').querySelectorAll('input:checked:not(:disabled)')].map((i) => i.value);
     UI.busy(form.querySelector('[type="submit"]'), async () => {
       try {

@@ -18,7 +18,6 @@
     $('overviewProjectName').textContent = p.name;
     document.title = `${T('تممها', 'Tammha')} | ${p.name}`;
     S.projectHeroProgress(w); // the completion, once, in the title bar
-    paintHeroImage(p, isLeader);
     $('ovOverview').textContent = p.overview || p.description || T('لم تُكتب نبذة المشروع بعد.', 'No overview yet.');
     const goals = (p.objectives || []).filter(Boolean);
     $('ovGoals').innerHTML = goals.length ? goals.map((g) => `<li>${esc(g)}</li>`).join('') : `<li class="app-muted">${esc(T('لم تُحدد الأهداف بعد.', 'No objectives yet.'))}</li>`;
@@ -66,7 +65,7 @@
       const inv = await Api.get(`/teams/${w.team.id}/invitation`);
       box.innerHTML = `<span class="team-tool__label">${esc(T('شارك الرمز أو الرابط مع زميلك', 'Share the code or the link with your classmate'))}</span>
         <div class="team-code"><code class="team-code__value" dir="ltr">${esc(inv.code)}</code>
-          <button class="team-link" type="button" data-copy="${esc(inv.link)}">${esc(T('نسخ الرابط', 'Copy link'))}</button><button class="team-link" type="button" data-regenerate>${esc(T('رمز جديد', 'New code'))}</button></div>
+          <button class="team-icon-btn" type="button" data-copy="${esc(inv.link)}" title="${esc(T('نسخ رابط الدعوة', 'Copy the invitation link'))}" aria-label="${esc(T('نسخ رابط الدعوة', 'Copy the invitation link'))}"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"></path></svg></button><button class="team-icon-btn" type="button" data-regenerate title="${esc(T('إنشاء رمز جديد', 'Create a new code'))}" aria-label="${esc(T('إنشاء رمز جديد', 'Create a new code'))}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.6-4.5L4 8"></path><path d="M4 3v5h5"></path><path d="M4 13a8 8 0 0 0 14.6 4.5L20 16"></path><path d="M20 21v-5h-5"></path></svg></button></div>
         <small class="app-muted">${esc(T('الرمز الجديد يُبطل الرمز والرابط السابقين.', 'A new code makes the previous code and link stop working.'))}</small>`;
     } catch (e) { box.textContent = Api.message(e); }
   }
@@ -95,7 +94,14 @@
   async function loadSupervision() {
     const body = $('ovSupBody'); const isLeader = !!w.viewer?.isLeader;
     const sup = ((w.supervisors || [])[0] || {}).user || (w.supervisors || [])[0]; // { userId, user } from the API
-    if (sup) { body.innerHTML = `<p>${esc(UI.personName(sup))} · <span dir="ltr">${esc(sup.email || '')}</span></p>`; return; }
+    // with a supervisor: two columns (title + name, e-mail label + e-mail); the section title
+    // is the first column's label, so the heading itself is kept for screen readers only
+    $('ovSupTitle').classList.toggle('visually-hidden', !!sup);
+    if (sup) {
+      body.innerHTML = `<div class="ov-sup"><div class="ov-sup__col"><span class="ov-sup__label">${esc(T('المشرف الأكاديمي', 'Academic supervisor'))}</span><b>${esc(UI.personName(sup))}</b></div>
+        <div class="ov-sup__col"><span class="ov-sup__label">${esc(T('البريد الإلكتروني للمشرف', "Supervisor's email"))}</span><a dir="ltr" href="mailto:${esc(sup.email || '')}">${esc(sup.email || '')}</a></div></div>`;
+      return;
+    }
     try {
       const reqs = await Api.get(`/projects/${w.id}/supervision-requests`);
       const pending = (reqs || []).find((r) => r.status === 'PENDING');
@@ -108,30 +114,6 @@
     } catch (e) { UI.state(body, 'error', { error: e }); }
   }
 
-  // project image (shown on the project cards): the team leader adds or changes it here
-  function paintHeroImage(p, isLeader) {
-    const hero = document.querySelector('.project-detail-hero'); if (!hero) return;
-    let tools = $('ovImageTools');
-    if (!isLeader) { if (tools) tools.remove(); return; }
-    if (!tools) {
-      hero.insertAdjacentHTML('beforeend', `<div class="ov-image" id="ovImageTools"><span class="ov-image__thumb" id="ovImageThumb" aria-hidden="true"></span><label class="ov-image__btn" for="ovImageFile" id="ovImageLabel"></label><input accept="image/png,image/jpeg,image/webp" class="visually-hidden" id="ovImageFile" type="file"/></div>`);
-      tools = $('ovImageTools');
-      $('ovImageFile').addEventListener('change', async (e) => {
-        const file = e.target.files && e.target.files[0]; e.target.value = ''; if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { UI.toast(T('الصورة أكبر من 5MB.', 'The image is larger than 5 MB.'), 'error'); return; }
-        let data;
-        try { data = await UI.imageDataUrl(file); } catch (x) { UI.toast(T('اختر صورة PNG أو JPG أو WebP.', 'Choose a PNG, JPG or WebP image.'), 'error'); return; }
-        try {
-          await Api.patch(`/projects/${encodeURIComponent(w.project.id)}`, { thumbnail: data }, { loader: { label: T('جارٍ حفظ الصورة…', 'Saving the image…') } });
-          S.invalidateProjects(); await reload(); UI.toast(T('حُفظت صورة المشروع.', 'Project image saved.'), 'success');
-        } catch (x) { UI.toast(Api.message(x), 'error'); }
-      });
-    }
-    const img = UI.projectImage(p);
-    $('ovImageThumb').style.backgroundImage = img ? `url('${img}')` : '';
-    $('ovImageThumb').hidden = !img;
-    $('ovImageLabel').textContent = img ? T('تغيير صورة المشروع', 'Change project image') : T('إضافة صورة للمشروع', 'Add a project image');
-  }
   async function reload() { w = await S.currentWorkspace(); render(); }
 
   document.addEventListener('submit', (e) => {

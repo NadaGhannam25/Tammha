@@ -575,7 +575,14 @@ export class MeetingsService {
 
   private joinWindow(meeting: MeetingRow) {
     const start = meeting.scheduledAt.getTime();
-    const opensAt = new Date(start - this.settings.joinEarlyMinutes * MINUTE);
+    // the room can be joined as soon as the meeting is scheduled (or JOIN_EARLY minutes
+    // before the start for older rows without a creation time)
+    const opensAt = new Date(
+      Math.min(
+        start - this.settings.joinEarlyMinutes * MINUTE,
+        meeting.createdAt ? meeting.createdAt.getTime() : Infinity,
+      ),
+    );
     const closesAt = new Date(
       endOf(meeting) + this.settings.joinGraceMinutes * MINUTE,
     );

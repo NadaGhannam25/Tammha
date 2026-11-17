@@ -33,6 +33,17 @@ import {
 
 /** Minimum time between two verification e-mails for one user. */
 const RESEND_COOLDOWN_MS = 60 * 1000;
+/** P17: a verification code is valid for 10 minutes. */
+export const VERIFICATION_CODE_TTL_MS = 10 * 60 * 1000;
+/** P17: at most this many verification codes per user per hour. */
+export const VERIFICATION_CODES_PER_HOUR = 5;
+const HOUR_MS = 60 * 60 * 1000;
+/** Same answer for an unknown e-mail, a wrong, used or expired code (no account enumeration). */
+const codeInvalid = () =>
+  new BadRequestException({
+    code: 'VERIFICATION_CODE_INVALID',
+    message: 'The code is incorrect or has expired. Request a new code.',
+  });
 
 const REFRESH_TOKEN_TTL_DAYS = 30;
 
@@ -203,7 +214,9 @@ export class AuthService {
   private async resolveRegistrationUniversity(dto: RegisterDto) {
     const select = { id: true, isActive: true, emailDomains: true } as const;
     const inactive = () =>
-      new BadRequestException('universityId does not match an active university');
+      new BadRequestException(
+        'universityId does not match an active university',
+      );
     if (dto.universityId) {
       const row = await this.prisma.university.findUnique({
         where: { id: dto.universityId },
@@ -264,17 +277,194 @@ export class AuthService {
   // P16: e-mail verification and password reset
   // ==========================================================
 
-  private async sendVerificationEmail(user: User) {
-    const token = await this.authTokens.issue(
+  /** P17: e-mails a new 6-digit verification code (older codes stop working). */
+  private async sendVerificationEmail(user: User, now = new Date()) {
+    const code = await this.authTokens.issueCode(
       user.id,
       AuthTokenType.EMAIL_VERIFICATION,
+      VERIFICATION_CODE_TTL_MS,
+      this.prisma,
+      now,
     );
-    await this.accountEmail.sendVerification(
+    await this.accountEmail.sendVerificationCode(
       user.email,
       user.firstName,
-      token,
+      code,
       user.preferredLanguage,
     );
+  }
+
+  /**
+   * Seconds until this user may receive another code: the 60-second cooldown, then the
+   * hourly cap. 0 = a code can be sent now.
+   */
+  private async codeWaitSeconds(userId: string, now = new Date()) {
+    const last = await this.authTokens.lastCodeIssuedAt(
+      userId,
+      AuthTokenType.EMAIL_VERIFICATION,
+    );
+    const cooldown = last
+      ? last.getTime() + RESEND_COOLDOWN_MS - now.getTime()
+      : 0;
+    if (cooldown > 0) return Math.ceil(cooldown / 1000);
+    const since = new Date(now.getTime() - HOUR_MS);
+    const sent = await this.authTokens.countCodesSince(
+      userId,
+      AuthTokenType.EMAIL_VERIFICATION,
+      since,
+    );
+    if (sent < VERIFICATION_CODES_PER_HOUR) return 0;
+    // the oldest code of the last hour leaves the window first
+    const recent = await this.prisma.authToken.findMany({
+      where: {
+        userId,
+        type: AuthTokenType.EMAIL_VERIFICATION,
+        attempts: { not: null },
+        createdAt: { gte: since },
+      },
+      orderBy: { createdAt: 'asc' },
+      select: { createdAt: true },
+      take: 1,
+    });
+    const freeAt = (recent[0]?.createdAt.getTime() ?? now.getTime()) + HOUR_MS;
+    return Math.max(1, Math.ceil((freeAt - now.getTime()) / 1000));
+  }
+
+  /**
+   * P17 public: verifies the account e-mail with the 6-digit code. Five wrong codes use
+   * the code up. Unknown e-mail, wrong, expired or used code: the same 400.
+   */
+  async verifyEmailCode(email: string, code: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user || !user.isActive) throw codeInvalid();
+    if (user.emailVerifiedAt) {
+      return {
+        message: 'Your e-mail address is verified.',
+        emailVerified: true,
+      };
+    }
+    const result = await this.authTokens.checkCode(
+      user.id,
+      AuthTokenType.EMAIL_VERIFICATION,
+      code,
+    );
+    if (result !== 'OK') throw codeInvalid();
+    await this.prisma.user.updateMany({
+      where: { id: user.id, emailVerifiedAt: null },
+      data: { emailVerifiedAt: new Date() },
+    });
+    await this.universityIdentity.promoteAccountEmail(user.id);
+    return { message: 'Your e-mail address is verified.', emailVerified: true };
+  }
+
+  /**
+   * P17 public: sends a new code. Always the same answer (no account enumeration);
+   * retryAfterSeconds is the wait before the next request (60 s cooldown, 5 per hour).
+   */
+  async resendVerificationCode(email: string) {
+    const generic = (retryAfterSeconds: number) => ({
+      message:
+        'If this e-mail belongs to an account that is not verified yet, a new code has been sent.',
+      retryAfterSeconds,
+      emailDelivery: this.accountEmail.deliveryState,
+    });
+    const user = await this.usersService.findByEmail(email);
+    if (!user || !user.isActive || user.emailVerifiedAt) {
+      return generic(RESEND_COOLDOWN_MS / 1000);
+    }
+    const wait = await this.codeWaitSeconds(user.id);
+    if (wait > 0) return generic(wait);
+    await this.sendVerificationEmail(user);
+    return generic(RESEND_COOLDOWN_MS / 1000);
+  }
+
+  /**
+   * P17 public: an UNVERIFIED account moves to another address (e.g. a personal mailbox
+   * when the university one drops our e-mails) and gets a new code there. Needs the
+   * password. Supervisors stay on a university address of their university.
+   */
+  async changeUnverifiedEmail(
+    currentEmail: string,
+    password: string,
+    newEmail: string,
+  ) {
+    const user = await this.usersService.findByEmail(currentEmail);
+    const passwordOk = await this.usersService.validatePassword(
+      password,
+      user?.password ?? this.dummyPasswordHash,
+    );
+    if (!user || !passwordOk || !user.isActive) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+    if (user.emailVerifiedAt) {
+      throw new ConflictException({
+        code: 'EMAIL_ALREADY_VERIFIED',
+        message: 'Your e-mail address is already verified',
+      });
+    }
+    const target = newEmail.trim().toLowerCase();
+    if (target === user.email.toLowerCase()) {
+      throw new BadRequestException({
+        code: 'EMAIL_UNCHANGED',
+        message: 'Enter a different e-mail address',
+      });
+    }
+    if (user.role === UserRole.SUPERVISOR) {
+      const university = user.universityId
+        ? await this.prisma.university.findUnique({
+            where: { id: user.universityId },
+            select: { emailDomains: true },
+          })
+        : null;
+      if (!emailDomainAllowed(target, university?.emailDomains ?? [])) {
+        throw new BadRequestException({
+          code: 'SUPERVISOR_UNIVERSITY_EMAIL_REQUIRED',
+          message:
+            'Academic supervisors use their university e-mail address of their university',
+          details: { allowedDomains: university?.emailDomains ?? [] },
+        });
+      }
+    }
+    const other = await this.usersService.findByEmail(target);
+    if (other && other.id !== user.id) {
+      throw new ConflictException({
+        code: 'EMAIL_TAKEN',
+        message: 'This e-mail address is already used by another account',
+      });
+    }
+    let updated: User;
+    try {
+      updated = await this.prisma.$transaction(async (tx) => {
+        // codes sent to the old address stop working
+        await tx.authToken.updateMany({
+          where: {
+            userId: user.id,
+            type: AuthTokenType.EMAIL_VERIFICATION,
+            usedAt: null,
+          },
+          data: { usedAt: new Date() },
+        });
+        return tx.user.update({
+          where: { id: user.id },
+          data: { email: target },
+        });
+      });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new ConflictException({
+          code: 'EMAIL_TAKEN',
+          message: 'This e-mail address is already used by another account',
+        });
+      }
+      throw error;
+    }
+    await this.sendVerificationEmail(updated);
+    return {
+      message: 'A verification code has been sent to the new address.',
+      email: updated.email,
+      retryAfterSeconds: RESEND_COOLDOWN_MS / 1000,
+      emailDelivery: this.accountEmail.deliveryState,
+    };
   }
 
   /** Public: confirms the address behind a verification link. Idempotent per user. */
@@ -292,7 +482,7 @@ export class AuthService {
     return { message: 'Your e-mail address is verified.', emailVerified: true };
   }
 
-  /** Authenticated: sends a new verification link (older links stop working). */
+  /** Authenticated: sends a new verification code (older codes stop working). */
   async resendVerification(userId: string) {
     const user = await this.usersService.findById(userId);
     if (!user) throw new UnauthorizedException('User not found');
@@ -302,25 +492,22 @@ export class AuthService {
         message: 'Your e-mail address is already verified',
       });
     }
-    const last = await this.authTokens.lastIssuedAt(
-      user.id,
-      AuthTokenType.EMAIL_VERIFICATION,
-    );
-    const waitMs = last ? last.getTime() + RESEND_COOLDOWN_MS - Date.now() : 0;
-    if (waitMs > 0) {
+    const wait = await this.codeWaitSeconds(user.id);
+    if (wait > 0) {
       throw new HttpException(
         {
           code: 'VERIFICATION_RECENTLY_SENT',
           message:
-            'A verification e-mail was just sent. Please wait before asking again.',
-          details: { retryAfterSeconds: Math.ceil(waitMs / 1000) },
+            'A verification code was just sent. Please wait before asking again.',
+          details: { retryAfterSeconds: wait },
         },
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
     await this.sendVerificationEmail(user);
     return {
-      message: 'A new verification link has been sent to your e-mail address.',
+      message: 'A new verification code has been sent to your e-mail address.',
+      retryAfterSeconds: RESEND_COOLDOWN_MS / 1000,
       emailDelivery: this.accountEmail.deliveryState,
     };
   }

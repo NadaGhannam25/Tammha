@@ -94,12 +94,16 @@ describe('AuthService', () => {
         },
         {
           provide: AuthTokensService,
-          useValue: { issue: jest.fn().mockResolvedValue('raw-token') },
+          useValue: {
+            issue: jest.fn().mockResolvedValue('raw-token'),
+            issueCode: jest.fn().mockResolvedValue('123456'),
+          },
         },
         {
           provide: AccountEmailService,
           useValue: {
             sendVerification: jest.fn().mockResolvedValue(undefined),
+            sendVerificationCode: jest.fn().mockResolvedValue(undefined),
             sendPasswordReset: jest.fn().mockResolvedValue(undefined),
             deliveryState: 'NOT_CONFIGURED',
           },

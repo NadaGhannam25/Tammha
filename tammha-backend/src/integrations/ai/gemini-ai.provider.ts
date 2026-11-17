@@ -48,6 +48,10 @@ interface GeminiResponse {
  * - Sampling parameters (temperature, top_p, top_k) are not sent: deprecated for current models.
  * - Errors become AiProviderError codes; provider messages are not propagated.
  */
+/** Pauses before the 2nd and 3rd attempt of a busy/unavailable answer. */
+const RETRY_DELAYS_MS = [800, 2000];
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export class GeminiAiTextProvider implements AiTextProvider {
   readonly name = 'gemini' as const;
   readonly model: string;
@@ -82,41 +86,25 @@ export class GeminiAiTextProvider implements AiTextProvider {
       },
     };
 
-    const controller = new AbortController();
-    const timeout = setTimeout(
-      () => controller.abort(),
-      request.timeoutMs ?? this.config.timeoutMs,
-    );
-    let status = 0;
-    let payload: GeminiResponse;
-    try {
-      const res = await this.fetchFn(
-        `${GEMINI_API_BASE}/models/${encodeURIComponent(this.model)}:generateContent`,
-        {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            'x-goog-api-key': this.config.apiKey,
-          },
-          body: JSON.stringify(body),
-          signal: controller.signal,
-        },
-      );
-      status = res.status;
-      if (!res.ok) throw this.httpError(res.status);
-      payload = (await res.json()) as GeminiResponse;
-    } catch (error) {
-      if (error instanceof AiProviderError) throw error;
-      if ((error as Error)?.name === 'AbortError') {
-        this.logger.warn('request timed out');
-        throw new AiProviderError('AI_PROVIDER_TIMEOUT');
+    // Busy/overloaded answers (500/502/503/504) and network errors are retried twice
+    // with a short pause: Gemini often answers 503 UNAVAILABLE for a few seconds.
+    let payload: GeminiResponse | undefined;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        payload = await this.callOnce(body, request.timeoutMs);
+        break;
+      } catch (error) {
+        const retryable =
+          error instanceof AiProviderError &&
+          error.code === 'AI_PROVIDER_UNAVAILABLE' &&
+          attempt < RETRY_DELAYS_MS.length + 1;
+        if (!retryable) throw error;
+        this.logger.warn(`retrying (attempt ${attempt + 1})`);
+        await sleep(RETRY_DELAYS_MS[attempt - 1]);
       }
-      this.logger.warn(`network error: ${(error as Error)?.name ?? 'Error'}`);
-      throw new AiProviderError('AI_PROVIDER_UNAVAILABLE', status || undefined);
-    } finally {
-      clearTimeout(timeout);
     }
 
+    if (!payload) throw new AiProviderError('AI_EMPTY_RESPONSE');
     if (payload.promptFeedback?.blockReason) {
       throw new AiProviderError('AI_RESPONSE_BLOCKED');
     }
@@ -146,9 +134,62 @@ export class GeminiAiTextProvider implements AiTextProvider {
     };
   }
 
-  private httpError(status: number): AiProviderError {
+  /** One request to generateContent (own timeout). */
+  private async callOnce(
+    body: unknown,
+    timeoutMs: number | undefined,
+  ): Promise<GeminiResponse> {
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      timeoutMs ?? this.config.timeoutMs,
+    );
+    let status = 0;
+    try {
+      const res = await this.fetchFn(
+        `${GEMINI_API_BASE}/models/${encodeURIComponent(this.model)}:generateContent`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-goog-api-key': this.config.apiKey,
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        },
+      );
+      status = res.status;
+      if (!res.ok) {
+        // Google's short status word (e.g. UNAVAILABLE, NOT_FOUND) helps the diagnosis;
+        // the message is not logged (it may echo the request)
+        let reason = '';
+        try {
+          const err = (await res.json()) as { error?: { status?: string } };
+          reason = /^[A-Z_]{3,40}$/.test(err?.error?.status ?? '')
+            ? ` ${err.error!.status}`
+            : '';
+        } catch {
+          // no JSON body
+        }
+        throw this.httpError(res.status, reason);
+      }
+      return (await res.json()) as GeminiResponse;
+    } catch (error) {
+      if (error instanceof AiProviderError) throw error;
+      if ((error as Error)?.name === 'AbortError') {
+        this.logger.warn('request timed out');
+        throw new AiProviderError('AI_PROVIDER_TIMEOUT');
+      }
+      this.logger.warn(`network error: ${(error as Error)?.name ?? 'Error'}`);
+      throw new AiProviderError('AI_PROVIDER_UNAVAILABLE', status || undefined);
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  private httpError(status: number, reason = ''): AiProviderError {
     // status code only: the response body may echo the request
-    this.logger.warn(`provider answered HTTP ${status}`);
+    this.logger.warn(`provider answered HTTP ${status}${reason}`);
     if (status === 429)
       return new AiProviderError('AI_PROVIDER_RATE_LIMITED', status);
     if (status === 408 || status >= 500) {

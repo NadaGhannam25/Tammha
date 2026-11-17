@@ -131,7 +131,7 @@ export class SmtpEmailSender implements EmailSender {
         });
       }
       info = await this.transport.sendMail({
-        from: this.settings.from,
+        from: message.from ?? this.settings.from,
         to: message.to,
         subject: message.subject,
         text: message.text,

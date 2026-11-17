@@ -25,7 +25,7 @@ export class ResendEmailSender implements EmailSender {
 
   async send(message: EmailMessage): Promise<EmailSendResult> {
     const payload: Record<string, unknown> = {
-      from: this.settings.from,
+      from: message.from ?? this.settings.from,
       to: Array.isArray(message.to) ? message.to : [message.to],
       subject: message.subject,
       text: message.text,

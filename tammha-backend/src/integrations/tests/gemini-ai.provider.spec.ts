@@ -101,6 +101,42 @@ describe('GeminiAiTextProvider (mocked fetch)', () => {
     expect(await codeOf(provider.generateText({ prompt: 'x' }))).toBe(code);
   });
 
+  it('a busy answer (503) is retried and the next answer is used; the status word is logged', async () => {
+    const answers = [
+      {
+        ok: false,
+        status: 503,
+        json: async () => ({ error: { status: 'UNAVAILABLE', message: KEY } }),
+      },
+      {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          candidates: [
+            { content: { parts: [{ text: 'fine' }] }, finishReason: 'STOP' },
+          ],
+        }),
+      },
+    ];
+    const fetchFn = jest.fn(async () =>
+      answers.shift()!,
+    ) as unknown as FetchLike;
+    const provider = new GeminiAiTextProvider(config, fetchFn);
+    const result = await provider.generateText({ prompt: 'x' });
+    expect(result.text).toBe('fine');
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(logs.join(' ')).toContain('HTTP 503 UNAVAILABLE');
+  });
+
+  it('a rejected request (404) is not retried', async () => {
+    const fetchFn = reply(404, { error: { status: 'NOT_FOUND' } });
+    const provider = new GeminiAiTextProvider(config, fetchFn);
+    expect(await codeOf(provider.generateText({ prompt: 'x' }))).toBe(
+      'AI_PROVIDER_REJECTED',
+    );
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
   it('blocked prompt, blocked answer, truncated answer, empty answer', async () => {
     const blockedPrompt = new GeminiAiTextProvider(
       config,

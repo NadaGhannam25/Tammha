@@ -43,6 +43,8 @@ export class AccountEmailService implements OnApplicationShutdown {
   private readonly logger = new Logger('AccountEmail');
   private readonly frontendUrl: string;
   private readonly devLogLinks: boolean;
+  /** sender of code e-mails: "Tammha <noreply@<domain of EMAIL_FROM>>" (or ACCOUNT_EMAIL_FROM) */
+  private readonly codeFrom: string | undefined;
   private readonly retries = new Set<Promise<void>>();
   private readonly timers = new Set<NodeJS.Timeout>();
 
@@ -55,6 +57,10 @@ export class AccountEmailService implements OnApplicationShutdown {
       CORS_ORIGINS: config.get('CORS_ORIGINS'),
     });
     this.frontendUrl = origins[0] ?? 'http://localhost:5173';
+    this.codeFrom = noReplyFrom(
+      config.get<string>('ACCOUNT_EMAIL_FROM'),
+      config.get<string>('EMAIL_FROM'),
+    );
     this.devLogLinks =
       config.get<string>('NODE_ENV') !== 'production' &&
       /^(true|1|yes)$/i.test(config.get<string>('DEV_LOG_EMAIL_LINKS') ?? '');
@@ -220,6 +226,42 @@ export class AccountEmailService implements OnApplicationShutdown {
     });
   }
 
+  /**
+   * P17: the 6-digit code that verifies the account e-mail (valid 10 minutes). No links,
+   * no buttons: university mailboxes (Microsoft 365) silently drop link e-mails.
+   */
+  async sendVerificationCode(
+    to: string,
+    name: string | null,
+    code: string,
+    preferredLanguage: string = 'ar',
+  ) {
+    const language = emailLanguage(preferredLanguage);
+    const copy =
+      language === 'ar'
+        ? {
+            subject: `تمّمها | رمز التحقق: ${code}`,
+            body: 'استخدم الرمز التالي لتأكيد بريدك الإلكتروني في تمّمها:',
+            codeNote:
+              'الرمز صالح لمدة 10 دقائق ويُستخدم مرة واحدة.\nإذا لم تطلب هذا الرمز، تجاهل هذه الرسالة.',
+          }
+        : {
+            subject: `Tammha | Your verification code: ${code}`,
+            body: 'Use this code to verify your e-mail address on Tammha:',
+            codeNote:
+              'The code is valid for 10 minutes and can be used once.\nIf you did not request it, ignore this e-mail.',
+          };
+    await this.deliver(
+      to,
+      'verification code',
+      {
+        ...renderTammhaMail({ language, recipientName: name, code, ...copy }),
+        link: `code ${code}`,
+      },
+      this.codeFrom,
+    );
+  }
+
   /** 6-digit code that confirms deleting the account (valid 15 minutes). */
   async sendAccountDeletionCode(
     to: string,
@@ -254,12 +296,12 @@ export class AccountEmailService implements OnApplicationShutdown {
     const copy =
       language === 'ar'
         ? {
-            subject: 'تممها | تم حذف الحساب',
-            body: 'تم حذف الحساب بنجاح ونتمنى لك التوفيق.',
+            subject: 'تمّمها | تم حذف حسابك',
+            body: 'شكرًا لأنك كنت جزءًا من تمّمها.\nحذفنا حسابك وبياناتك الشخصية كما طلبت.\nنتمنى لك كل التوفيق في مشروعك ومسيرتك، وبابنا مفتوح لك متى ما رجعت.',
           }
         : {
             subject: 'Tammha | Account deleted',
-            body: 'Your account was deleted successfully. We wish you all the best.',
+            body: 'Thank you for being part of Tammha.\nYour account and personal data have been deleted as you asked.\nWe wish you every success with your project and your studies. You are always welcome back.',
           };
     await this.deliver(to, 'account deleted', {
       ...renderTammhaMail({ language, recipientName: name, ...copy }),
@@ -271,10 +313,12 @@ export class AccountEmailService implements OnApplicationShutdown {
     to: string,
     purpose: string,
     mail: { subject: string; text: string; html: string; link: string },
+    from?: string,
   ) {
     if (this.sender?.isEnabled()) {
       const message = {
         to,
+        ...(from ? { from } : {}),
         subject: mail.subject,
         text: mail.text,
         html: mail.html,
@@ -297,6 +341,7 @@ export class AccountEmailService implements OnApplicationShutdown {
   private async attempt(
     message: {
       to: string;
+      from?: string;
       subject: string;
       text: string;
       html: string;
@@ -320,6 +365,7 @@ export class AccountEmailService implements OnApplicationShutdown {
   private async retryLater(
     message: {
       to: string;
+      from?: string;
       subject: string;
       text: string;
       html: string;
@@ -352,4 +398,17 @@ export class AccountEmailService implements OnApplicationShutdown {
     for (const t of this.timers) clearTimeout(t);
     this.timers.clear();
   }
+}
+
+/**
+ * "Tammha <noreply@tammha.site>" from EMAIL_FROM's domain (ACCOUNT_EMAIL_FROM wins).
+ * undefined: use the sender's default address.
+ */
+export function noReplyFrom(
+  explicit: string | undefined,
+  emailFrom: string | undefined,
+): string | undefined {
+  if (explicit && explicit.trim()) return explicit.trim();
+  const m = /@([A-Za-z0-9.-]+\.[A-Za-z]{2,})>?\s*$/.exec(emailFrom ?? '');
+  return m ? `Tammha <noreply@${m[1]}>` : undefined;
 }

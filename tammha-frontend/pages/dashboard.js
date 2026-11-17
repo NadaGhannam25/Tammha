@@ -33,7 +33,7 @@
       box.innerHTML = items.slice(0, 2).map((w) => {
         const p = w.project; const pct = Math.round(w.progress?.percent ?? 0);
         const role = w.viewer?.isLeader ? T('قائد الفريق', 'Team Leader') : T('عضو في الفريق', 'Team member');
-        return `<article class="project-card"><div aria-hidden="true" class="project-card__visual${UI.projectImage(p) ? ' has-image' : ''}"${UI.projectImage(p) ? ` style="background-image:url('${UI.projectImage(p)}')"` : ''}></div><div class="project-card__body">
+        return `<article class="project-card">${UI.projectImageSlot(p, !!w.viewer?.isLeader, 'project-card__visual')}<div class="project-card__body">
           <div class="project-card__topline"><div><h3>${esc(p.name)}</h3><p>${esc(w.team?.name || '')} · ${esc(role)}</p></div>
           <a aria-label="${esc(T('فتح المشروع', 'Open project'))}" class="round-arrow" href="project-overview.html?project=${encodeURIComponent(p.id)}">${ICON_ARROW}</a></div>
           <div class="progress-row"><div aria-label="${esc(T(`نسبة إنجاز المشروع ${pct} بالمئة`, `Project completion ${pct} percent`))}" class="progress-track"><span style="width: ${pct}%"></span></div><strong>${pct}%</strong></div>
@@ -48,9 +48,13 @@
       const page = await Api.get('/meetings/upcoming', { query: { limit: 3 } });
       const items = page.items || page;
       if (!items.length) { UI.state(meetingsBox, 'empty', { title: T('لا توجد اجتماعات قادمة', 'No upcoming meetings'), text: T('تظهر هنا الاجتماعات المجدولة لمشاريعك.', 'Scheduled meetings of your projects appear here.') }); return; }
-      meetingsBox.innerHTML = items.map((m, i) => `${i ? '<div class="meeting-divider"></div>' : ''}<article class="meeting-row"><span class="meeting-accent"></span>
-        <div class="meeting-info"><h3>${esc(m.title)}</h3><p>${esc(m.description || UI.personName(m.createdBy))}</p></div>
-        <div class="meeting-time"><strong>${esc(UI.fmtTime(m.scheduledAt))} - ${esc(UI.fmtTime(m.endsAt))}</strong><span>${esc(UI.fmtDate(m.scheduledAt))}</span></div></article>`).join('');
+      // one tidy row per meeting: icon, title + project, date and time, join (when open)
+      meetingsBox.innerHTML = `<ul class="dash-meetings">${items.map((m) => `<li class="dash-meeting">
+        <span class="dash-meeting__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"></rect><path d="m16 10 5-3v10l-5-3"></path></svg></span>
+        <div class="dash-meeting__info"><b>${esc(m.title)}</b><small>${esc(projectNames[m.projectId] || UI.personName(m.createdBy))}</small></div>
+        <div class="dash-meeting__when"><b>${esc(UI.fmtDate(m.scheduledAt))}</b><small dir="ltr">${esc(UI.fmtTime(m.scheduledAt))} - ${esc(UI.fmtTime(m.endsAt))}</small></div>
+        ${m.join?.isOpen && m.isParticipant ? `<a class="dash-meeting__join" href="meeting-prejoin.html?id=${encodeURIComponent(m.id)}">${esc(T('انضمام', 'Join'))}</a>` : '<span class="dash-meeting__join dash-meeting__join--none"></span>'}
+      </li>`).join('')}</ul>`;
     } catch (e) { UI.state(meetingsBox, 'error', { error: e, retry: meetings }); }
   }
 
@@ -113,7 +117,7 @@
   S.ready.then(async () => {
     try {
       namesReady = projects(false); // also gives the calendar the project names
-      await Promise.allSettled([namesReady, meetings(false), calendar(), invitations()]);
+      await Promise.allSettled([namesReady, namesReady.then(() => meetings(false), () => meetings(false)), calendar(), invitations()]);
     } finally {
       revealPage();
     }

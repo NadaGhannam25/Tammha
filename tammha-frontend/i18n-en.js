@@ -82,7 +82,7 @@ window.TAMMHA_EN = {
  "نوع الدخول": "Account type",
  "طالب": "Student",
  "مشرف أكاديمي": "Academic supervisor",
- "أرسلنا رابط التحقق إلى بريدك الجامعي. فعّل بريدك أولًا، ثم سجّل الدخول لاستخدام المنصة.": "A verification link was sent to your university email. Verify your email first, then sign in to use the platform.",
+ "أرسلنا رمز التحقق إلى بريدك. أدخل الرمز أولًا، ثم سجّل الدخول لاستخدام المنصة.": "We sent a verification code to your email. Enter the code first, then sign in to use the platform.",
  "البريد الجامعي": "University email",
  "كلمة المرور": "Password",
  "أدخل كلمة المرور": "Enter your password",

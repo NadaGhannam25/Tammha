@@ -34,8 +34,8 @@
 .app-bell__item strong{color:#173d57;font-size:13.5px}
 .app-bell__item span{color:#56707d;font-size:13px;line-height:1.6}
 .app-bell__item small{color:#8aa0ab;font-size:11.5px}
-.app-bell__item.is-unread{background:#f3f9fd}
-.app-bell__item.is-unread strong::before{content:"";display:inline-block;width:7px;height:7px;margin-inline-end:6px;border-radius:50%;background:#0a6fdc;vertical-align:middle}
+.app-bell__item.is-unread{background:#eaf4fc}
+
 
 .app-modal{position:fixed;inset:0;z-index:250;display:grid;place-items:center;padding:16px;background:rgba(15,40,58,.35)}
 .app-modal__dialog{width:min(560px,100%);max-height:90vh;overflow:auto;padding:26px;border-radius:18px;background:#fff;box-shadow:0 20px 60px rgba(15,40,58,.2)}
@@ -537,7 +537,8 @@ input[type="email"]::placeholder{direction:ltr;text-align:left}
 .tm-dialog__box--danger .tm-dialog__icon{background:#fdf0f1;color:#c23b44}
 .tm-dialog__box h2{margin:0 0 8px;font-size:18px;font-weight:800}
 .tm-dialog__body p{margin:0 0 6px;color:#4b6573;font-size:13px;line-height:1.85}
-.tm-dialog__email{display:table;margin:4px auto 10px!important;padding:6px 12px;border-radius:8px;background:#f3f7f9;color:#173d57!important;font-weight:700;overflow-wrap:anywhere}
+.tm-dialog__email{display:table;margin:2px auto 10px!important;padding:0;background:none;box-shadow:none;color:#0a6fdc!important;font-weight:700;overflow-wrap:anywhere}
+.tm-dialog__image{display:block;width:150px;height:auto;margin:0 auto 10px}
 .tm-dialog__muted{color:#8a9ca6!important;font-size:12px!important}
 .tm-dialog__list{margin:6px 0 10px;padding-inline-start:20px;text-align:start;color:#173d57;font-size:13px;line-height:1.9}
 .tm-dialog__code{display:block}
@@ -550,27 +551,35 @@ input[type="email"]::placeholder{direction:ltr;text-align:left}
 .tm-dialog__btn--danger{background:#c23b44;border-color:#c23b44;color:#fff}
 .settings-danger-card button{color:#c23b44!important;border-color:#efc9cc!important;background:#fff!important}
 
-/* ----- First-login onboarding (QA review 2) ----- */
-.onb__dialog{width:min(520px,calc(100vw - 32px));text-align:center;padding:26px 26px 22px}
-.onb__dots{display:flex;justify-content:center;gap:6px;list-style:none;margin:0 0 16px;padding:0}
-.onb__dots li{width:26px;height:4px;border-radius:4px;background:#e3e9ec}
-.onb__dots li.is-active{background:#008bbf}
+/* ----- First-login onboarding: a welcome, then 3 tabbed pages (QA review 3) ----- */
+.onb__dialog{width:min(520px,calc(100vw - 32px));padding:26px 26px 20px}
+.onb__welcome{text-align:center}
 .onb__logo{width:64px;height:64px;object-fit:contain;margin-bottom:6px}
-.onb__page h2{margin:0 0 8px;font-size:20px;color:#173d57}
-.onb__page>p{margin:0 0 8px;color:#4b6573;font-size:13px;line-height:1.9}
-.onb__muted{color:#8a9ca6!important;font-size:12px!important}
-.onb__form{display:grid;gap:12px;text-align:start;margin-top:8px}
+.onb__welcome h2{margin:0 0 8px;font-size:20px;color:#173d57}
+.onb__welcome p{margin:0;color:#4b6573;font-size:13px;line-height:1.9}
+.onb__tabs{display:flex;gap:6px;margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid #edf1f3}
+.onb__tab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 4px;border-radius:8px;color:#8a9ca6;font-size:12px;font-weight:700;text-align:center}
+.onb__tab i{font-style:normal;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#eef2f4;color:#7d909b;font-size:11px}
+.onb__tab.is-active{color:#008bbf;background:#eef8fb}
+.onb__tab.is-active i,.onb__tab.is-done i{background:#008bbf;color:#fff}
+.onb__page h3{margin:0 0 4px;font-size:17px;color:#173d57}
+.onb__page>p{margin:0 0 10px;color:#5d7684;font-size:12.5px;line-height:1.8}
+.onb__form{display:grid;gap:12px;margin-top:8px}
 .onb-field{display:grid;gap:6px}
 .onb-field span{font-size:12.5px;font-weight:700;color:#173d57}
 .onb-field input{height:42px;padding:0 12px;border:1px solid #d9e2e7;border-radius:10px;font-family:inherit;font-size:13px;color:#173d57;background:#fff}
 .onb-field input:focus{outline:none;border-color:#008bbf;box-shadow:0 0 0 3px rgba(0,139,191,.12)}
-.onb__tour{list-style:none;margin:10px 0 4px;padding:0;display:grid;gap:10px;text-align:start}
+.onb__tour{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:10px}
 .onb__tour li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid #e8eef1;border-radius:12px}
 .onb__tour-icon{flex:0 0 auto;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#eef8fb;color:#008bbf}
 .onb__tour-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .onb__tour b{display:block;font-size:13px;color:#173d57}
 .onb__tour small{display:block;margin-top:2px;font-size:12px;color:#7d909b;line-height:1.7}
-.onb__actions{justify-content:center;flex-wrap:wrap;margin-top:14px}
+.onb__start{display:flex;justify-content:center;gap:8px;margin:14px 0 2px}
+.onb__start-btn{height:34px;padding:0 14px;display:inline-flex;align-items:center;border:1px solid #cfe3ec;border-radius:9px;background:#fff;color:#00759f;font-size:12.5px;font-weight:700;text-decoration:none}
+.onb__start-btn--primary{background:#eef8fb}
+.onb__actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;padding-top:12px;border-top:1px solid #f0f3f5}
+.onb__welcome .onb__actions{justify-content:center;border-top:0;padding-top:0}
 .settings-study-fields{display:contents}
 .settings-v43-form .onb-field input{height:38px;border:1px solid #dfe7eb;border-radius:8px;background:#fbfcfd;font-size:14px;color:#3f5d6c}
 .settings-v43-form .onb-field span{font-size:11.5px;color:#274b61;font-weight:800}
@@ -580,3 +589,116 @@ input[type="email"]::placeholder{direction:ltr;text-align:left}
 .meeting-room-body{position:relative}
 .meeting-room-body>.room-error{position:absolute;top:16px;inset-inline:28px;z-index:5;margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .meeting-room-body>.room-error[hidden]{display:none}
+
+/* ----- P17: verification code screen ----- */
+.auth-flow-card--code .auth-flow-visual{display:none}
+.vcode{display:grid!important;gap:10px;justify-items:center;width:100%}
+.vcode__sent{margin:0;color:#5d7684;font-size:13px;text-align:center}
+.vcode__sent b{color:#0a6fdc;font-weight:700}
+.vcode__form{display:grid;gap:10px;justify-items:center;width:100%}
+.vcode__boxes{display:flex;gap:8px;justify-content:center}
+.vcode__digit{width:46px;height:54px;border:1px solid #d6e0e6;border-radius:10px;background:#fff;text-align:center;font-size:22px;font-weight:700;color:#173d57;font-family:inherit}
+.vcode__digit:focus{outline:none;border-color:#008bbf;box-shadow:0 0 0 3px rgba(0,139,191,.14)}
+.vcode__error{min-height:1em;margin:0;color:#c23b44;font-size:12px;text-align:center}
+.vcode__submit{width:100%;max-width:330px}
+.vcode__resend{text-align:center}
+.vcode__link{border:0;background:none;color:#0a6fdc;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:4px}
+.vcode__link:disabled{color:#8fa2ad;cursor:default}
+.vcode__hint{margin:0;max-width:360px;color:#8a9ca6;font-size:12px;line-height:1.8;text-align:center}
+.vcode__change{display:grid;gap:10px;width:100%;max-width:330px;padding:14px;border:1px solid #e3e9ee;border-radius:12px;text-align:start}
+.vcode__change[hidden],.vcode__other[hidden]{display:none}
+.vcode__change label{display:grid;gap:5px}
+.vcode__change span{font-size:12px;font-weight:700;color:#173d57}
+.vcode__change input{height:40px;padding:0 12px;border:1px solid #d6e0e6;border-radius:9px;font-family:inherit;font-size:13px}
+.vcode__change-actions{display:flex;gap:8px}
+.vcode__change-actions>*{flex:1}
+@media(max-width:420px){.vcode__digit{width:40px;height:48px;font-size:20px}.vcode__boxes{gap:6px}}
+
+/* ===== QA review 3 ===== */
+/* meeting invitees: chips side by side (like the supervisor's form) */
+.meeting-participants__list{gap:8px!important}
+.meeting-modal__form label.meeting-participants__item,.meeting-participants__item{display:inline-flex!important;grid-template-columns:none!important;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #dfe7eb;border-radius:8px;color:#3f5d6c;font-size:13px;font-weight:600;cursor:pointer;background:#fff}
+.meeting-modal__form .meeting-participants__item input{width:15px;height:15px;margin:0;padding:0;flex:none;accent-color:#008bbf}
+.meeting-participants__item:has(input:checked){border-color:#bfe0ec;background:#eef8fb}
+.meeting-participants__item:has(input:disabled){opacity:.85;cursor:default}
+/* dashboard: upcoming meetings in tidy rows */
+.dash-meetings{list-style:none;margin:0;padding:0;display:grid}
+.dash-meeting{display:grid;grid-template-columns:38px minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid #eef2f4}
+.dash-meeting:last-child{border-bottom:0}
+.dash-meeting__icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:#eef8fb;color:#008bbf}
+.dash-meeting__icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dash-meeting__info,.dash-meeting__when{display:grid;gap:2px;min-width:0}
+.dash-meeting__info b{font-size:13.5px;color:#173d57;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dash-meeting__info small,.dash-meeting__when small{font-size:11.5px;color:#8a9ca6}
+.dash-meeting__when{text-align:end}
+.dash-meeting__when b{font-size:12.5px;color:#173d57;font-weight:700}
+.dash-meeting__join{height:32px;padding:0 14px;display:inline-flex;align-items:center;border-radius:8px;background:#008bbf;color:#fff;font-size:12px;font-weight:700;text-decoration:none}
+.dash-meeting__join--none{padding:0;width:0;background:none}
+@media(max-width:600px){.dash-meeting{grid-template-columns:38px minmax(0,1fr) auto}.dash-meeting__join{grid-column:2/-1;justify-self:start}}
+/* project image: no Tammha logo; an empty slot invites an upload (team leader). Wide, not tall. */
+.project-image{position:relative;display:grid;place-items:center;align-content:center;gap:6px;border-radius:12px;background:#f5f8fa center/cover no-repeat;border:1px dashed #d3dfe5;color:#8aa0ab;font-family:inherit;font-size:12px;font-weight:700;padding:0;overflow:hidden}
+.project-image svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.project-image.has-image{border:1px solid #e3e9ee}
+.project-image--edit{cursor:pointer}
+.project-image--edit.is-empty:hover{border-color:#008bbf;color:#008bbf;background-color:#f0f8fb}
+.project-image__hint{position:absolute;inset-inline-end:8px;bottom:8px;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.92);color:#173d57;font-size:11px;opacity:0;transition:opacity .15s}
+.project-image__hint svg{width:14px;height:14px}
+.project-image--edit:hover .project-image__hint,.project-image--edit:focus-visible .project-image__hint{opacity:1}
+.project-card{grid-template-columns:260px minmax(0,1fr)!important;min-height:0!important;align-items:center}
+.project-card__visual.project-image{min-height:0!important;height:146px;width:100%}
+.project-card__visual.project-image::after{display:none!important}
+.project-identity__image{flex:0 0 112px;width:112px;height:64px;border-radius:10px}
+.project-identity__image svg{width:20px;height:20px}
+.project-identity__image span{font-size:10.5px}
+@media(max-width:700px){.project-card{grid-template-columns:1fr!important}.project-card__visual.project-image{height:120px;display:grid!important}.project-identity__image{flex-basis:84px;width:84px;height:52px}}
+/* project overview: academic supervisor (name | e-mail) */
+.ov-sup{display:flex;flex-wrap:wrap;gap:12px 56px}
+.ov-sup__col{display:grid;gap:4px;min-width:0}
+.ov-sup__label{font-size:15px;font-weight:800;color:#173d57}
+.ov-sup__col b{font-size:13.5px;color:#3d5866;font-weight:600}
+.ov-sup__col a{font-size:13.5px;color:#0a6fdc;text-decoration:none;overflow-wrap:anywhere}
+/* invitation code: copy / new code as clear icons */
+.team-icon-btn{width:34px;height:34px;display:inline-grid;place-items:center;border:1px solid #d9e2e7;border-radius:9px;background:#fff;color:#173d57;cursor:pointer;flex:0 0 auto}
+.team-icon-btn:hover{border-color:#008bbf;color:#008bbf}
+.team-icon-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.team-code{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* sign-in / sign-up: the landing page's EN / AR mark */
+.lang-toggle.lang-toggle--short{height:34px;min-width:46px;padding:0 10px;border:1.5px solid #dbe4ea;border-radius:10px;background:#fff;color:#0a74e0;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.02em;line-height:1;box-shadow:none;cursor:pointer;transition:border-color .2s ease,color .2s ease}
+.lang-toggle.lang-toggle--short:hover{border-color:#0a74e0;color:#0560d0}
+/* university handbook page: no project box (the current project is used) */
+.hb-selected__head{display:none!important}
+/* project files: cards (default, no table, no storage bar) */
+.project-files-cards-wrap{max-width:1180px;margin:0 auto}
+.pfile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.pfile-grid>.app-state{grid-column:1/-1}
+.pfile-card{position:relative;display:flex;flex-direction:column;gap:10px;min-width:0;padding:14px 16px;background:#fff;border:1px solid #e3e9ec;border-radius:12px;transition:border-color .15s,box-shadow .15s}
+.pfile-card:hover{border-color:#cfe0e8;box-shadow:0 6px 18px rgba(0,27,72,.05)}
+.pfile-card[hidden]{display:none}
+.pfile-card__top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.pfile-card__top img{width:38px;height:38px;object-fit:contain}
+.pfile-card__open{display:grid;gap:3px;min-width:0;padding:0;border:0;background:none;text-align:start;font-family:inherit;cursor:pointer}
+.pfile-card__open strong{font-size:14px;color:#173d57;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfile-card__open small{font-size:11.5px;color:#8a9ca6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfile-card__open:hover strong{color:#008bbf}
+.pfile-card__chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:11px;color:#5d7684}
+.pfile-card__chips>span:not([class*="chip"]){padding:2px 8px;border-radius:6px;background:#f2f5f7}
+.pfile-card__meta{display:flex;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid #f0f3f5;font-size:11.5px;color:#7d909b}
+.pfile-card__meta span:first-child{color:#3d5866;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfile-card .file-actions{position:relative}
+@media(max-width:560px){.pfile-grid{grid-template-columns:1fr}}
+/* project stages: one tidy line per stage (status + progress, period, tasks, actions) */
+.stages-row{grid-template-columns:minmax(0,2fr) minmax(150px,1.1fr) minmax(130px,.9fr) 80px 210px!important;gap:16px!important}
+.stages-row--head>span:last-child{text-align:end}
+.stages-current{margin:0;padding:10px 18px;border-bottom:1px solid #eef2f4;background:#fbfdfe;color:#5d7684;font-size:12.5px}
+.stages-current strong{color:#173d57}
+.stages-row__state{display:flex;align-items:center;gap:8px;min-width:0}
+.stages-row__state small{margin:0!important;font-weight:800;color:#173d57}
+.stages-row__bar{flex:1;max-width:70px;height:5px;border-radius:5px;background:#eef2f4;overflow:hidden}
+.stages-row__bar i{display:block;height:100%;background:#008bbf;border-radius:inherit}
+.stages-row__actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.stages-row__status{margin:0!important;height:34px;min-width:110px}
+.stages-row__icon{width:34px;height:34px;flex:0 0 auto;display:inline-grid;place-items:center;border:1px solid #d9e2e7;border-radius:9px;background:#fff;color:#3d5866;cursor:pointer;text-decoration:none}
+.stages-row__icon:hover{border-color:#008bbf;color:#008bbf}
+.stages-row__icon--danger:hover{border-color:#e3a5aa;color:#c23b44}
+.stages-row__icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:900px){.stages-row{grid-template-columns:minmax(0,1fr) auto!important}.stages-row>:nth-child(2),.stages-row>:nth-child(3),.stages-row>:nth-child(4){display:none}.stages-row--head>:last-child{display:none}}

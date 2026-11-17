@@ -254,6 +254,9 @@ model AuthToken {
   usedAt    DateTime?
   // UNIVERSITY_EMAIL_VERIFICATION: the address the link was sent to
   email     String?
+  // 6-digit codes (EMAIL_VERIFICATION codes, ACCOUNT_DELETION): wrong attempts so far.
+  // NULL for link tokens.
+  attempts  Int?
   createdAt DateTime      @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

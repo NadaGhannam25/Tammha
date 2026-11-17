@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { AuthTokenType, ProjectRole, TeamRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { createHash, randomBytes, randomInt } from 'crypto';
+import { randomBytes } from 'crypto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { AuthUser } from '@common/types/auth-user.type';
 import { AUTH_TOKEN_TTL_MS, AuthTokensService } from './auth-tokens.service';
@@ -18,19 +18,12 @@ import { AccountEmailService } from './account-email.service';
 export const PASSWORD_LINK_REPEAT_MS = 5 * 60_000;
 /** A new deletion code can be requested once a minute. */
 const DELETION_CODE_COOLDOWN_MS = 60_000;
-/** Wrong codes allowed before the code stops working. */
-const DELETION_MAX_ATTEMPTS = 5;
 
 const err = (code: string, message: string, details?: object) => ({
   code,
   message,
   ...(details ? { details } : {}),
 });
-
-const codeHash = (userId: string, issuedAt: Date, code: string) =>
-  createHash('sha256')
-    .update(`account-deletion:${userId}:${issuedAt.getTime()}:${code}`)
-    .digest('hex');
 
 /**
  * Settings page actions on the signed-in account:
@@ -127,7 +120,7 @@ export class AccountLifecycleService {
   async requestDeletion(user: AuthUser, now = new Date()) {
     const account = await this.activeAccount(user.id);
     await this.assertDeletable(account.id);
-    const last = await this.authTokens.lastIssuedAt(
+    const last = await this.authTokens.lastCodeIssuedAt(
       account.id,
       AuthTokenType.ACCOUNT_DELETION,
     );
@@ -142,28 +135,13 @@ export class AccountLifecycleService {
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
-    const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
-    await this.prisma.authToken.updateMany({
-      where: {
-        userId: account.id,
-        type: AuthTokenType.ACCOUNT_DELETION,
-        usedAt: null,
-      },
-      data: { usedAt: now },
-    });
-    await this.prisma.authToken.create({
-      data: {
-        userId: account.id,
-        type: AuthTokenType.ACCOUNT_DELETION,
-        tokenHash: codeHash(account.id, now, code),
-        expiresAt: new Date(
-          now.getTime() + AUTH_TOKEN_TTL_MS[AuthTokenType.ACCOUNT_DELETION],
-        ),
-        createdAt: now,
-        // wrong attempts so far (this token type has no e-mail of its own)
-        email: '0',
-      },
-    });
+    const code = await this.authTokens.issueCode(
+      account.id,
+      AuthTokenType.ACCOUNT_DELETION,
+      AUTH_TOKEN_TTL_MS[AuthTokenType.ACCOUNT_DELETION],
+      this.prisma,
+      now,
+    );
     await this.accountEmail.sendAccountDeletionCode(
       account.email,
       account.firstName,
@@ -187,35 +165,18 @@ export class AccountLifecycleService {
           'The code is incorrect or has expired. Request a new one.',
         ),
       );
-    const row = await this.prisma.authToken.findFirst({
-      where: {
-        userId: account.id,
-        type: AuthTokenType.ACCOUNT_DELETION,
-        usedAt: null,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    if (!row || row.expiresAt <= now) throw invalid();
-    if (row.tokenHash !== codeHash(account.id, row.createdAt, code.trim())) {
-      const attempts = Number(row.email ?? '0') + 1;
-      await this.prisma.authToken.update({
-        where: { id: row.id },
-        data: {
-          email: String(attempts),
-          ...(attempts >= DELETION_MAX_ATTEMPTS ? { usedAt: now } : {}),
-        },
-      });
-      throw invalid();
-    }
+    // a blocked account keeps its code (nothing is consumed)
     await this.assertDeletable(account.id);
+    const check = await this.authTokens.checkCode(
+      account.id,
+      AuthTokenType.ACCOUNT_DELETION,
+      code,
+      now,
+    );
+    if (check !== 'OK') throw invalid();
 
     const scrambled = await bcrypt.hash(randomBytes(24).toString('hex'), 10);
     await this.prisma.$transaction(async (tx) => {
-      const { count } = await tx.authToken.updateMany({
-        where: { id: row.id, usedAt: null },
-        data: { usedAt: now },
-      });
-      if (count === 0) throw invalid();
       await tx.refreshToken.updateMany({
         where: { userId: account.id, revokedAt: null },
         data: { revokedAt: now },

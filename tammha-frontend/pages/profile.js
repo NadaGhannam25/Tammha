@@ -39,16 +39,23 @@
       throw new Error('too-large');
     } finally { URL.revokeObjectURL(url); }
   }
+  // the new photo shows at once (no loading message); it is saved in the background and
+  // put back as it was if saving fails
   async function savePhoto(avatar, button) {
     const err = $('profilePhotoError'); err.textContent = '';
+    const previous = S.user.avatar ?? null;
+    const shown = Object.assign({}, S.user, { avatar });
+    paintPhoto(shown);
     await UI.busy(button, async () => {
       try {
-        const u = await Api.patch('/users/me', { avatar }, { loader: { target: err, label: T('جارٍ حفظ الصورة…', 'Saving the photo…') } });
+        const u = await Api.patch('/users/me', { avatar });
         const merged = Object.assign(S.user, { avatar: u.avatar ?? null });
         Api.saveUser(merged); paintPhoto(merged);
-        UI.toast(avatar ? T('حُفظت الصورة الشخصية.', 'Profile photo saved.') : T('أُزيلت الصورة الشخصية.', 'Profile photo removed.'), 'success');
-      } catch (er) { err.textContent = Api.message(er); }
-    });
+      } catch (er) {
+        paintPhoto(Object.assign({}, S.user, { avatar: previous }));
+        err.textContent = Api.message(er);
+      }
+    }, { silent: true });
   }
   $('profilePhotoFile').addEventListener('change', async (e) => {
     const file = e.target.files[0]; e.target.value = '';

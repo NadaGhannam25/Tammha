@@ -35,6 +35,10 @@ export function renderTammhaMail(input: {
   recipientName?: string | null;
   buttonLabel?: string;
   actionUrl?: string;
+  /** a one-time code shown large under the body (no link) */
+  code?: string;
+  /** text under the code (validity, "ignore if not you") */
+  codeNote?: string;
 }): { subject: string; text: string; html: string } {
   const { language, body } = input;
   const ar = language === 'ar';
@@ -53,13 +57,23 @@ export function renderTammhaMail(input: {
   const backup = ar
     ? 'إذا لم يعمل الزر، استخدم الرابط التالي:'
     : 'If the button does not work, use this link:';
-  const text = `${greeting}\n\n${body}${link ? `\n\n${label}: ${link}\n${backup}\n${link}` : ''}\n\n${footer}`;
+  const textCode = input.code
+    ? `\n\n${input.code}${input.codeNote ? `\n\n${input.codeNote}` : ''}`
+    : '';
+  const text = `${greeting}\n\n${body}${textCode}${link ? `\n\n${label}: ${link}\n${backup}\n${link}` : ''}\n\n${footer}`;
   const safeLink = escapeEmailHtml(link);
   const linkBlock = link
     ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:22px 0 16px;border-collapse:collapse"><tr><td align="center" style="padding:19px 12px;background:#f1f6ff;border:1px solid #e4edfb;border-radius:8px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate"><tr><td align="center" bgcolor="#0958bb" style="background:#0958bb;border-radius:6px"><a href="${safeLink}" target="_blank" style="display:inline-block;padding:11px 24px;color:#ffffff;font-family:Tahoma,Arial,sans-serif;font-weight:700;font-size:14px;line-height:20px;text-decoration:none">${escapeEmailHtml(label)}</a></td></tr></table></td></tr></table>` +
       `<p style="margin:0;color:#5d6571;font-size:11px;line-height:1.75;overflow-wrap:anywhere">${escapeEmailHtml(backup)} <a href="${safeLink}" style="color:#0958bb;text-decoration:underline;word-break:break-all">${safeLink}</a></p>`
     : '';
   const renderedBody = escapeEmailHtml(body).replace(/\n/g, '<br>');
+  const code = (input.code ?? '').replace(/[^0-9A-Za-z]/g, '').slice(0, 12);
+  const codeBlock = code
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:22px 0 14px;border-collapse:collapse"><tr><td align="center" style="padding:20px 12px;background:#f1f6ff;border:1px solid #e4edfb;border-radius:8px"><span dir="ltr" style="display:inline-block;font-family:Tahoma,Arial,sans-serif;font-size:34px;line-height:42px;font-weight:700;letter-spacing:10px;color:#132c55">${escapeEmailHtml(code)}</span></td></tr></table>` +
+      (input.codeNote
+        ? `<p style="margin:0;color:#5d6571;font-size:12px;line-height:1.9">${escapeEmailHtml(input.codeNote).replace(/\n/g, '<br>')}</p>`
+        : '')
+    : '';
   const html =
     `<!doctype html><html lang="${language}" dir="${direction}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"></head>` +
     `<body style="margin:0;padding:20px 8px;background:#f2f4f8;color:#202b3e;font-family:Tahoma,Arial,sans-serif">` +
@@ -68,7 +82,7 @@ export function renderTammhaMail(input: {
     `<tr><td dir="${direction}" align="${align}" style="padding:27px 32px 30px;text-align:${align};direction:${direction}">` +
     `<h1 style="color:#132c55;font-size:18px;font-weight:700;line-height:1.55;margin:0 0 21px">${escapeEmailHtml(subject)}</h1>` +
     `<p style="color:#293447;font-size:14px;line-height:1.95;margin:0 0 13px">${escapeEmailHtml(greeting)}</p>` +
-    `<p style="color:#293447;font-size:14px;line-height:2;margin:0">${renderedBody}</p>${linkBlock}</td></tr>` +
+    `<p style="color:#293447;font-size:14px;line-height:2;margin:0">${renderedBody}</p>${codeBlock}${linkBlock}</td></tr>` +
     `<tr><td align="center" style="padding:19px 22px;background:#f8fafc;border-top:1px solid #e6ebf2;text-align:center;color:#687589;font-size:11px;line-height:1.85">${escapeEmailHtml(footer).replace(/\n/g, '<br>')}</td></tr>` +
     `</table></body></html>`;
   return { subject, text, html };

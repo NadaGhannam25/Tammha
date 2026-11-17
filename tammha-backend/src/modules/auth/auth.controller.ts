@@ -35,6 +35,9 @@ import {
   VerifyEmailDto,
   UniversityEmailRequestDto,
   ConfirmAccountDeletionDto,
+  VerifyEmailCodeDto,
+  ResendVerificationCodeDto,
+  ChangeUnverifiedEmailDto,
 } from './dto/account.dto';
 import { AccountLifecycleService } from './account-lifecycle.service';
 import { AllowUnverifiedEmail, JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -252,13 +255,73 @@ export class AuthController {
   // P16: e-mail verification and password reset
   // ==========================================================
 
+  // ---------- P17: verification by 6-digit code ----------
+
+  @Post('verify-email/code')
+  @StrictRateLimit()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify the e-mail address with the 6-digit code',
+    description:
+      'Public. Codes are valid for 10 minutes, single-use; 5 wrong codes use the code up. ' +
+      'Unknown e-mail, wrong, used or expired code all give the same 400.',
+  })
+  @ApiResponse({ status: 200, type: VerifyEmailResponseDto })
+  @ApiResponse({ status: 400, description: 'VERIFICATION_CODE_INVALID' })
+  verifyEmailCode(@Body() dto: VerifyEmailCodeDto) {
+    return this.authService.verifyEmailCode(dto.email, dto.code);
+  }
+
+  @Post('verify-email/resend')
+  @StrictRateLimit()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Send a new verification code',
+    description:
+      'Public. Always the same answer. retryAfterSeconds: wait before the next request ' +
+      '(60 seconds between codes, at most 5 codes per hour). A new code makes older codes invalid.',
+  })
+  @ApiResponse({ status: 200 })
+  resendVerificationCode(@Body() dto: ResendVerificationCodeDto) {
+    return this.authService.resendVerificationCode(dto.email);
+  }
+
+  @Post('verify-email/change-email')
+  @StrictRateLimit()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Use another e-mail address (unverified accounts only)',
+    description:
+      'Public. Needs the account password. The account e-mail becomes newEmail, codes sent to the old ' +
+      'address stop working and a new code is sent to newEmail. Supervisors must stay on their university domain.',
+  })
+  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 401, description: 'Invalid email or password' })
+  @ApiResponse({
+    status: 409,
+    description: 'EMAIL_ALREADY_VERIFIED or EMAIL_TAKEN',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'EMAIL_UNCHANGED, SUPERVISOR_UNIVERSITY_EMAIL_REQUIRED',
+  })
+  changeUnverifiedEmail(@Body() dto: ChangeUnverifiedEmailDto) {
+    return this.authService.changeUnverifiedEmail(
+      dto.currentEmail,
+      dto.password,
+      dto.newEmail,
+    );
+  }
+
   @Post('verify-email')
   @StrictRateLimit()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Verify the e-mail address (token from the verification link)',
+    summary:
+      'Verify the e-mail address (token from an older verification link)',
     description:
-      'Public. The frontend page /verify-email?token=... posts the token here. Tokens are single-use and expire after 24 hours.',
+      'Public. Kept for links sent before codes replaced them (P17); new e-mails contain a code ' +
+      '(POST /auth/verify-email/code). Tokens are single-use and expire after 24 hours.',
   })
   @ApiResponse({ status: 200, type: VerifyEmailResponseDto })
   @ApiResponse({

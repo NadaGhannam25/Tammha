@@ -11,21 +11,18 @@
   const { T, esc } = UI;
 
   const ICONS = {
-    mail: '<svg aria-hidden="true" viewBox="0 0 48 48"><rect x="6" y="11" width="36" height="26" rx="4"></rect><path d="m8 14 16 12 16-12"></path></svg>',
-    mailCheck: '<svg aria-hidden="true" viewBox="0 0 48 48"><rect x="6" y="11" width="36" height="26" rx="4"></rect><path d="m8 14 16 12 16-12"></path><circle cx="37" cy="34" r="8" class="tm-dialog__badge"></circle><path d="m33.5 34 2.5 2.5 4.5-5" class="tm-dialog__tick"></path></svg>',
     warning: '<svg aria-hidden="true" viewBox="0 0 48 48"><path d="M24 7 43 40H5L24 7Z"></path><path d="M24 19v10M24 34v.5"></path></svg>',
-    done: '<svg aria-hidden="true" viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"></circle><path d="m16.5 24.5 5 5 10-11"></path></svg>',
   };
 
   // ----- one small centred dialog, reused -----
   let dialog = null;
-  function openDialog({ icon, tone = '', title, body, actions, locked = false }) {
+  function openDialog({ icon = '', image = '', tone = '', title, body, actions, locked = false }) {
     closeDialog();
     dialog = document.createElement('div');
     dialog.className = 'tm-dialog';
     dialog.innerHTML = `<div class="tm-dialog__box ${tone ? `tm-dialog__box--${tone}` : ''}" role="dialog" aria-modal="true" aria-labelledby="tmDialogTitle">
       ${locked ? '' : `<button class="tm-dialog__close" type="button" data-close aria-label="${esc(T('إغلاق', 'Close'))}">×</button>`}
-      <span class="tm-dialog__icon">${icon}</span>
+      ${image ? `<img class="tm-dialog__image" src="${image}" alt="">` : icon ? `<span class="tm-dialog__icon">${icon}</span>` : ''}
       <h2 id="tmDialogTitle">${esc(title)}</h2>
       <div class="tm-dialog__body">${body}</div>
       <div class="tm-dialog__actions">${actions}</div></div>`;
@@ -50,14 +47,14 @@
       const email = `<p class="tm-dialog__email" dir="ltr">${esc(r.email)}</p>`;
       if (r.alreadySent) {
         openDialog({
-          icon: ICONS.mail, title: T('الرابط مُرسل مسبقًا', 'Link already sent'),
+          image: 'assets/password-link-sent.png', title: T('الرابط مُرسل مسبقًا', 'Link already sent'),
           body: `<p>${esc(T('أرسلنا رابط تغيير كلمة المرور إلى بريدك الإلكتروني قبل قليل:', 'We already sent a password link to your email a moment ago:'))}</p>${email}<p class="tm-dialog__muted">${esc(T(`تحقق من صندوق الوارد أو الرسائل غير المرغوب فيها. يمكنك طلب رابط جديد بعد ${minutes(r.retryAfterSeconds)} دقيقة.`, `Check your inbox or spam folder. You can ask for a new link in ${minutes(r.retryAfterSeconds)} min.`))}</p>`,
           actions: `<button class="tm-dialog__btn tm-dialog__btn--primary" type="button" data-close>${esc(T('حسنًا', 'OK'))}</button>`,
         });
         return;
       }
       openDialog({
-        icon: ICONS.mailCheck, title: T('تم إرسال الرابط', 'Link sent'),
+        image: 'assets/password-link-sent.png', title: T('تم إرسال الرابط', 'Link sent'),
         body: `<p>${esc(T('أرسلنا رابط تغيير كلمة المرور إلى بريدك الإلكتروني:', 'We sent a password link to your email:'))}</p>${email}<p class="tm-dialog__muted">${esc(T('الرابط صالح لمدة 30 دقيقة ويُستخدم مرة واحدة.', 'The link is valid for 30 minutes and can be used once.'))}</p>`,
         actions: `<button class="tm-dialog__btn tm-dialog__btn--primary" type="button" data-close>${esc(T('حسنًا', 'OK'))}</button>`,
       });
@@ -74,7 +71,7 @@
   }
   function askCode(info) {
     const d = openDialog({
-      icon: ICONS.mail, tone: 'danger', title: T('أدخل رمز التأكيد', 'Enter the confirmation code'),
+      tone: 'danger', title: T('أدخل رمز التأكيد', 'Enter the confirmation code'),
       body: `<p>${esc(T('أرسلنا رمزًا من 6 أرقام إلى بريدك الإلكتروني:', 'We sent a 6-digit code to your email:'))}</p><p class="tm-dialog__email" dir="ltr">${esc(info.email)}</p>
         <label class="tm-dialog__code"><span class="visually-hidden">${esc(T('رمز التأكيد', 'Confirmation code'))}</span><input id="tmDeleteCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" dir="ltr" placeholder="••••••"></label>
         <p class="tm-dialog__error" id="tmDeleteError" role="alert"></p><p class="tm-dialog__muted">${esc(T('الرمز صالح لمدة 15 دقيقة.', 'The code is valid for 15 minutes.'))}</p>`,
@@ -95,8 +92,8 @@
         }
         Api.clearSession();
         openDialog({
-          locked: true, icon: ICONS.done, title: T('تم حذف الحساب', 'Account deleted'),
-          body: `<p>${esc(T('تم حذف الحساب بنجاح ونتمنى لك التوفيق.', 'Your account was deleted successfully. We wish you all the best.'))}</p>`,
+          locked: true, image: 'assets/account-deleted.png', title: T('تم حذف حسابك', 'Your account has been deleted'),
+          body: `<p>${esc(T('شكرًا لأنك كنت جزءًا من تمّمها. حذفنا حسابك وبياناتك الشخصية كما طلبت، وأرسلنا لك رسالة تأكيد على بريدك.', 'Thank you for being part of Tammha. Your account and personal data have been deleted as you asked, and a confirmation was sent to your email.'))}</p><p>${esc(T('نتمنى لك كل التوفيق في مشروعك ومسيرتك، وبابنا مفتوح لك متى ما رجعت.', 'We wish you every success with your project and your studies. You are always welcome back.'))}</p>`,
           actions: `<a class="tm-dialog__btn tm-dialog__btn--primary" href="index.html">${esc(T('العودة إلى الصفحة الرئيسية', 'Back to the home page'))}</a>`,
         });
       });

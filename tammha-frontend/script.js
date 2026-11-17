@@ -579,7 +579,7 @@ function openLinkDialog(name, url, meta) {
   const pad = (n) => String(n).padStart(2, '0');
   const ICON = '<svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>';
   const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
+  const MINUTES = Array.from({ length: 60 }, (_, i) => i); // every minute (a meeting can start in a minute)
 
   const popup = document.createElement('div');
   popup.className = 'datepicker timepicker';
@@ -593,7 +593,7 @@ function openLinkDialog(name, url, meta) {
 
   const label = (s) => `${pad(s.h)}:${pad(s.m)} ${s.pm ? (EN ? 'PM' : 'م') : (EN ? 'AM' : 'ص')}`;
   const to24 = (s) => `${pad((s.h % 12) + (s.pm ? 12 : 0))}:${pad(s.m)}`;
-  const from24 = (t) => { const [H, M] = t.split(':').map(Number); return { h: H % 12 || 12, m: M - (M % 5), pm: H >= 12 }; };
+  const from24 = (t) => { const [H, M] = t.split(':').map(Number); return { h: H % 12 || 12, m: M, pm: H >= 12 }; };
 
   function render() {
     popup.innerHTML = `
@@ -631,7 +631,9 @@ function openLinkDialog(name, url, meta) {
   }
   function open(input) {
     active = input;
-    state = input.dataset.time ? from24(input.dataset.time) : { h: 10, m: 0, pm: false };
+    // empty field: start from the next minute
+    const soon = new Date(Date.now() + 60_000);
+    state = input.dataset.time ? from24(input.dataset.time) : from24(`${soon.getHours()}:${soon.getMinutes()}`);
     popup.hidden = false;
     render();
     place();

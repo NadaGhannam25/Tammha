@@ -17,6 +17,7 @@ import { SupabaseStorageService } from '@modules/documents/supabase-storage.serv
 import { AI_TEXT_PROVIDER } from '@/integrations/ai/ai.provider';
 import { EMAIL_SENDER } from '@/integrations/email/email.sender';
 import { ProjectHandbookService } from '@modules/ai-support/handbook/project-handbook.service';
+import { verificationCodeIn } from '@/testing/verification-code';
 
 /**
  * Pre-deployment fixes (Nov 2026), on the real AppModule with e-mail verification ON:
@@ -47,12 +48,12 @@ describe('Pre-deployment fixes (AppModule integration)', () => {
   const ids: Record<string, string> = {};
   const http = () => request(app.getHttpServer());
   const as = (k: string) => ({ Authorization: `Bearer ${tokens[k]}` });
-  const linkFor = (to: string) => {
-    const msg = [...mail.sent].reverse().find((m) => m.to === to);
-    return /\/verify-email\.html\?token=([A-Za-z0-9_-]{43})/.exec(
-      msg?.text ?? '',
-    )?.[1];
-  };
+  /** P17: the latest verification code e-mailed to this address */
+  const codeFor = (to: string) =>
+    [...mail.sent]
+      .reverse()
+      .map((m) => (m.to === to ? verificationCodeIn(m.text) : null))
+      .find((c) => !!c) ?? null;
 
   async function signUp(
     key: string,
@@ -76,8 +77,8 @@ describe('Pre-deployment fixes (AppModule integration)', () => {
     tokens[key] = res.body.tokens.accessToken;
     if (verify) {
       await http()
-        .post(`${API}/auth/verify-email`)
-        .send({ token: linkFor(email) })
+        .post(`${API}/auth/verify-email/code`)
+        .send({ email, code: codeFor(email) })
         .expect(200);
     }
     return res.body;
@@ -158,8 +159,11 @@ describe('Pre-deployment fixes (AppModule integration)', () => {
 
     it('after verification: dashboard access and offered to students of the university', async () => {
       await http()
-        .post(`${API}/auth/verify-email`)
-        .send({ token: linkFor('drnoha@uni.edu.sa') })
+        .post(`${API}/auth/verify-email/code`)
+        .send({
+          email: 'drnoha@uni.edu.sa',
+          code: codeFor('drnoha@uni.edu.sa'),
+        })
         .expect(200);
       const login = await http()
         .post(`${API}/auth/login`)

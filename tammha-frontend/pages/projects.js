@@ -30,7 +30,7 @@
     const missing = (w.setupReadiness && w.setupReadiness.missingRequirements) || [];
     const setup = p.setup && !p.setup.completed && missing.length ? `<span class="project-setup-note">${esc(T('الإعداد غير مكتمل', 'Setup incomplete'))}</span>` : '';
     return `<article class="projects-list-card" data-status="${esc(p.status)}">
-      <div class="project-identity"><span class="project-identity__logo${UI.projectImage(p) ? ' has-image' : ''}"${UI.projectImage(p) ? ` style="background-image:url('${UI.projectImage(p)}')"` : ''}>${UI.projectImage(p) ? '' : '<img alt="" src="assets/tammha-mark.png"/>'}</span>
+      <div class="project-identity">${UI.projectImageSlot(p, !!w.viewer?.isLeader, 'project-identity__image')}
         <div class="project-identity__text"><h2>${esc(p.name)}</h2><p>${esc(meta)}</p></div>
         <span class="project-status project-status--${STATUS_CLASS[p.status] || 'progress'}">${esc(L(D.PROJECT_STATUSES[p.status]?.label || [p.status, p.status]))}</span></div>
       <div class="project-progress"><div class="project-progress__label"><span>${esc(T('نسبة الإنجاز', 'Completion'))}</span><strong>${pct}%</strong></div>

@@ -849,7 +849,7 @@ export function createInMemoryPrisma() {
   // ---- P16 ----
   db.authToken = new Table('atk', {
     unique: ['tokenHash'],
-    defaults: () => ({ usedAt: null, email: null }),
+    defaults: () => ({ usedAt: null, email: null, attempts: null }),
     relations: {
       user: (r) => db.user.rows.find((u: Row) => u.id === r.userId),
     },

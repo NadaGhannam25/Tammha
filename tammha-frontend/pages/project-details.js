@@ -34,13 +34,13 @@
     body.innerHTML = head + stages.map((s, i) => {
       const status = s.isOverdue && s.status !== 'COMPLETED' ? 'OVERDUE' : s.status;
       const pr = s.progress || {};
-      const tools = isLeader ? `<select class="stages-row__status" data-stage-status="${esc(s.id)}" aria-label="${esc(T('حالة المرحلة', 'Stage status'))}">${['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((c) => `<option value="${c}"${c === s.status ? ' selected' : ''}>${esc(stateLabel(c))}</option>`).join('')}</select><button class="app-btn app-btn--ghost" type="button" data-stage-delete="${esc(s.id)}">${esc(T('حذف', 'Delete'))}</button>` : '';
+      const tools = isLeader ? `<select class="stages-row__status" data-stage-status="${esc(s.id)}" aria-label="${esc(T('حالة المرحلة', 'Stage status'))}">${['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].map((c) => `<option value="${c}"${c === s.status ? ' selected' : ''}>${esc(stateLabel(c))}</option>`).join('')}</select><button class="stages-row__icon stages-row__icon--danger" type="button" data-stage-delete="${esc(s.id)}" title="${esc(T('حذف المرحلة', 'Delete stage'))}" aria-label="${esc(T('حذف المرحلة', 'Delete stage'))}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"></path></svg></button>` : '';
       return `<div class="stages-row stages-row--${CLS[status] || 'pending'}" role="row"${s.status === 'IN_PROGRESS' ? ' aria-current="step"' : ''}>
         <div class="stages-row__stage" role="cell"><span class="stages-row__step">${s.status === 'COMPLETED' ? '' : i + 1}</span><div><strong>${esc(s.title)}${current && s.id === current.id ? ` <span class="stage-current-tag">${esc(T('الحالية', 'Current'))}</span>` : ''}</strong><small>${esc(s.description || '')}</small></div></div>
-        <span role="cell"><span class="stage-state stage-state--${CLS[status] || 'pending'}">${esc(stateLabel(status))}</span>${pr.totalTasks ? `<small>${esc(String(pr.percent ?? 0))}%</small>` : ''}</span>
+        <span role="cell" class="stages-row__state"><span class="stage-state stage-state--${CLS[status] || 'pending'}">${esc(stateLabel(status))}</span>${pr.totalTasks ? `<span class="stages-row__bar" aria-label="${esc(T(`نسبة الإنجاز ${pr.percent ?? 0}%`, `Completion ${pr.percent ?? 0}%`))}"><i style="width:${Math.max(0, Math.min(100, pr.percent ?? 0))}%"></i></span><small>${esc(String(pr.percent ?? 0))}%</small>` : ''}</span>
         <span role="cell">${esc(T('حتى', 'Due'))} ${esc(UI.fmtDate(s.dueDate))}</span>
         <span role="cell">${esc(T(`${pr.completedTasks || 0} من ${pr.totalTasks || 0}`, `${pr.completedTasks || 0} of ${pr.totalTasks || 0}`))}</span>
-        <span role="cell"><a class="stages-row__link" href="tasks.html?project=${encodeURIComponent(w.id)}">${esc(T('المهام', 'Tasks'))}</a>${tools}</span></div>`;
+        <span role="cell" class="stages-row__actions"><a class="stages-row__icon" href="tasks.html?project=${encodeURIComponent(w.id)}" title="${esc(T('مهام المرحلة', 'Stage tasks'))}" aria-label="${esc(T('مهام المرحلة', 'Stage tasks'))}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"></path></svg></a>${tools}</span></div>`;
     }).join('');
   }
   async function load() {

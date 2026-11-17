@@ -218,7 +218,8 @@ describe('Meetings + LiveKit (integration, fake LiveKit credentials)', () => {
         new Date(res.body.endsAt).getTime() -
           new Date(res.body.scheduledAt).getTime(),
       ).toBe(45 * MIN);
-      expect(res.body.join).toMatchObject({ isOpen: false });
+      // QA review 3: joinable as soon as it is scheduled
+      expect(res.body.join).toMatchObject({ isOpen: true });
 
       // P11 meeting notifications: everyone except the organiser
       expect(notesOf('alice')).toHaveLength(0);
@@ -757,6 +758,10 @@ describe('Meetings + LiveKit (integration, fake LiveKit credentials)', () => {
           scheduledAt: inMinutes(24 * 60),
         }).expect(201)
       ).body.id;
+      // QA review 3: a scheduled meeting can be joined at once
+      await token('bob', later).expect(200);
+      // a row created before the change opens 15 minutes before the start
+      meetingRow(later).createdAt = null;
       const early = await token('bob', later).expect(409);
       expect(early.body.code).toBe('MEETING_NOT_OPEN_YET');
       expect(new Date(early.body.details.opensAt).getTime()).toBe(

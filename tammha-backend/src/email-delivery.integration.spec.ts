@@ -32,6 +32,7 @@ import { NotificationsService } from '@modules/notifications/notifications.servi
 import { TaskRemindersService } from '@modules/notifications/reminders/task-reminders.service';
 import { AccountEmailService } from '@modules/auth/account-email.service';
 import { SupervisorAccountsService } from '@modules/auth/supervisor-accounts.service';
+import { verificationCodeIn } from '@/testing/verification-code';
 
 /**
  * Production e-mail path with SMTP enabled: real SmtpEmailSender, real outbox
@@ -67,6 +68,12 @@ describe('E-mail delivery over SMTP (integration)', () => {
       .find((m) => m.text.includes(`/${kind}.html?token=`));
     return mail ? /token=([A-Za-z0-9_-]{43})/.exec(mail.text)![1] : null;
   };
+  /** P17: the latest verification code e-mailed to this address */
+  const codeIn = (to: string) =>
+    [...smtp.to(to)]
+      .reverse()
+      .map((m) => verificationCodeIn(m.text))
+      .find((c) => !!c) ?? null;
   /** delivers everything due now (as the scheduler would) */
   const flush = async () => outbox.dispatch(new Date(Date.now() + 1000));
   const mailsTo = (k: string, type?: NotificationType) =>
@@ -122,8 +129,8 @@ describe('E-mail delivery over SMTP (integration)', () => {
   }
   async function verify(key: string) {
     await http()
-      .post(`${API}/auth/verify-email`)
-      .send({ token: linkIn(email(key), 'verify-email') })
+      .post(`${API}/auth/verify-email/code`)
+      .send({ email: email(key), code: codeIn(email(key)) })
       .expect(200);
   }
 
@@ -175,17 +182,22 @@ describe('E-mail delivery over SMTP (integration)', () => {
 
   // ==================================================================
   describe('Account e-mail verification is required', () => {
-    it('registration sends the verification link from the project mailbox and says verification is required', async () => {
+    it('registration sends the verification CODE from the noreply address and says verification is required', async () => {
       const body = await register('leila', 'STUDENT');
       expect(body.emailVerificationRequired).toBe(true);
       expect(body.user.emailVerified).toBe(false);
       const [mail] = smtp.to(email('leila'));
+      const code = codeIn(email('leila'));
+      expect(code).toMatch(/^\d{6}$/);
       expect(mail).toMatchObject({
-        from: 'Tammha <support@tammha.site>',
+        // P17: codes come from noreply@ (same domain as EMAIL_FROM), no links at all
+        from: 'Tammha <noreply@tammha.site>',
         to: email('leila'),
-        subject: 'Tammha | Verify Your Email Address',
+        subject: `Tammha | Your verification code: ${code}`,
       });
-      expect(mail.text).toContain('/verify-email.html?token=');
+      expect(mail.text).not.toContain('http');
+      expect(mail.html).not.toMatch(/https?:/);
+      expect(mail.html).toContain(code);
       // account e-mails never go through the database outbox (their tokens stay hashed)
       expect(db.emailDelivery.rows).toHaveLength(0);
     });
@@ -268,7 +280,7 @@ describe('E-mail delivery over SMTP (integration)', () => {
         .expect(200);
     });
 
-    it('SMTP down during registration: the account is still created; the link is retried in the background', async () => {
+    it('SMTP down during registration: the account is still created; the code is retried in the background', async () => {
       smtp.failNext({ code: 'ECONNECTION' });
       await register('omar', 'STUDENT', {
         universityEmail: 'omar.k@um.edu.sa',
