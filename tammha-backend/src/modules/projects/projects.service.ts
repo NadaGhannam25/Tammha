@@ -328,6 +328,7 @@ export class ProjectsService {
       category?: ProjectCategory | null;
       origin?: ProjectOrigin | null;
       expectedCompletionDate?: Date | null;
+      thumbnail?: string | null;
     } = {};
     if (dto.overview !== undefined) data.overview = dto.overview || null;
     if (dto.objectives !== undefined) data.objectives = dto.objectives;
@@ -335,6 +336,7 @@ export class ProjectsService {
     if (dto.origin !== undefined) data.origin = dto.origin;
     if (dto.expectedCompletionDate !== undefined)
       data.expectedCompletionDate = this.toDate(dto.expectedCompletionDate);
+    if (dto.thumbnail !== undefined) data.thumbnail = dto.thumbnail || null;
     return data;
   }
 

@@ -458,6 +458,9 @@ export function createInMemoryPrisma() {
       universityId: null,
       avatar: null,
       bio: null,
+      college: null,
+      major: null,
+      deletedAt: null,
       isActive: true,
       role: 'STUDENT',
     }),
@@ -655,7 +658,8 @@ export function createInMemoryPrisma() {
   });
 
   db.meetingNotes = new Table('mnote', {
-    unique: ['meetingId'],
+    unique: [],
+    compound: { meetingId_createdById: ['meetingId', 'createdById'] },
     defaults: () => ({ createdById: null, updatedById: null }),
     relations: {
       createdBy: (r) => db.user.rows.find((u: Row) => u.id === r.createdById),
@@ -698,10 +702,10 @@ export function createInMemoryPrisma() {
     relations: {
       project: (r) => db.project.rows.find((p: Row) => p.id === r.projectId),
       createdBy: (r) => db.user.rows.find((u: Row) => u.id === r.createdById),
-      notes: (r) => db.meetingNotes.rows.find((n: Row) => n.meetingId === r.id),
     },
     many: {
       attendees: { table: () => db.meetingAttendee, foreignKey: 'meetingId' },
+      notes: { table: () => db.meetingNotes, foreignKey: 'meetingId' },
     },
   });
 

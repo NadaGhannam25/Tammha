@@ -173,6 +173,11 @@ model User {
   // P16: e-mail verification and first-login onboarding (persisted across devices)
   emailVerifiedAt           DateTime?
   onboardingCompletedAt     DateTime?
+  // first-login onboarding: the user's college and major (free text, shown on the profile)
+  college                   String?
+  major                     String?
+  // account deleted by its owner: personal data removed, the row kept for project history
+  deletedAt                 DateTime?
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
 
@@ -263,6 +268,8 @@ enum AuthTokenType {
   UNIVERSITY_EMAIL_VERIFICATION
   /// a SUPERVISOR account created by an ADMIN: the link sets the first password
   ACCOUNT_ACTIVATION
+  /// 6-digit code e-mailed to confirm deleting the account
+  ACCOUNT_DELETION
 }
 
 // ============================================
@@ -831,7 +838,7 @@ model Meeting {
   project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdBy User              @relation("createdBy", fields: [createdById], references: [id])
   attendees MeetingAttendee[]
-  notes     MeetingNotes?
+  notes     MeetingNotes[]
 
   @@index([projectId, scheduledAt])
   @@map("meetings")
@@ -866,10 +873,11 @@ enum AttendanceStatus {
   ATTENDED
 }
 
-/// Notes of one meeting (one per meeting), written and edited by its participants.
+/// Notes of a meeting, one per author: the supervisor's notes are shared with the team
+/// (read-only for the students); a student's notes are private to that student.
 model MeetingNotes {
   id          String   @id @default(cuid())
-  meetingId   String   @unique
+  meetingId   String
   content     String
   createdById String?
   updatedById String?
@@ -880,6 +888,8 @@ model MeetingNotes {
   createdBy User?   @relation("meetingNotesCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   updatedBy User?   @relation("meetingNotesUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
+  @@unique([meetingId, createdById])
+  @@index([meetingId])
   @@map("meeting_notes")
 }
 

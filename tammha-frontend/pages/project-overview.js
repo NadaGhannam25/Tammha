@@ -18,15 +18,11 @@
     $('overviewProjectName').textContent = p.name;
     document.title = `${T('تممها', 'Tammha')} | ${p.name}`;
     S.projectHeroProgress(w); // the completion, once, in the title bar
+    paintHeroImage(p, isLeader);
     $('ovOverview').textContent = p.overview || p.description || T('لم تُكتب نبذة المشروع بعد.', 'No overview yet.');
     const goals = (p.objectives || []).filter(Boolean);
     $('ovGoals').innerHTML = goals.length ? goals.map((g) => `<li>${esc(g)}</li>`).join('') : `<li class="app-muted">${esc(T('لم تُحدد الأهداف بعد.', 'No objectives yet.'))}</li>`;
     const members = w.team?.members || [];
-    // the team and the supervisor have their own sections: only the dates are listed here
-    $('ovStats').innerHTML = [
-      [T('تاريخ بدء المشروع', 'Start date'), UI.fmtDate(p.startDate)],
-      [T('الإنجاز المتوقع', 'Expected completion'), UI.fmtDate(p.expectedCompletionDate || p.endDate)]
-    ].map(([k, v]) => `<div class="overview-stat"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
     // team: the Team Leader (who created the project, or received the leadership) first with the
     // badge; under the leader's name the leader sees two small options: add a member, invitation code
     const me = S.user;
@@ -112,6 +108,30 @@
     } catch (e) { UI.state(body, 'error', { error: e }); }
   }
 
+  // project image (shown on the project cards): the team leader adds or changes it here
+  function paintHeroImage(p, isLeader) {
+    const hero = document.querySelector('.project-detail-hero'); if (!hero) return;
+    let tools = $('ovImageTools');
+    if (!isLeader) { if (tools) tools.remove(); return; }
+    if (!tools) {
+      hero.insertAdjacentHTML('beforeend', `<div class="ov-image" id="ovImageTools"><span class="ov-image__thumb" id="ovImageThumb" aria-hidden="true"></span><label class="ov-image__btn" for="ovImageFile" id="ovImageLabel"></label><input accept="image/png,image/jpeg,image/webp" class="visually-hidden" id="ovImageFile" type="file"/></div>`);
+      tools = $('ovImageTools');
+      $('ovImageFile').addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0]; e.target.value = ''; if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { UI.toast(T('الصورة أكبر من 5MB.', 'The image is larger than 5 MB.'), 'error'); return; }
+        let data;
+        try { data = await UI.imageDataUrl(file); } catch (x) { UI.toast(T('اختر صورة PNG أو JPG أو WebP.', 'Choose a PNG, JPG or WebP image.'), 'error'); return; }
+        try {
+          await Api.patch(`/projects/${encodeURIComponent(w.project.id)}`, { thumbnail: data }, { loader: { label: T('جارٍ حفظ الصورة…', 'Saving the image…') } });
+          S.invalidateProjects(); await reload(); UI.toast(T('حُفظت صورة المشروع.', 'Project image saved.'), 'success');
+        } catch (x) { UI.toast(Api.message(x), 'error'); }
+      });
+    }
+    const img = UI.projectImage(p);
+    $('ovImageThumb').style.backgroundImage = img ? `url('${img}')` : '';
+    $('ovImageThumb').hidden = !img;
+    $('ovImageLabel').textContent = img ? T('تغيير صورة المشروع', 'Change project image') : T('إضافة صورة للمشروع', 'Add a project image');
+  }
   async function reload() { w = await S.currentWorkspace(); render(); }
 
   document.addEventListener('submit', (e) => {

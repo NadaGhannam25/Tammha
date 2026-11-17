@@ -3,7 +3,7 @@
 // Invitations: GET /team-invitations/incoming, POST /team-invitations/:id/accept | decline
 // Wizard "إنشاء مشروع جديد" (the student becomes Team Leader), in this order:
 //   1. POST  /projects                                  name, description, team name, dates
-//   2. PATCH /projects/:id                              overview, objectives, category, origin, expected end
+//   2. PATCH /projects/:id                              overview, objectives, category, origin, expected end, image (thumbnail)
 //   3. POST  /milestones                                one per chosen stage, in order (the first becomes current)
 //   4. PUT   /projects/:id/handbook/university-selection { universityKey }   or   PUT /projects/:id/handbook (PDF)
 //   5. POST  /teams/:teamId/student-invitations         one per classmate (optional)
@@ -18,6 +18,7 @@
   const list = document.querySelector('.projects-list');
   const STATUS_CLASS = { PLANNING: 'progress', IN_PROGRESS: 'progress', REVIEW: 'progress', COMPLETED: 'completed', ARCHIVED: 'archived' };
   let universities = [];
+  let wizardImage = null; // the project image chosen in the wizard (resized data URL)
 
   function card(w) {
     const p = w.project; const pct = Math.round(w.progress?.percent ?? 0);
@@ -29,7 +30,7 @@
     const missing = (w.setupReadiness && w.setupReadiness.missingRequirements) || [];
     const setup = p.setup && !p.setup.completed && missing.length ? `<span class="project-setup-note">${esc(T('الإعداد غير مكتمل', 'Setup incomplete'))}</span>` : '';
     return `<article class="projects-list-card" data-status="${esc(p.status)}">
-      <div class="project-identity"><span class="project-identity__logo"><img alt="" src="assets/tammha-mark.png"/></span>
+      <div class="project-identity"><span class="project-identity__logo${UI.projectImage(p) ? ' has-image' : ''}"${UI.projectImage(p) ? ` style="background-image:url('${UI.projectImage(p)}')"` : ''}>${UI.projectImage(p) ? '' : '<img alt="" src="assets/tammha-mark.png"/>'}</span>
         <div class="project-identity__text"><h2>${esc(p.name)}</h2><p>${esc(meta)}</p></div>
         <span class="project-status project-status--${STATUS_CLASS[p.status] || 'progress'}">${esc(L(D.PROJECT_STATUSES[p.status]?.label || [p.status, p.status]))}</span></div>
       <div class="project-progress"><div class="project-progress__label"><span>${esc(T('نسبة الإنجاز', 'Completion'))}</span><strong>${pct}%</strong></div>
@@ -227,8 +228,26 @@
     document.querySelectorAll('#projectWizardForm .field-error').forEach((el) => { el.hidden = true; el.textContent = ''; });
     document.querySelectorAll('#projectWizardForm .is-invalid').forEach((el) => el.classList.remove('is-invalid'));
     panels.forEach((p) => p.querySelectorAll('input,select,textarea,button').forEach((el) => { el.disabled = false; }));
-    resetStages(); syncSource();
+    resetStages(); syncSource(); setWizardImage(null);
   }
+  // ----- project image (optional): shown on the project cards -----
+  function setWizardImage(data) {
+    wizardImage = data;
+    const box = $('wizardImagePreview'); if (!box) return;
+    box.style.backgroundImage = data ? `url('${data}')` : '';
+    box.classList.toggle('has-image', !!data);
+    $('wizardImageRemove').hidden = !data;
+    $('wizardImagePickLabel').textContent = data ? T('تغيير الصورة', 'Change image') : T('اختيار صورة', 'Choose image');
+  }
+  $('wizardImageFile').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0]; e.target.value = '';
+    const err = $('wizardImageError'); err.hidden = true; err.textContent = '';
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { err.textContent = T('الصورة أكبر من 5MB.', 'The image is larger than 5 MB.'); err.hidden = false; return; }
+    try { setWizardImage(await UI.imageDataUrl(file)); }
+    catch (x) { err.textContent = T('اختر صورة PNG أو JPG أو WebP.', 'Choose a PNG, JPG or WebP image.'); err.hidden = false; }
+  });
+  $('wizardImageRemove').addEventListener('click', () => setWizardImage(null));
   async function open() {
     if (modal.hidden && !createdProjectId) resetWizard();
     modal.hidden = false; document.body.classList.add('has-wizard'); render(); syncSource();
@@ -292,7 +311,9 @@
       }
       const pid = w.project.id; const teamId = w.team.id;
       const run = async (label, fn) => { try { await fn(); return true; } catch (err) { problems.push(`${label}: ${Api.message(err)}`); return false; } };
-      await run(T('تفاصيل المشروع', 'Project details'), () => Api.patch(`/projects/${pid}`, { overview: $('wizardProjectAbout').value.trim(), objectives: [$('wizardProjectGoal').value.trim()], category: $('wizardCategory').value, origin: $('wizardOrigin').value, expectedCompletionDate: end }));
+      const details = { overview: $('wizardProjectAbout').value.trim(), objectives: [$('wizardProjectGoal').value.trim()], category: $('wizardCategory').value, origin: $('wizardOrigin').value, expectedCompletionDate: end };
+      if (wizardImage) details.thumbnail = wizardImage;
+      await run(T('تفاصيل المشروع', 'Project details'), () => Api.patch(`/projects/${pid}`, details));
       // stages, in the chosen order (the backend makes the first one the current stage)
       const names = chosenStages();
       const t0 = new Date(`${start}T00:00:00`).getTime(); const t1 = new Date(`${end}T00:00:00`).getTime();

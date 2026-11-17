@@ -1,9 +1,8 @@
 // ===== Settings (profile.html) — connected to the API =====
-// Profile:  GET /auth/me (session), PATCH /users/me { firstName, lastName, studentNumber }
+// Profile:  GET /auth/me (session), PATCH /users/me { firstName, lastName, studentNumber, college, major }
 //           (the e-mail is the university account and is not edited here)
 // Storage:  GET /users/me/storage (10 GB quota of the student, per project)
-// Security: there is no "change password while signed in" endpoint; the reset link is sent to the
-//           account e-mail with POST /auth/forgot-password. Sign-out ends this session (POST /auth/logout).
+// Security: account-security.js (password link, delete account). Sign-out ends this session (POST /auth/logout).
 // Language: handled by script.js / i18n.js (one setting for the whole site).
 (function () {
   'use strict';
@@ -15,6 +14,8 @@
     $('profileFirst').value = u.firstName || ''; $('profileLast').value = u.lastName || '';
     $('profileEmail').value = u.email || ''; $('profileNumber').value = u.studentNumber || '';
     $('profileUniversity').value = uniName || '';
+    // college and major (collected in the first-login onboarding)
+    $('profileStudyFields').innerHTML = UI.collegeMajorFields('profile', u);
     paintPhoto(u);
   }
 
@@ -68,7 +69,7 @@
     if (number && !/^[A-Za-z0-9-]{4,30}$/.test(number)) { err.textContent = T('أدخل الرقم الجامعي كما في بطاقتك الجامعية.', 'Enter the student number as on your university card.'); return; }
     UI.busy(e.target.querySelector('[type="submit"]'), async () => {
       try {
-        const u = await Api.patch('/users/me', { firstName: first, lastName: $('profileLast').value.trim() || undefined, studentNumber: number || undefined });
+        const u = await Api.patch('/users/me', { firstName: first, lastName: $('profileLast').value.trim() || undefined, studentNumber: number || undefined, college: $('profileCollege') ? $('profileCollege').value.trim() : undefined, major: $('profileMajor') ? $('profileMajor').value.trim() : undefined });
         Api.saveUser(Object.assign({}, S.user, u));
         document.querySelectorAll('.profile__text strong').forEach((el) => { el.textContent = UI.personName(u); });
         UI.toast(T('حُفظت التغييرات.', 'Changes saved.'), 'success');
@@ -87,14 +88,11 @@
         <dl class="storage-compact__meta"><div><dt>${esc(T('ملفات المشاريع', 'Project files'))}</dt><dd dir="ltr">${esc(UI.fmtSize(s.breakdown?.documentBytes))}</dd></div>
         <div><dt>${esc(T('أدلة المشاريع', 'Project handbooks'))}</dt><dd dir="ltr">${esc(UI.fmtSize(s.breakdown?.handbookBytes))}</dd></div>
         <div><dt>${esc(T('المتبقي', 'Remaining'))}</dt><dd dir="ltr">${esc(UI.fmtSize(s.remainingBytes))}</dd></div></dl>
-        ${(s.projects || []).length ? `<ul class="app-list">${s.projects.map((p) => `<li><span>${esc(p.projectName)}</span><span dir="ltr">${esc(UI.fmtSize(p.usedBytes))}</span></li>`).join('')}</ul>` : ''}`;
+        ${(s.projects || []).length ? `<section class="storage-projects" aria-labelledby="storageProjectsTitle"><h3 id="storageProjectsTitle">${esc(T('المساحة حسب المشروع', 'Space by project'))}</h3><ul class="storage-projects__list">${s.projects.map((p) => { const share = s.usedBytes ? Math.round((p.usedBytes / s.usedBytes) * 100) : 0; return `<li><span class="storage-projects__name">${esc(p.projectName)}</span><span class="storage-projects__bar" aria-hidden="true"><i style="width:${Math.max(share, p.usedBytes ? 2 : 0)}%"></i></span><span class="storage-projects__size" dir="ltr">${esc(UI.fmtSize(p.usedBytes))}</span></li>`; }).join('')}</ul></section>` : ''}`;
     } catch (e) { UI.state(box, 'error', { error: e, retry: storage }); }
   }
 
-  $('sendPasswordLink').addEventListener('click', () => UI.busy($('sendPasswordLink'), async () => {
-    await Api.post('/auth/forgot-password', { email: S.user.email }, { auth: false });
-    $('securityStatus').textContent = T(`أُرسل رابط تغيير كلمة المرور إلى ${S.user.email}.`, `A password link was sent to ${S.user.email}.`);
-  }));
+  // change password and delete account: account-security.js
 
   S.ready.then(async (u) => {
     let uniName = '';

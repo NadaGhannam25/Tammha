@@ -605,12 +605,12 @@
     }));
     qsa('[data-notes]', root).forEach((b) => b.addEventListener('click', () => openNotes(b.dataset.notes)));
   }
-  // Meeting notes: GET / PUT /meetings/:id/notes (one shared text per meeting)
+  // Meeting notes: GET / PUT /meetings/:id/notes (the supervisor's own notes; shared with the team, read-only for students)
   async function openNotes(id) {
     const m = db.meetings.find((x) => x.id === id);
     if (!m) return;
     const pr = project(m.project);
-    openDrawer(pr ? L(pr.name) : '', L(m.title), `<dl class="task-drawer__facts"><div><dt>${T('التاريخ', 'Date')}</dt><dd>${fmtDate(m.date)}</dd></div><div><dt>${T('الوقت', 'Time')}</dt><dd>${fmtTime(m.time)}</dd></div></dl>${m.agenda ? `<section class="task-drawer__block"><h3>${T('جدول الأعمال', 'Agenda')}</h3><p>${esc(m.agenda)}</p></section>` : ''}<section class="task-drawer__block"><h3>${T('ملاحظات الاجتماع', 'Meeting notes')}</h3><p id="svNotesText" style="white-space:pre-line">${T('جارٍ التحميل…', 'Loading…')}</p><small class="sv-muted" id="svNotesMeta"></small>
+    openDrawer(pr ? L(pr.name) : '', L(m.title), `<dl class="task-drawer__facts"><div><dt>${T('التاريخ', 'Date')}</dt><dd>${fmtDate(m.date)}</dd></div><div><dt>${T('الوقت', 'Time')}</dt><dd>${fmtTime(m.time)}</dd></div></dl>${m.agenda ? `<section class="task-drawer__block"><h3>${T('جدول الأعمال', 'Agenda')}</h3><p>${esc(m.agenda)}</p></section>` : ''}<section class="task-drawer__block"><h3>${T('ملاحظاتي على الاجتماع', 'My meeting notes')}</h3><p class="sv-muted sv-notes-hint">${T('تظهر ملاحظاتك لطلاب الفريق للقراءة فقط، وملاحظات الطلاب خاصة بهم.', 'The team students can read your notes (read-only); their own notes stay private.')}</p><p id="svNotesText" style="white-space:pre-line">${T('جارٍ التحميل…', 'Loading…')}</p><small class="sv-muted" id="svNotesMeta"></small>
       <form class="sv-inline-form" id="svNotesForm" hidden><label class="visually-hidden" for="svNotesInput">${T('ملاحظات الاجتماع', 'Meeting notes')}</label><textarea id="svNotesInput" maxlength="20000" rows="5"></textarea><small class="field-error" hidden>${T('اكتب الملاحظات أولًا', 'Write the notes first')}</small><div class="sv-review-actions"><button class="sv-btn" type="submit">${T('حفظ', 'Save')}</button><button class="sv-btn sv-btn--text" data-notes-cancel type="button">${T('إلغاء', 'Cancel')}</button></div></form>
       <button class="sv-btn sv-btn--ghost" id="svNotesEdit" type="button" hidden>${T('تعديل الملاحظات', 'Edit notes')}</button></section><section class="task-drawer__block"><h3>${T('المشاركون', 'Participants')}</h3><p>${m.people.map(person).map(esc).join(T('، ', ', ')) || '—'}</p></section>`);
     const form = qs('#svNotesForm'), input = qs('#svNotesInput'), editBtn = qs('#svNotesEdit'), text = qs('#svNotesText'), meta = qs('#svNotesMeta');
@@ -619,8 +619,7 @@
       const n = await Api.get(`/meetings/${encodeURIComponent(id)}/notes`);
       current = (n && n.exists && n.content) || '';
       text.textContent = current || T('لم تُكتب ملاحظات بعد.', 'No notes yet.');
-      const by = n && (n.updatedBy || n.createdBy);
-      meta.textContent = by ? `${T('آخر تحديث', 'Last updated')}: ${UI.personName(by)} · ${fmtDate(dayOf(n.updatedAt))}` : '';
+      meta.textContent = n && n.exists ? `${T('آخر تحديث', 'Last updated')}: ${fmtDate(dayOf(n.updatedAt))}` : '';
       editBtn.hidden = m.status === 'CANCELLED';
     } catch (e) { text.textContent = Api.message(e); }
     editBtn.addEventListener('click', () => { input.value = current; form.hidden = false; editBtn.hidden = true; input.focus(); });
@@ -851,13 +850,7 @@
         } catch (er) { err.textContent = Api.message(er); }
       });
     });
-    const link = qs('#sSendPasswordLink');
-    if (link) link.addEventListener('click', () => UI.busy(link, async () => {
-      try {
-        await Api.post('/auth/forgot-password', { email: u.email }, { auth: false });
-        qs('#sSecurityStatus').textContent = T(`أُرسل رابط تغيير كلمة المرور إلى ${u.email}.`, `A password link was sent to ${u.email}.`);
-      } catch (er) { qs('#sSecurityStatus').textContent = Api.message(er); }
-    }));
+    // change password and delete account: account-security.js
   }
 
   // ---------- Boot ----------

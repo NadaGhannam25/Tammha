@@ -10,6 +10,7 @@ export const AUTH_TOKEN_TTL_MS: Record<AuthTokenType, number> = {
   PASSWORD_RESET: 30 * 60 * 1000, // 30 minutes
   UNIVERSITY_EMAIL_VERIFICATION: 24 * 60 * 60 * 1000, // 24 hours
   ACCOUNT_ACTIVATION: 7 * 24 * 60 * 60 * 1000, // 7 days (supervisor accounts)
+  ACCOUNT_DELETION: 15 * 60 * 1000, // 15 minutes (6-digit code)
 };
 
 const hash = (raw: string) => createHash('sha256').update(raw).digest('hex');

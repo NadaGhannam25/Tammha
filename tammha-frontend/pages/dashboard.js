@@ -33,7 +33,7 @@
       box.innerHTML = items.slice(0, 2).map((w) => {
         const p = w.project; const pct = Math.round(w.progress?.percent ?? 0);
         const role = w.viewer?.isLeader ? T('قائد الفريق', 'Team Leader') : T('عضو في الفريق', 'Team member');
-        return `<article class="project-card"><div aria-hidden="true" class="project-card__visual"></div><div class="project-card__body">
+        return `<article class="project-card"><div aria-hidden="true" class="project-card__visual${UI.projectImage(p) ? ' has-image' : ''}"${UI.projectImage(p) ? ` style="background-image:url('${UI.projectImage(p)}')"` : ''}></div><div class="project-card__body">
           <div class="project-card__topline"><div><h3>${esc(p.name)}</h3><p>${esc(w.team?.name || '')} · ${esc(role)}</p></div>
           <a aria-label="${esc(T('فتح المشروع', 'Open project'))}" class="round-arrow" href="project-overview.html?project=${encodeURIComponent(p.id)}">${ICON_ARROW}</a></div>
           <div class="progress-row"><div aria-label="${esc(T(`نسبة إنجاز المشروع ${pct} بالمئة`, `Project completion ${pct} percent`))}" class="progress-track"><span style="width: ${pct}%"></span></div><strong>${pct}%</strong></div>

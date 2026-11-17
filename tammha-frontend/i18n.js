@@ -121,6 +121,8 @@
   // ---------- language button ----------
   function addButton() {
     if (document.querySelector('[data-lang-toggle], #langToggle')) return; // landing has its own
+    // the meeting room has no language switch (the language is chosen in Settings)
+    if (document.body && document.body.classList.contains('meeting-room-page')) return;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'lang-toggle';

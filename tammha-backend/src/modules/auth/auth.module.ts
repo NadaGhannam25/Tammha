@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthTokensService } from './auth-tokens.service';
 import { AccountEmailService } from './account-email.service';
+import { AccountLifecycleService } from './account-lifecycle.service';
 import { UniversityIdentityService } from './university-identity.service';
 import { SupervisorAccountsService } from './supervisor-accounts.service';
 import { AdminSupervisorsController } from './admin-supervisors.controller';
@@ -54,6 +55,7 @@ import {
     JwtStrategy,
     AuthTokensService,
     AccountEmailService,
+    AccountLifecycleService,
     UniversityIdentityService,
     SupervisorAccountsService,
   ],

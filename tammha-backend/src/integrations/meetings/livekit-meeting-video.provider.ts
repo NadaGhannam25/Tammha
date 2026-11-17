@@ -1,5 +1,5 @@
 import { Logger, ServiceUnavailableException } from '@nestjs/common';
-import { AccessToken } from 'livekit-server-sdk';
+import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { LiveKitConfig } from '../integrations.config';
 import {
   MeetingJoinCredentials,
@@ -64,6 +64,25 @@ export class LiveKitMeetingVideoProvider implements MeetingVideoProvider {
       });
     }
   }
+
+  async closeRoom(roomName: string): Promise<void> {
+    try {
+      const client = new RoomServiceClient(
+        toHttpUrl(this.config.url),
+        this.config.apiKey,
+        this.config.apiSecret,
+      );
+      await client.deleteRoom(roomName);
+    } catch (error) {
+      // the room may not exist (nobody joined yet); the clients also leave on the end signal
+      this.logger.warn(`closing room failed: ${(error as Error).name}`);
+    }
+  }
+}
+
+/** The server API uses HTTP(S): wss://x -> https://x */
+export function toHttpUrl(url: string): string {
+  return url.replace(/^wss:\/\//, 'https://').replace(/^ws:\/\//, 'http://');
 }
 
 /** Browsers connect over WebSocket: https://x -> wss://x, http://localhost -> ws://localhost */

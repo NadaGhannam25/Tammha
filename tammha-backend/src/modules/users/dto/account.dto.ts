@@ -55,6 +55,29 @@ export class UpdateMyProfileDto {
 
   @ApiPropertyOptional({
     description:
+      'College (free text, set during onboarding). Empty removes it.',
+    maxLength: 160,
+    example: 'كلية الهندسة وعلوم الحاسب',
+  })
+  @IsOptional()
+  @Trim()
+  @IsString()
+  @MaxLength(160)
+  college?: string;
+
+  @ApiPropertyOptional({
+    description: 'Major (free text, set during onboarding). Empty removes it.',
+    maxLength: 160,
+    example: 'الذكاء الاصطناعي',
+  })
+  @IsOptional()
+  @Trim()
+  @IsString()
+  @MaxLength(160)
+  major?: string;
+
+  @ApiPropertyOptional({
+    description:
       'Profile photo as a small data URL (PNG, JPEG or WebP, base64; the interface resizes it to 256 px). ' +
       `Up to ${AVATAR_MAX_LENGTH} characters. null removes the photo.`,
     nullable: true,

@@ -35,6 +35,8 @@ export interface MeetingVideoProvider {
   createJoinCredentials(
     request: MeetingJoinRequest,
   ): Promise<MeetingJoinCredentials>;
+  /** Disconnects everyone and closes the room (best effort; absent when disabled). */
+  closeRoom?(roomName: string): Promise<void>;
 }
 
 /** P12: a new random room name per meeting (unguessable, no titles or personal data). */

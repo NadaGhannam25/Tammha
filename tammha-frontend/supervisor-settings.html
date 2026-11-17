@@ -64,8 +64,9 @@
     </section>
     <section class="settings-tab-panel" data-settings-panel="security" hidden>
       <div class="settings-v43-panel-head"><div><h2 data-en="Privacy & security">الخصوصية والأمان</h2><p data-en="Change your password and end the session.">تغيير كلمة المرور وإنهاء الجلسة.</p></div></div>
-      <div class="settings-v43-session-card"><div><strong data-en="Change password">تغيير كلمة المرور</strong><span data-en="A secure link to set a new password is sent to your account email.">يُرسَل رابط آمن لتعيين كلمة مرور جديدة إلى البريد الإلكتروني للحساب.</span><small aria-live="polite" id="sSecurityStatus"></small></div><button id="sSendPasswordLink" type="button" data-en="Send link">إرسال الرابط</button></div>
+      <div class="settings-v43-session-card"><div><strong data-en="Change password">تغيير كلمة المرور</strong><span data-en="A secure link to set a new password is sent to your account email.">يُرسَل رابط آمن لتعيين كلمة مرور جديدة إلى البريد الإلكتروني للحساب.</span></div><button data-password-link id="sSendPasswordLink" type="button" data-en="Send link">إرسال الرابط</button></div>
       <div class="settings-v43-session-card"><div><strong data-en="Sign out">تسجيل الخروج</strong><span data-en="Ends the session on this device.">ينهي الجلسة على هذا الجهاز.</span></div><button data-logout type="button" data-en="Sign out">تسجيل الخروج</button></div>
+      <div class="settings-v43-session-card settings-danger-card"><div><strong data-en="Delete account">حذف الحساب</strong><span data-en="Permanent, confirmed with a code sent to your email.">حذف نهائي يتم بعد تأكيد رمز يصل إلى بريدك.</span></div><button data-delete-account type="button" data-en="Delete account">حذف الحساب</button></div>
     </section>
     <section class="settings-tab-panel" data-settings-panel="language" hidden>
       <div class="settings-v43-panel-head"><div><h2 data-en="Language">اللغة</h2><p data-en="Choose the Tammha interface language.">اختر لغة واجهة تممها.</p></div></div>
@@ -171,6 +172,7 @@
 </div>
 
 <script src="script.js"></script>
+<script src="account-security.js"></script>
 <script src="pages/documents.js"></script>
 <script src="supervisor.js"></script>
 </body>

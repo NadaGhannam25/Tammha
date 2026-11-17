@@ -61,3 +61,13 @@ export class UniversityEmailRequestDto {
   @MaxLength(254)
   universityEmail!: string;
 }
+
+export class ConfirmAccountDeletionDto {
+  @ApiProperty({
+    example: '483920',
+    description: 'The 6-digit code from the e-mail',
+  })
+  @IsString()
+  @Matches(/^\s*\d{6}\s*$/, { message: 'code must be 6 digits' })
+  code!: string;
+}

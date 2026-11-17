@@ -4,13 +4,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { MeetingStatus, Prisma } from '@prisma/client';
+import { MeetingStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 import { AuthUser } from '@common/types/auth-user.type';
 import { WorkspaceAccessService } from '@common/workspace/workspace-access.service';
 import { PUBLIC_USER_SELECT } from '@common/workspace/user-select';
 import {
   MeetingNotesViewDto,
+  SharedMeetingNoteDto,
   UpsertMeetingNotesDto,
 } from './dto/meeting-notes.dto';
 
@@ -20,17 +21,24 @@ const NOTES_SELECT = {
   id: true,
   meetingId: true,
   content: true,
+  createdById: true,
   createdAt: true,
   updatedAt: true,
   createdBy: { select: PUBLIC_USER_SELECT },
   updatedBy: { select: PUBLIC_USER_SELECT },
 } satisfies Prisma.MeetingNotesSelect;
 
+type NotesRow = Prisma.MeetingNotesGetPayload<{
+  select: typeof NOTES_SELECT;
+}>;
+
 /**
- * Notes of a meeting (the existing MeetingNotes model: one note per meeting).
- * Read and write: the students of the project team and the project's supervisor (the
- * same people who can see the meeting). Writing creates the note the first time and
- * updates it afterwards; the author and the last editor are recorded.
+ * Notes of a meeting, one per author (the people who can see the meeting: the students
+ * of the project team and its supervisor).
+ * - Everyone reads and writes only their own notes ("mine").
+ * - The supervisor's notes are shared with the team: students read them ("shared"),
+ *   but cannot edit them.
+ * - A student's notes are private: nobody else (not even the supervisor) reads them.
  */
 @Injectable()
 export class MeetingNotesService {
@@ -42,11 +50,12 @@ export class MeetingNotesService {
   async get(user: AuthUser, meetingId: string): Promise<MeetingNotesViewDto> {
     const meeting = await this.meetingOrThrow(meetingId);
     await this.access.assertCanViewProject(user, meeting.projectId);
-    const row = await this.prisma.meetingNotes.findUnique({
+    const rows = await this.prisma.meetingNotes.findMany({
       where: { meetingId },
       select: NOTES_SELECT,
+      orderBy: { createdAt: 'asc' },
     });
-    return this.toView(meeting.id, row);
+    return this.toView(meeting.id, user, rows);
   }
 
   async upsert(
@@ -70,8 +79,8 @@ export class MeetingNotesService {
         err('MEETING_NOTES_EMPTY', 'Write the meeting notes first'),
       );
     }
-    const row = await this.prisma.meetingNotes.upsert({
-      where: { meetingId },
+    await this.prisma.meetingNotes.upsert({
+      where: { meetingId_createdById: { meetingId, createdById: user.id } },
       create: {
         meetingId,
         content,
@@ -79,9 +88,9 @@ export class MeetingNotesService {
         updatedById: user.id,
       },
       update: { content, updatedById: user.id },
-      select: NOTES_SELECT,
+      select: { id: true },
     });
-    return this.toView(meeting.id, row);
+    return this.get(user, meetingId);
   }
 
   private async meetingOrThrow(meetingId: string) {
@@ -99,17 +108,33 @@ export class MeetingNotesService {
 
   private toView(
     meetingId: string,
-    row: Prisma.MeetingNotesGetPayload<{ select: typeof NOTES_SELECT }> | null,
+    user: AuthUser,
+    rows: NotesRow[],
   ): MeetingNotesViewDto {
+    const mine = rows.find((r) => r.createdById === user.id) ?? null;
+    const shared: SharedMeetingNoteDto[] = rows
+      .filter(
+        (r) =>
+          r.createdById !== user.id &&
+          r.createdBy?.role === UserRole.SUPERVISOR,
+      )
+      .map((r) => ({
+        content: r.content,
+        author: r.createdBy,
+        updatedAt: r.updatedAt,
+      }));
     return {
       meetingId,
-      exists: !!row,
-      content: row?.content ?? '',
-      createdBy: row?.createdBy ?? null,
-      updatedBy: row?.updatedBy ?? null,
-      createdAt: row?.createdAt ?? null,
-      updatedAt: row?.updatedAt ?? null,
-      edited: !!row && row.updatedAt.getTime() > row.createdAt.getTime(),
+      exists: !!mine,
+      content: mine?.content ?? '',
+      createdBy: mine?.createdBy ?? null,
+      updatedBy: mine?.updatedBy ?? null,
+      createdAt: mine?.createdAt ?? null,
+      updatedAt: mine?.updatedAt ?? null,
+      edited: !!mine && mine.updatedAt.getTime() > mine.createdAt.getTime(),
+      visibility:
+        user.role === UserRole.SUPERVISOR ? 'SHARED_WITH_TEAM' : 'PRIVATE',
+      shared,
     };
   }
 }

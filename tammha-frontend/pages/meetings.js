@@ -2,7 +2,7 @@
 //   GET  /meetings?includeCancelled=true      meetings of every project of the user
 //   POST /meetings                            schedule (project, title, goals, date + time, duration, participants)
 //   POST /meetings/:id/cancel                 organiser or the project's supervisor
-//   GET/PUT /meetings/:id/notes               one shared text per meeting; the follow-up points are kept
+//   GET/PUT /meetings/:id/notes               my own notes (private to me) + the supervisor's notes (read-only, `shared`); the follow-up points are kept
 //                                             after a marker line inside the same text
 // "انضمام" opens meeting-prejoin.html?id=… when the join window is open (the server decides).
 // meetings.html?ended=<id> (after leaving the room) opens the short notes dialog.
@@ -126,16 +126,19 @@
   function renderNotes(editing) {
     const sections = notesModal.querySelector('.meeting-notes-sections'); const parts = split(notesData?.content);
     const meta = $('meetingNotesMeta');
-    meta.textContent = notesData?.exists && notesData.updatedBy ? T(`آخر تحديث: ${UI.personName(notesData.updatedBy)} · ${UI.fmtDateTime(notesData.updatedAt)}`, `Last updated: ${UI.personName(notesData.updatedBy)} · ${UI.fmtDateTime(notesData.updatedAt)}`) : '';
+    meta.textContent = notesData?.exists ? T(`آخر تحديث لملاحظاتك: ${UI.fmtDateTime(notesData.updatedAt)}`, `Your notes were last updated: ${UI.fmtDateTime(notesData.updatedAt)}`) : '';
     meta.hidden = !meta.textContent;
     const cancelled = notesMeeting.status === 'CANCELLED';
+    // the supervisor's notes: shared with the team, read-only for students
+    const shared = (notesData?.shared || []).map((n) => `<section class="meeting-notes-field meeting-notes-field--shared"><h3>${esc(T('ملاحظات المشرف', 'Supervisor notes'))}<small>${esc(UI.personName(n.author))} · ${esc(UI.fmtDateTime(n.updatedAt))}</small></h3><div class="meeting-notes-box"><p>${esc(n.content)}</p></div></section>`).join('');
+    const privacy = `<p class="meeting-notes-privacy">${esc(T('ملاحظاتك خاصة بك، لا يراها أعضاء الفريق ولا المشرف.', 'Your notes are private: neither the team nor the supervisor can see them.'))}</p>`;
     if (!editing) {
-      sections.innerHTML = `<section class="meeting-notes-field"><h3>${esc(T('ملاحظات الاجتماع', 'Meeting notes'))}</h3><div class="meeting-notes-box"><p></p></div></section><section class="meeting-notes-field meeting-notes-field--improvements"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3><div class="meeting-notes-box"><p></p></div></section>`;
-      const ps = sections.querySelectorAll('p');
-      ps[0].textContent = parts.notes || T('لا توجد ملاحظات بعد.', 'No notes yet.'); ps[1].textContent = parts.improvements || T('لا توجد نقاط تحسين إضافية.', 'No additional improvement points.');
+      sections.innerHTML = `${shared}<section class="meeting-notes-field"><h3>${esc(T('ملاحظاتي', 'My notes'))}</h3><div class="meeting-notes-box"><p></p></div></section><section class="meeting-notes-field meeting-notes-field--improvements"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3><div class="meeting-notes-box"><p></p></div></section>`;
+      const own = sections.querySelectorAll('.meeting-notes-field:not(.meeting-notes-field--shared) p');
+      own[0].textContent = parts.notes || T('لم تكتب ملاحظات بعد.', 'You have not written notes yet.'); own[1].textContent = parts.improvements || T('لا توجد نقاط تحسين إضافية.', 'No additional improvement points.');
       $('meetingNotesEdit').hidden = cancelled; $('meetingNotesSave').hidden = true; return;
     }
-    sections.innerHTML = `<section class="meeting-notes-field"><label for="meetingNotesInput"><h3>${esc(T('ملاحظات الاجتماع', 'Meeting notes'))}</h3></label><textarea class="meeting-notes-input" id="meetingNotesInput" maxlength="20000" rows="5"></textarea><small class="field-error" hidden id="meetingNotesError">${esc(T('اكتب ملاحظات الاجتماع أولًا', 'Write the meeting notes first'))}</small></section><section class="meeting-notes-field meeting-notes-field--improvements"><label for="meetingImprovementsInput"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3></label><textarea class="meeting-notes-input" id="meetingImprovementsInput" maxlength="10000" rows="3"></textarea></section>`;
+    sections.innerHTML = `${shared}<section class="meeting-notes-field"><label for="meetingNotesInput"><h3>${esc(T('ملاحظاتي', 'My notes'))}</h3></label><textarea class="meeting-notes-input" id="meetingNotesInput" maxlength="20000" rows="5"></textarea><small class="field-error" hidden id="meetingNotesError">${esc(T('اكتب ملاحظات الاجتماع أولًا', 'Write the meeting notes first'))}</small></section><section class="meeting-notes-field meeting-notes-field--improvements"><label for="meetingImprovementsInput"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3></label><textarea class="meeting-notes-input" id="meetingImprovementsInput" maxlength="10000" rows="3"></textarea></section>${privacy}`;
     $('meetingNotesInput').value = parts.notes; $('meetingImprovementsInput').value = parts.improvements;
     $('meetingNotesEdit').hidden = true; $('meetingNotesSave').hidden = false; $('meetingNotesInput').focus();
   }

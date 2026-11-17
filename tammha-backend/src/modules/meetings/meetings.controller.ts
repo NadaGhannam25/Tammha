@@ -188,6 +188,20 @@ export class MeetingsController {
     return this.meetings.createJoinToken(user, id);
   }
 
+  @Post(':id/end')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'End the meeting for everyone',
+    description:
+      'Organiser or project supervisor. Marks the meeting COMPLETED (no one can join again) and closes the video room.',
+  })
+  @ApiOkResponse({ type: MeetingViewDto })
+  @ApiResponse({ status: 403, description: 'MEETING_MANAGE_NOT_ALLOWED' })
+  @ApiResponse({ status: 409, description: 'MEETING_CANCELLED' })
+  end(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.meetings.end(user, id);
+  }
+
   // ---------- notes ----------
 
   @Get(':id/notes')

@@ -64,7 +64,13 @@ const MEETING_SELECT = {
   createdAt: true,
   updatedAt: true,
   createdBy: { select: PUBLIC_USER_SELECT },
-  notes: { select: { id: true, updatedAt: true } },
+  notes: {
+    select: {
+      createdById: true,
+      updatedAt: true,
+      createdBy: { select: { role: true } },
+    },
+  },
   attendees: {
     select: {
       userId: true,
@@ -258,6 +264,29 @@ export class MeetingsService {
     return this.toView(await this.load(meetingId), user);
   }
 
+  /**
+   * "End meeting for everyone" (organiser or project supervisor): the meeting is marked
+   * COMPLETED, nobody can join again, and the video room is closed (everyone is
+   * disconnected).
+   */
+  async end(user: AuthUser, meetingId: string): Promise<MeetingViewDto> {
+    const current = await this.load(meetingId);
+    await this.assertCanManage(user, current);
+    if (current.cancelledAt || current.status === MeetingStatus.CANCELLED) {
+      throw cancelledError();
+    }
+    if (current.status !== MeetingStatus.COMPLETED) {
+      await this.prisma.meeting.update({
+        where: { id: meetingId },
+        data: { status: MeetingStatus.COMPLETED, updatedAt: new Date() },
+      });
+    }
+    if (current.liveKitRoomName && this.video.closeRoom) {
+      await this.video.closeRoom(current.liveKitRoomName);
+    }
+    return this.toView(await this.load(meetingId), user);
+  }
+
   // ==========================================================
   // Read
   // ==========================================================
@@ -359,7 +388,10 @@ export class MeetingsService {
         }),
       );
     }
-    if (now > window.closesAt.getTime()) {
+    if (
+      now > window.closesAt.getTime() ||
+      meeting.status === MeetingStatus.COMPLETED
+    ) {
       throw new ConflictException(
         err('MEETING_ENDED', 'This meeting has ended'),
       );
@@ -548,7 +580,8 @@ export class MeetingsService {
       endOf(meeting) + this.settings.joinGraceMinutes * MINUTE,
     );
     const now = Date.now();
-    const cancelled = !!meeting.cancelledAt;
+    const cancelled =
+      !!meeting.cancelledAt || meeting.status === MeetingStatus.COMPLETED;
     return {
       opensAt,
       closesAt,
@@ -566,11 +599,13 @@ export class MeetingsService {
     const status: MeetingState =
       meeting.cancelledAt || meeting.status === MeetingStatus.CANCELLED
         ? 'CANCELLED'
-        : now < meeting.scheduledAt.getTime()
-          ? 'SCHEDULED'
-          : now < endOf(meeting)
-            ? 'ONGOING'
-            : 'COMPLETED';
+        : meeting.status === MeetingStatus.COMPLETED
+          ? 'COMPLETED'
+          : now < meeting.scheduledAt.getTime()
+            ? 'SCHEDULED'
+            : now < endOf(meeting)
+              ? 'ONGOING'
+              : 'COMPLETED';
     return {
       id: meeting.id,
       projectId: meeting.projectId,
@@ -595,12 +630,31 @@ export class MeetingsService {
         canManage ??
         (meeting.createdById === user.id || user.role === UserRole.SUPERVISOR),
       join: this.joinWindow(meeting),
-      hasNotes: !!meeting.notes,
-      notesUpdatedAt: meeting.notes?.updatedAt ?? null,
+      // notes this user can read: their own and the supervisor's (shared with the team)
+      ...visibleNotes(meeting.notes, user.id),
       createdAt: meeting.createdAt,
       updatedAt: meeting.updatedAt,
     };
   }
+}
+
+function visibleNotes(
+  notes: {
+    createdById: string | null;
+    updatedAt: Date;
+    createdBy: { role: UserRole } | null;
+  }[],
+  userId: string,
+) {
+  const seen = notes.filter(
+    (n) =>
+      n.createdById === userId || n.createdBy?.role === UserRole.SUPERVISOR,
+  );
+  const last = seen.reduce<Date | null>(
+    (max, n) => (!max || n.updatedAt > max ? n.updatedAt : max),
+    null,
+  );
+  return { hasNotes: seen.length > 0, notesUpdatedAt: last };
 }
 
 function endOf(meeting: { scheduledAt: Date; duration: number }): number {

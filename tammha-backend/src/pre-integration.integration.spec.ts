@@ -206,12 +206,16 @@ describe('Pre-integration features (AppModule integration)', () => {
       meetingId = m.body.id;
     });
 
-    it('members and the supervisor write and read the notes; the editors are recorded', async () => {
+    it("each author keeps their own notes; the supervisor's are shared read-only", async () => {
       const empty = await http()
         .get(`${API}/meetings/${meetingId}/notes`)
         .set(as('noor'))
         .expect(200);
-      expect(empty.body).toMatchObject({ exists: false, content: '' });
+      expect(empty.body).toMatchObject({
+        exists: false,
+        content: '',
+        shared: [],
+      });
       const created = await http()
         .put(`${API}/meetings/${meetingId}/notes`)
         .set(as('noor'))
@@ -222,23 +226,33 @@ describe('Pre-integration features (AppModule integration)', () => {
         content: 'Agreed: survey by Thursday.',
         createdBy: { id: ids.noor },
         updatedBy: { id: ids.noor },
+        visibility: 'PRIVATE',
       });
-      const edited = await http()
+      const sup = await http()
         .put(`${API}/meetings/${meetingId}/notes`)
         .set(as('supA'))
-        .send({
-          content: 'Agreed: survey by Thursday. Review chapter 2 next week.',
-        })
+        .send({ content: 'Review chapter 2 next week.' })
         .expect(200);
-      expect(edited.body).toMatchObject({
-        createdBy: { id: ids.noor },
-        updatedBy: { id: ids.supA },
+      expect(sup.body).toMatchObject({
+        content: 'Review chapter 2 next week.',
+        createdBy: { id: ids.supA },
+        visibility: 'SHARED_WITH_TEAM',
       });
-      expect(db.meetingNotes.rows).toHaveLength(1);
+      // the supervisor did not overwrite the student's notes
+      expect(db.meetingNotes.rows).toHaveLength(2);
+      const noor = await http()
+        .get(`${API}/meetings/${meetingId}/notes`)
+        .set(as('noor'))
+        .expect(200);
+      expect(noor.body.content).toBe('Agreed: survey by Thursday.');
+      expect(noor.body.shared).toEqual([
+        expect.objectContaining({ content: 'Review chapter 2 next week.' }),
+      ]);
       const meeting = await http()
         .get(`${API}/meetings/${meetingId}`)
         .set(as('leila'))
         .expect(200);
+      // leila has no notes of her own, but can read the supervisor's
       expect(meeting.body.hasNotes).toBe(true);
     });
 

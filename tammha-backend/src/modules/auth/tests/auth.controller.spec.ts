@@ -3,6 +3,7 @@ import { UserRole } from '@prisma/client';
 import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
 import { UniversityIdentityService } from '../university-identity.service';
+import { AccountLifecycleService } from '../account-lifecycle.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { toSafeUser } from '@modules/users/user.mapper';
 
@@ -38,6 +39,9 @@ describe('AuthController', () => {
     universityId: 'uni-1',
     avatar: null,
     bio: null,
+    college: null,
+    major: null,
+    deletedAt: null,
     studentNumber: null,
     universityEmail: null,
     universityEmailVerifiedAt: null,
@@ -56,6 +60,7 @@ describe('AuthController', () => {
       providers: [
         { provide: AuthService, useValue: authServiceMock },
         { provide: UniversityIdentityService, useValue: {} },
+        { provide: AccountLifecycleService, useValue: {} },
       ],
     })
       .overrideGuard(JwtAuthGuard)

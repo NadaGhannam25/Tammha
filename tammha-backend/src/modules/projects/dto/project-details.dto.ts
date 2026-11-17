@@ -9,7 +9,9 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
+  ValidateIf,
 } from 'class-validator';
 import {
   ProjectCategory,
@@ -27,6 +29,10 @@ const CleanObjectives = () =>
           .filter((v) => v !== '')
       : value,
   );
+
+/** Longest stored project image (the interface resizes it to 640 px JPEG, about 40-90 KB). */
+export const PROJECT_IMAGE_MAX_LENGTH = 200_000;
+const IMAGE_DATA_URL = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/;
 
 /**
  * P16: project details collected during setup and editable by the team leader.
@@ -82,6 +88,24 @@ export class ProjectDetailsDto {
   @IsOptional()
   @IsDateString()
   expectedCompletionDate?: string | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    description:
+      'Project image shown on the project cards, as a small data URL (PNG, JPEG or WebP, base64; the ' +
+      `interface resizes it). Up to ${PROJECT_IMAGE_MAX_LENGTH} characters. null removes it.`,
+  })
+  @IsOptional()
+  @ValidateIf((o) => o.thumbnail !== null)
+  @IsString()
+  @MaxLength(PROJECT_IMAGE_MAX_LENGTH, {
+    message: 'thumbnail is too large: choose a smaller image',
+  })
+  @Matches(IMAGE_DATA_URL, {
+    message: 'thumbnail must be a PNG, JPEG or WebP image',
+  })
+  thumbnail?: string | null;
 }
 
 /** Steps the leader can move between while setup is not completed. */

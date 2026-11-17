@@ -46,18 +46,10 @@
       body.innerHTML = `<p class="hb-empty">${esc(T('لم يُعتمد دليل لهذا المشروع بعد. اختر أحد أدلة الجامعات الجاهزة أو ارفع دليلًا مخصصًا، علمًا بأن إعداد المشروع لا يكتمل دون دليل معتمد.', 'No handbook has been set for this project yet. Choose a university handbook or upload one; project setup cannot be completed without a handbook.'))}</p>`;
       return;
     }
-    const uni = sel.kind === 'UNIVERSITY' ? universities.find((u) => u.key === sel.key) : null;
-    const source = sel.kind === 'UNIVERSITY' ? T(`الدليل الرسمي — ${uName(uni) || sel.universityName}`, `Official handbook — ${uName(uni) || sel.universityName}`) : T('دليل مخصص رفعه الفريق لهذا المشروع', 'Custom handbook uploaded by the team for this project');
     const statusText = sel.kind === 'UPLOAD' && !sel.ready ? (sel.failed ? T('تعذّرت قراءة نص الدليل. ارفع ملف PDF يحتوي على نص قابل للتحديد.', 'The handbook text could not be read. Upload a PDF with selectable text.') : T('جارٍ استخراج نص الدليل…', 'Extracting the handbook text…')) : '';
-    const myUni = universities.find((u) => u.isMyUniversity);
-    body.innerHTML = `<div class="hb-file">
-      <img alt="" src="assets/file-pdf.png"/>
-      <div class="hb-file__text"><strong dir="auto">${esc(sel.fileName)}</strong><small>${esc(source)}${sel.pageCount ? ` · ${esc(sel.pageCount)} ${esc(T('صفحة', 'pages'))}` : ''}${sel.fileSize ? ` · ${esc(UI.fmtSize(sel.fileSize))}` : ''}</small>
-      ${statusText ? `<small class="${sel.failed ? 'hb-file__error' : 'hb-file__note'}">${esc(statusText)}</small>` : ''}
-      ${uni && !uni.isMyUniversity && myUni ? `<small class="hb-file__note">${esc(T(`جامعتك المسجلة تبقى ${uName(myUni)}.`, `Your registered university remains ${uName(myUni)}.`))}</small>` : ''}</div>
-      <button class="hb-link" data-view-selected type="button">${esc(T('عرض الملف', 'View file'))}</button>
-      ${isLeader() && sel.kind === 'UNIVERSITY' ? `<button class="hb-link" data-clear type="button">${esc(T('إلغاء الاعتماد', 'Remove'))}</button>` : ''}
-    </div>`;
+    // the selected handbook is not shown as a card (QA review 2): the options below show the
+    // choice; only a problem with an uploaded handbook is reported here
+    body.innerHTML = statusText ? `<p class="${sel.failed ? 'hb-file__error' : 'hb-file__note'}">${esc(statusText)}</p>` : '';
   }
   $('hbSelectedBody').addEventListener('click', async (e) => {
     if (e.target.closest('[data-view-selected]')) {

@@ -34,7 +34,9 @@ import {
   ResetPasswordDto,
   VerifyEmailDto,
   UniversityEmailRequestDto,
+  ConfirmAccountDeletionDto,
 } from './dto/account.dto';
+import { AccountLifecycleService } from './account-lifecycle.service';
 import { AllowUnverifiedEmail, JwtAuthGuard } from './guards/jwt-auth.guard';
 import { StrictRateLimit } from '@common/security/rate-limit.decorator';
 import { AuthenticatedRequest } from '@common/types/auth-user.type';
@@ -45,7 +47,56 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly universityIdentity: UniversityIdentityService,
+    private readonly lifecycle: AccountLifecycleService,
   ) {}
+
+  @Post('me/password-link')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @StrictRateLimit()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'E-mail me a link to change my password (settings page)',
+    description:
+      'Sends a reset link to the account e-mail. Within 5 minutes of the last link nothing is sent again: ' +
+      'alreadySent=true with retryAfterSeconds.',
+  })
+  sendPasswordLink(@Request() req: AuthenticatedRequest) {
+    return this.lifecycle.sendPasswordLink(req.user);
+  }
+
+  @Post('me/delete/request')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @StrictRateLimit()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Start deleting my account: e-mails a 6-digit code',
+    description:
+      'The code is valid for 15 minutes (5 attempts). 409 ACCOUNT_DELETION_BLOCKED (details.blockers) while the ' +
+      'user leads a team that has other members or supervises projects. 429 DELETION_CODE_RECENTLY_SENT.',
+  })
+  requestDeletion(@Request() req: AuthenticatedRequest) {
+    return this.lifecycle.requestDeletion(req.user);
+  }
+
+  @Post('me/delete/confirm')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @StrictRateLimit()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Delete my account permanently with the e-mailed code',
+    description:
+      'Removes the personal data, signs out every device and disables the account; a goodbye e-mail is sent. ' +
+      '400 DELETION_CODE_INVALID, 409 ACCOUNT_DELETION_BLOCKED.',
+  })
+  confirmDeletion(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: ConfirmAccountDeletionDto,
+  ) {
+    return this.lifecycle.confirmDeletion(req.user, dto.code);
+  }
 
   /**
    * Register a new STUDENT account

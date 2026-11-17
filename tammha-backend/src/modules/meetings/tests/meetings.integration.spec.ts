@@ -805,6 +805,134 @@ describe('Meetings + LiveKit (integration, fake LiveKit credentials)', () => {
       expect(again.body.roomName).toBe(res.body.roomName);
     });
   });
+
+  // ------------------------------------------------------------------------
+  describe('Notes per author (QA review 2)', () => {
+    const notes = (who: string, id: string) =>
+      w.http().get(`${API}/meetings/${id}/notes`).set(w.as(who));
+    const write = (who: string, id: string, content: string) =>
+      w
+        .http()
+        .put(`${API}/meetings/${id}/notes`)
+        .set(w.as(who))
+        .send({ content });
+
+    it("students' notes are private; the supervisor's are shared read-only", async () => {
+      const m = await schedule('alice', {
+        title: 'Notes split',
+        scheduledAt: inMinutes(30),
+      }).expect(201);
+      const id = m.body.id;
+      await write('alice', id, 'alice private').expect(200);
+      await write('bob', id, 'bob private').expect(200);
+      const sup = await write('supA', id, 'supervisor decisions').expect(200);
+      expect(sup.body).toMatchObject({
+        content: 'supervisor decisions',
+        visibility: 'SHARED_WITH_TEAM',
+        shared: [],
+      });
+
+      const a = await notes('alice', id).expect(200);
+      expect(a.body).toMatchObject({
+        exists: true,
+        content: 'alice private',
+        visibility: 'PRIVATE',
+      });
+      expect(a.body.shared.map((n: any) => n.content)).toEqual([
+        'supervisor decisions',
+      ]);
+      expect(a.body.shared[0].author.id).toBe(w.users.supA.id);
+      const b = await notes('bob', id).expect(200);
+      expect(b.body.content).toBe('bob private');
+      expect(JSON.stringify(b.body)).not.toContain('alice private');
+      const s2 = await notes('supA', id).expect(200);
+      expect(s2.body.content).toBe('supervisor decisions');
+      expect(JSON.stringify(s2.body)).not.toContain('private');
+
+      // editing changes only the caller's own note
+      await write('bob', id, 'bob edited').expect(200);
+      expect((await notes('supA', id)).body.content).toBe(
+        'supervisor decisions',
+      );
+      expect((await notes('alice', id)).body.content).toBe('alice private');
+
+      // hasNotes reflects what the caller can read
+      const carlFree = await w
+        .http()
+        .get(`${API}/meetings/${id}`)
+        .set(w.as('alice'))
+        .expect(200);
+      expect(carlFree.body.hasNotes).toBe(true);
+    });
+
+    it('a student without own notes still sees hasNotes when the supervisor wrote', async () => {
+      const m = await schedule('alice', {
+        title: 'Only supervisor notes',
+        scheduledAt: inMinutes(30),
+      }).expect(201);
+      const id = m.body.id;
+      const before = await w
+        .http()
+        .get(`${API}/meetings/${id}`)
+        .set(w.as('bob'))
+        .expect(200);
+      expect(before.body.hasNotes).toBe(false);
+      await write('alice', id, 'alice only').expect(200);
+      expect(
+        (await w.http().get(`${API}/meetings/${id}`).set(w.as('bob'))).body
+          .hasNotes,
+      ).toBe(false);
+      await write('supA', id, 'from supervisor').expect(200);
+      expect(
+        (await w.http().get(`${API}/meetings/${id}`).set(w.as('bob'))).body
+          .hasNotes,
+      ).toBe(true);
+      const bob = await notes('bob', id).expect(200);
+      expect(bob.body).toMatchObject({ exists: false, content: '' });
+      expect(bob.body.shared).toHaveLength(1);
+    });
+  });
+
+  // ------------------------------------------------------------------------
+  describe('End for everyone (QA review 2)', () => {
+    it('only the organiser or supervisor ends it; then nobody can join', async () => {
+      const m = await schedule('alice', {
+        title: 'End me',
+        scheduledAt: inMinutes(2),
+      }).expect(201);
+      const id = m.body.id;
+      await w
+        .http()
+        .post(`${API}/meetings/${id}/token`)
+        .set(w.as('bob'))
+        .expect(200);
+      await w
+        .http()
+        .post(`${API}/meetings/${id}/end`)
+        .set(w.as('bob'))
+        .expect(403);
+      const ended = await w
+        .http()
+        .post(`${API}/meetings/${id}/end`)
+        .set(w.as('alice'))
+        .expect(200);
+      expect(ended.body.status).toBe('COMPLETED');
+      expect(ended.body.join.isOpen).toBe(false);
+      expect(meetingRow(id).status).toBe('COMPLETED');
+      const again = await w
+        .http()
+        .post(`${API}/meetings/${id}/token`)
+        .set(w.as('bob'))
+        .expect(409);
+      expect(again.body.code ?? again.body.error?.code).toBeDefined();
+      // ending twice is harmless
+      await w
+        .http()
+        .post(`${API}/meetings/${id}/end`)
+        .set(w.as('supA'))
+        .expect(200);
+    });
+  });
 });
 
 // ============================================================================

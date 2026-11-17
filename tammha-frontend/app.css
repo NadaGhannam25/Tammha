@@ -348,8 +348,6 @@ body.has-wizard{overflow:hidden}
 .project-hero-progress__track>span{display:block;height:100%;border-radius:inherit;background:#fff}
 .project-hero-progress strong{font-size:15px;font-weight:800}
 .project-summary:empty{display:none}
-#ovStats{grid-template-columns:repeat(2,minmax(0,1fr))}
-#ovStats .overview-stat{border-bottom:0}
 @media (min-width:981px){.project-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 /* 8. Files: the review status is plain text after the file name */
@@ -398,3 +396,187 @@ a.calendar-agenda__item:hover{border-color:#cfe2ee;background:#f6fafc}
 /* E-mail addresses always read left to right, also on Arabic pages */
 input[type="email"]{direction:ltr;text-align:left}
 input[type="email"]::placeholder{direction:ltr;text-align:left}
+
+/* ===== QA review 2 ===== */
+/* supervisor notes on a task: a plain box with a grey border (no coloured bar or tint) */
+.task-feedback__list li:not(.task-drawer__none){background:#fff;border:1px solid #e3e9ee;border-radius:10px;box-shadow:none}
+/* labels such as "Team Leader": coloured text only, no background */
+.team-badge,.hb-option__tag,.hb-option__tag--custom{padding:0;background:none;border-radius:0}
+/* tables: no column titles until the rows are there (loading, empty or error shows its own message) */
+.project-files-table:has([id$="Body"]:empty)>.project-files-row--head,
+.project-files-table:has([id$="Body"]>.app-state)>.project-files-row--head,
+.tasks-table:has(#tasksBody:empty)>.tasks-row--head,
+.tasks-table:has(#tasksBody>.app-state)>.tasks-row--head,
+.stages-table:has(#stagesBody:empty)>.stages-row--head,
+.stages-table:has(#stagesBody>.app-state)>.stages-row--head,
+.meetings-list:not(:has(.meeting-list-card))>.meeting-table-header{display:none!important}
+
+/* ----- Meeting room (QA review 2): header, stage, screen share, neutral toolbar ----- */
+.room-head{gap:16px;padding:0 28px!important}
+.room-head__brand{display:flex;align-items:center;gap:14px;min-width:0}
+.room-head__brand img{width:40px;height:40px;object-fit:contain;flex:0 0 auto}
+.room-head__divider{width:1px;height:30px;background:#e3e9ec;flex:0 0 auto}
+.room-head__title{min-width:0}
+.room-head__title span{display:block;font-size:11px;color:#7d909b;font-weight:700}
+.room-head__title h1{margin:1px 0 0;font-size:17px;color:#173d57;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+.room-head__actions{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.room-head__status{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#5d7684;font-weight:600}
+.room-head__status::before{content:"";width:8px;height:8px;border-radius:50%;background:#c2ccd2}
+.room-head__status[data-state="ok"]::before{background:#1f9d63}
+.room-head__status[data-state="off"]::before{background:#d0525a}
+.room-head__time{font-variant-numeric:tabular-nums;color:#173d57;font-size:13px;padding-inline-start:10px;border-inline-start:1px solid #e3e9ec}
+.room-head__btn{height:36px;padding:0 14px;border:1px solid #d9e2e7;border-radius:9px;background:#fff;color:#173d57;font-family:inherit;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:7px;cursor:pointer}
+.room-head__btn:hover{border-color:#b9c8d0}
+.room-head__btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.room-head__btn--end{color:#b3363e;border-color:#ecc9cc}
+.room-head__btn--end:hover{border-color:#d99aa0}
+.room-head__btn[hidden]{display:none}
+
+.meeting-room-v42-stage{display:grid!important;grid-template-columns:minmax(0,1fr) 240px!important;gap:14px!important;padding:18px 28px!important;min-height:0}
+.meeting-room-v42-stage.is-alone{grid-template-columns:minmax(0,1fr)!important}
+.meeting-room-v42-stage.is-alone .room-strip{display:none}
+.room-main{min-height:0;display:grid}
+.room-strip{min-height:0;overflow-y:auto;display:grid;align-content:start;gap:10px;grid-auto-rows:150px}
+.meeting-tile{min-height:0;place-items:center}
+.meeting-tile--small .meeting-tile-avatar{width:58px;height:58px;font-size:22px}
+.meeting-tile-avatar{overflow:hidden}
+.meeting-tile-avatar .app-avatar{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;background:transparent;color:inherit;font:inherit;background-size:cover;background-position:center}
+.meeting-tile__label{position:absolute;bottom:10px;inset-inline-start:10px;inset-inline-end:10px;z-index:1;display:flex;align-items:center;gap:7px;min-width:0}
+.meeting-tile__label b{font-size:13px;color:#173d57;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meeting-tile__label small{font-size:10.5px;color:#8a9ca6;white-space:nowrap}
+.meeting-tile--small .meeting-tile__label small{display:none}
+.meeting-tile:has(.meeting-tile-video) .meeting-tile__label{background:rgba(255,255,255,.92);padding:4px 8px;border-radius:8px;inset-inline-end:auto;max-width:calc(100% - 20px)}
+.meeting-tile.is-speaking{box-shadow:0 0 0 2px #0a93c4 inset!important}
+.room-mic{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid #e2eaee;color:#3d5866;flex:0 0 auto}
+.room-mic svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.room-mic[data-state="muted"]{color:#8a9ca6}
+.room-mic[data-state="speaking"]{color:#0a7fae;border-color:#bfe0ec}
+.room-wave path{animation:roomWave .9s ease-in-out infinite;transform-origin:center;transform-box:fill-box}
+.room-wave path:nth-child(2){animation-delay:.15s}.room-wave path:nth-child(3){animation-delay:.3s}.room-wave path:nth-child(4){animation-delay:.45s}.room-wave path:nth-child(5){animation-delay:.6s}
+@keyframes roomWave{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}
+@media (prefers-reduced-motion:reduce){.room-wave path{animation:none}}
+.room-people li{grid-template-columns:32px minmax(0,1fr) auto auto!important}
+.room-people .room-people__avatar{width:32px;height:32px;border-radius:50%;background-size:cover;background-position:center}
+
+/* shared screen: the whole screen is visible (contain), with full-screen view */
+.meeting-screen{position:relative;min-height:0;border-radius:12px;background:#0f1d27;overflow:hidden;display:grid;place-items:center}
+.meeting-screen__video{width:100%;height:100%;object-fit:contain;background:#0f1d27;cursor:zoom-in}
+.meeting-screen:fullscreen,.meeting-screen.is-expanded{border-radius:0}
+.meeting-screen:fullscreen .meeting-screen__video{cursor:zoom-out}
+.meeting-screen.is-expanded{position:fixed;inset:0;z-index:50}
+.meeting-screen__label{position:absolute;top:10px;inset-inline-start:10px;display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;background:rgba(255,255,255,.94);color:#173d57;font-size:12px;font-weight:700}
+.meeting-screen__label svg,.meeting-screen__expand svg,.meeting-screen__self svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.meeting-screen__expand{position:absolute;top:10px;inset-inline-end:10px;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;border:0;border-radius:8px;background:rgba(255,255,255,.94);color:#173d57;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.meeting-screen__self{display:grid;justify-items:center;gap:12px;color:#e8eef2;text-align:center}
+.meeting-screen__self svg{width:44px;height:44px}
+.meeting-screen__self b{font-size:15px}
+
+/* toolbar: same look whether a device is on or off; "off" shows the crossed icon (like Teams) */
+.meeting-room-v42-toolbar .meeting-tool,.meeting-room-v42-toolbar .meeting-tool:hover,
+.meeting-room-v42-toolbar .meeting-tool.is-on:not([data-device]),.meeting-room-v42-toolbar .meeting-tool[data-device]:not(.is-on){background:#fff!important;color:#173d57!important;border:1px solid #dfe6ea!important;box-shadow:none}
+.meeting-room-v42-toolbar .meeting-tool:hover{border-color:#b9c8d0!important}
+.meeting-room-v42-toolbar .meeting-tool{position:relative;height:44px;padding:0 16px}
+.meeting-tool__slash{display:none}
+.meeting-tool[data-device]:not(.is-on) .meeting-tool__slash{display:inline}
+.meeting-room-v42-toolbar .meeting-tool[aria-pressed="true"]:not([data-device])::after{content:"";position:absolute;bottom:5px;left:50%;width:16px;height:2px;margin-left:-8px;border-radius:2px;background:#173d57}
+@media(max-width:800px){
+  .room-head{padding:0 12px!important;gap:8px}.room-head__divider,.room-head__title span,.room-head__time{display:none}
+  .room-head__title h1{font-size:15px;max-width:34vw}.room-head__btn{padding:0 10px}.room-head__btn span{display:none}
+  .meeting-room-v42-stage{grid-template-columns:1fr!important;grid-template-rows:minmax(0,1.6fr) minmax(0,1fr);padding:10px 12px!important}
+  .room-strip{grid-auto-flow:column;grid-auto-columns:150px;grid-auto-rows:auto;overflow-x:auto;overflow-y:hidden}
+  .meeting-room-v42-stage.is-alone{grid-template-rows:1fr}
+}
+/* meeting notes: supervisor notes (shared, read-only) and the private-notes hint */
+.meeting-notes-field--shared .meeting-notes-box{background:#fff;border:1px solid #e3e9ee;box-shadow:none}
+.meeting-notes-field--shared h3 small{margin-inline-start:8px;color:#8a9ca6;font-size:11px;font-weight:500}
+.meeting-notes-privacy{margin:6px 0 0;color:#7d909b;font-size:11.5px;line-height:1.7}
+.sv-notes-hint{margin:0 0 8px;font-size:11.5px}
+
+/* ----- Project image (QA review 2): cards, wizard, overview ----- */
+.project-card__visual.has-image{background-size:cover;background-position:center;border:1px solid #e3e9ee}
+.project-card__visual.has-image::after{display:none}
+.project-identity__logo.has-image{background-size:cover;background-position:center;border:1px solid #e3e9ee}
+.wizard-image{grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:12px;border:1px solid #e3e9ee;border-radius:12px;background:#fff}
+.wizard-image__preview{flex:0 0 auto;width:132px;height:84px;border-radius:10px;border:1px dashed #d6e2e7;background:#f5f8f9 url("assets/tammha-mini.png") center/34px no-repeat;background-blend-mode:normal}
+.wizard-image__preview.has-image{border-style:solid;background-size:cover;background-position:center}
+.wizard-image__text{display:grid;gap:4px;min-width:0}
+.wizard-image__text strong{font-size:13px;color:#173d57}
+.wizard-image__text small{color:#7d909b;font-size:11.5px;line-height:1.7}
+.wizard-image__actions{display:flex;gap:8px;margin-top:4px}
+.wizard-image__pick,.wizard-image__remove,.ov-image__btn{white-space:nowrap;height:32px;padding:0 12px;display:inline-flex;align-items:center;border:1px solid #d9e2e7;border-radius:8px;background:#fff;color:#173d57;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.wizard-image__remove{color:#b3363e}
+.wizard-image__remove[hidden]{display:none}
+.project-detail-hero{position:relative}
+.ov-image{display:flex;align-items:center;gap:10px;margin-top:10px}
+.ov-image__thumb{width:56px;height:36px;border-radius:7px;border:1px solid #e3e9ee;background-size:cover;background-position:center}
+.ov-image__thumb[hidden]{display:none}
+@media(max-width:600px){.wizard-image{flex-direction:column;align-items:flex-start}}
+
+/* ----- Settings storage: projects using space (QA review 2) ----- */
+.storage-projects{margin-top:18px;padding-top:14px;border-top:1px solid #edf1f3}
+.storage-projects h3{margin:0 0 10px;font-size:13.5px;color:#173d57;font-weight:800}
+.storage-projects__list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.storage-projects__list li{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(80px,1fr) 84px;align-items:center;gap:12px;padding:9px 12px;border:1px solid #edf1f3;border-radius:10px}
+.storage-projects__name{font-size:12.5px;color:#173d57;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.storage-projects__bar{height:6px;border-radius:6px;background:#eef2f4;overflow:hidden}
+.storage-projects__bar i{display:block;height:100%;border-radius:inherit;background:#008bbf}
+.storage-projects__size{font-size:12px;color:#5d7684;text-align:end;font-variant-numeric:tabular-nums}
+@media(max-width:600px){.storage-projects__list li{grid-template-columns:minmax(0,1fr) auto}.storage-projects__bar{grid-column:1/-1;order:3}}
+/* university handbook page: no "selected handbook" card, only the project picker */
+.hb-selected:has(#hbSelectedBody:empty){padding:0;background:none;border:0}
+
+/* ----- Centred dialog (settings: password link, delete account) ----- */
+.tm-dialog{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:16px;background:rgba(15,35,50,.38)}
+.tm-dialog__box{position:relative;width:min(420px,100%);padding:30px 26px 22px;border-radius:16px;background:#fff;box-shadow:0 24px 60px rgba(0,27,72,.18);text-align:center;color:#173d57}
+.tm-dialog__close{position:absolute;top:10px;inset-inline-end:12px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#7d909b;font-size:22px;line-height:1;cursor:pointer}
+.tm-dialog__close:hover{background:#f2f5f7}
+.tm-dialog__icon{display:inline-grid;place-items:center;width:72px;height:72px;border-radius:50%;background:#eef8fb;color:#008bbf;margin-bottom:12px}
+.tm-dialog__icon svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tm-dialog__icon .tm-dialog__badge{fill:#1f9d63;stroke:#fff;stroke-width:2}
+.tm-dialog__icon .tm-dialog__tick{stroke:#fff;stroke-width:2.4}
+.tm-dialog__box--danger .tm-dialog__icon{background:#fdf0f1;color:#c23b44}
+.tm-dialog__box h2{margin:0 0 8px;font-size:18px;font-weight:800}
+.tm-dialog__body p{margin:0 0 6px;color:#4b6573;font-size:13px;line-height:1.85}
+.tm-dialog__email{display:table;margin:4px auto 10px!important;padding:6px 12px;border-radius:8px;background:#f3f7f9;color:#173d57!important;font-weight:700;overflow-wrap:anywhere}
+.tm-dialog__muted{color:#8a9ca6!important;font-size:12px!important}
+.tm-dialog__list{margin:6px 0 10px;padding-inline-start:20px;text-align:start;color:#173d57;font-size:13px;line-height:1.9}
+.tm-dialog__code{display:block}
+.tm-dialog__code input{width:180px;height:48px;margin:6px 0 4px;border:1px solid #d9e2e7;border-radius:10px;text-align:center;font-size:24px;letter-spacing:.35em;font-family:inherit;color:#173d57}
+.tm-dialog__code input:focus{outline:none;border-color:#008bbf;box-shadow:0 0 0 3px rgba(0,139,191,.14)}
+.tm-dialog__error{min-height:1em;color:#c23b44!important;font-size:12px!important}
+.tm-dialog__actions{display:flex;justify-content:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+.tm-dialog__btn{height:40px;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #d9e2e7;border-radius:10px;background:#fff;color:#173d57;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
+.tm-dialog__btn--primary{background:#008bbf;border-color:#008bbf;color:#fff}
+.tm-dialog__btn--danger{background:#c23b44;border-color:#c23b44;color:#fff}
+.settings-danger-card button{color:#c23b44!important;border-color:#efc9cc!important;background:#fff!important}
+
+/* ----- First-login onboarding (QA review 2) ----- */
+.onb__dialog{width:min(520px,calc(100vw - 32px));text-align:center;padding:26px 26px 22px}
+.onb__dots{display:flex;justify-content:center;gap:6px;list-style:none;margin:0 0 16px;padding:0}
+.onb__dots li{width:26px;height:4px;border-radius:4px;background:#e3e9ec}
+.onb__dots li.is-active{background:#008bbf}
+.onb__logo{width:64px;height:64px;object-fit:contain;margin-bottom:6px}
+.onb__page h2{margin:0 0 8px;font-size:20px;color:#173d57}
+.onb__page>p{margin:0 0 8px;color:#4b6573;font-size:13px;line-height:1.9}
+.onb__muted{color:#8a9ca6!important;font-size:12px!important}
+.onb__form{display:grid;gap:12px;text-align:start;margin-top:8px}
+.onb-field{display:grid;gap:6px}
+.onb-field span{font-size:12.5px;font-weight:700;color:#173d57}
+.onb-field input{height:42px;padding:0 12px;border:1px solid #d9e2e7;border-radius:10px;font-family:inherit;font-size:13px;color:#173d57;background:#fff}
+.onb-field input:focus{outline:none;border-color:#008bbf;box-shadow:0 0 0 3px rgba(0,139,191,.12)}
+.onb__tour{list-style:none;margin:10px 0 4px;padding:0;display:grid;gap:10px;text-align:start}
+.onb__tour li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid #e8eef1;border-radius:12px}
+.onb__tour-icon{flex:0 0 auto;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#eef8fb;color:#008bbf}
+.onb__tour-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.onb__tour b{display:block;font-size:13px;color:#173d57}
+.onb__tour small{display:block;margin-top:2px;font-size:12px;color:#7d909b;line-height:1.7}
+.onb__actions{justify-content:center;flex-wrap:wrap;margin-top:14px}
+.settings-study-fields{display:contents}
+.settings-v43-form .onb-field input{height:38px;border:1px solid #dfe7eb;border-radius:8px;background:#fbfcfd;font-size:14px;color:#3f5d6c}
+.settings-v43-form .onb-field span{font-size:11.5px;color:#274b61;font-weight:800}
+
+.settings-danger-card{gap:14px}.settings-danger-card>div{min-width:0}
+/* meeting room: the connection error floats over the stage instead of taking a grid row */
+.meeting-room-body{position:relative}
+.meeting-room-body>.room-error{position:absolute;top:16px;inset-inline:28px;z-index:5;margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.meeting-room-body>.room-error[hidden]{display:none}

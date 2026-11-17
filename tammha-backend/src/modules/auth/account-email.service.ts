@@ -220,6 +220,53 @@ export class AccountEmailService implements OnApplicationShutdown {
     });
   }
 
+  /** 6-digit code that confirms deleting the account (valid 15 minutes). */
+  async sendAccountDeletionCode(
+    to: string,
+    name: string | null,
+    code: string,
+    preferredLanguage: string = 'ar',
+  ) {
+    const language = emailLanguage(preferredLanguage);
+    const copy =
+      language === 'ar'
+        ? {
+            subject: 'تممها | رمز تأكيد حذف الحساب',
+            body: `تلقينا طلبًا لحذف حسابك في تممها نهائيًا. رمز التأكيد هو:\n\n${code}\n\nالرمز صالح لمدة 15 دقيقة. بعد إدخاله سيُحذف الحساب ولا يمكن استرجاعه. إذا لم تطلب ذلك، تجاهل هذه الرسالة وغيّر كلمة المرور.`,
+          }
+        : {
+            subject: 'Tammha | Account deletion code',
+            body: `We received a request to permanently delete your Tammha account. Your confirmation code is:\n\n${code}\n\nThe code is valid for 15 minutes. Once entered, the account is deleted and cannot be restored. If you did not request this, ignore this email and change your password.`,
+          };
+    await this.deliver(to, 'account deletion code', {
+      ...renderTammhaMail({ language, recipientName: name, ...copy }),
+      link: `code ${code}`,
+    });
+  }
+
+  /** Sent after the account was deleted (to the address it had). */
+  async sendAccountDeleted(
+    to: string,
+    name: string | null,
+    preferredLanguage: string = 'ar',
+  ) {
+    const language = emailLanguage(preferredLanguage);
+    const copy =
+      language === 'ar'
+        ? {
+            subject: 'تممها | تم حذف الحساب',
+            body: 'تم حذف الحساب بنجاح ونتمنى لك التوفيق.',
+          }
+        : {
+            subject: 'Tammha | Account deleted',
+            body: 'Your account was deleted successfully. We wish you all the best.',
+          };
+    await this.deliver(to, 'account deleted', {
+      ...renderTammhaMail({ language, recipientName: name, ...copy }),
+      link: '',
+    });
+  }
+
   private async deliver(
     to: string,
     purpose: string,
@@ -241,7 +288,7 @@ export class AccountEmailService implements OnApplicationShutdown {
       this.retries.add(retry);
       return;
     }
-    if (this.devLogLinks) {
+    if (this.devLogLinks && mail.link) {
       // development only (refused in production by the env validation)
       this.logger.log(`[DEV_LOG_EMAIL_LINKS] ${purpose} link: ${mail.link}`);
     }
