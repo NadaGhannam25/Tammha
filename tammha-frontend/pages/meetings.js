@@ -25,7 +25,7 @@
   function action(m) {
     if (m.status === 'CANCELLED') return `<span class="app-chip app-chip--muted">${esc(T('ملغى', 'Cancelled'))}</span>`;
     if (isPast(m)) return `<button class="meeting-action-button meeting-action-button--notes" data-notes="${esc(m.id)}" type="button">${esc(m.hasNotes ? T('عرض الملاحظات', 'View notes') : T('كتابة الملاحظات', 'Write notes'))}</button>`;
-    const cancel = m.canManage ? `<button class="app-btn app-btn--ghost" data-cancel="${esc(m.id)}" type="button">${esc(T('إلغاء', 'Cancel'))}</button>` : '';
+    const cancel = m.canManage ? `<button class="meeting-cancel-btn" data-cancel="${esc(m.id)}" type="button" title="${esc(T('إلغاء الاجتماع', 'Cancel meeting'))}" aria-label="${esc(T('إلغاء الاجتماع', 'Cancel meeting'))}"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m9 9 6 6m0-6-6 6"></path></svg></button>` : '';
     if (m.join?.isOpen && m.isParticipant) return `<a class="meeting-action-button meeting-action-button--join" href="meeting-prejoin.html?id=${encodeURIComponent(m.id)}">${esc(T('انضمام', 'Join'))}</a>${cancel}`;
     return `<span class="app-chip app-chip--muted" title="${esc(T('يُفتح الدخول قبل الموعد بقليل', 'Opens shortly before the start'))}">${esc(T(`يُفتح ${UI.fmtTime(m.join?.opensAt)}`, `Opens ${UI.fmtTime(m.join?.opensAt)}`))}</span>${cancel}`;
   }
@@ -73,12 +73,20 @@
   });
 
   // ----- schedule -----
+  // each project's people are fetched once, in the background as soon as the page opens,
+  // so the invitees show at once when the form is opened
+  const peopleCache = new Map();
+  const projectPeople = (pid) => {
+    if (!peopleCache.has(pid)) peopleCache.set(pid, Api.get(`/projects/${pid}`, { loader: false }).catch((e) => { peopleCache.delete(pid); throw e; }));
+    return peopleCache.get(pid);
+  };
   const modal = $('meetingModal'); const form = $('meetingForm');
   async function fillParticipants() {
     const box = $('meetingCreateParticipants'); box.innerHTML = '';
     const pid = $('meetingCreateProject').value; if (!pid) return;
     try {
-      const w = await Api.get(`/projects/${pid}`);
+      const w = await projectPeople(pid);
+      if ($('meetingCreateProject').value !== pid) return;
       const people = [S.user, ...(w.team?.members || []).map((m) => m.user || m), ...(w.supervisors || []).map((x) => x.user || x)];
       const unique = [...new Map(people.filter((u) => u && (u.id || u.userId)).map((u) => [u.id || u.userId, u])).values()];
       box.innerHTML = unique.map((u) => `<label class="meeting-participants__item"><input type="checkbox" value="${esc(u.id)}" checked ${u.id === S.user.id ? 'disabled' : ''}/><span>${esc(UI.personName(u))}${u.role === 'SUPERVISOR' ? ` (${esc(T('المشرف', 'Supervisor'))})` : ''}</span></label>`).join('');
@@ -182,6 +190,7 @@
     try {
       projects = await S.projects();
       $('meetingCreateProject').innerHTML = projects.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+      projects.forEach((p) => projectPeople(p.id).catch(() => {}));
       $('openMeetingModal').hidden = !projects.length;
       await load();
       const ended = new URLSearchParams(location.search).get('ended'); if (ended) endedDialog(ended);

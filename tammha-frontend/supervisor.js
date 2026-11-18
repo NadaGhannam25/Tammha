@@ -420,7 +420,7 @@
         qsa('[data-accept]').forEach((b) => b.addEventListener('click', () => accept(b)));
         qsa('[data-reject]').forEach((b) => b.addEventListener('click', () => {
           const r = db.requests.find((x) => x.id === b.dataset.reject);
-          confirmBox(T(`رفض طلب «${r.name}»؟`, `Reject “${r.name}”?`), T('سيُبلَّغ قائد الفريق بالرفض ليختار مشرفًا آخر.', 'The Team Leader will be told so they can choose another supervisor.'), T('رفض الطلب', 'Reject request'), (reason) => {
+          confirmBox(T(`رفض طلب "${r.name}"؟`, `Reject "${r.name}"?`), T('سيُبلَّغ قائد الفريق بالرفض ليختار مشرفًا آخر.', 'The Team Leader will be told so they can choose another supervisor.'), T('رفض الطلب', 'Reject request'), (reason) => {
             act(null, () => Api.post(`/supervision-requests/${encodeURIComponent(r.id)}/reject`, reason ? { note: reason } : {}), () => {
               recount(); draw(); toast(T('رُفض الطلب وأُبلغ قائد الفريق.', 'Request rejected and the Team Leader was notified.'));
             });
@@ -439,7 +439,7 @@
       const r = db.requests.find((x) => x.id === b.dataset.accept);
       act(b, () => Api.post(`/supervision-requests/${encodeURIComponent(r.id)}/accept`, {}), () => {
         view = 'all'; recount(); draw();
-        toast(T(`قبلت الإشراف على «${r.name}»، وأصبح ضمن مشاريعك.`, `You now supervise “${r.name}”.`));
+        toast(T(`قبلت الإشراف على "${r.name}"، وأصبح ضمن مشاريعك.`, `You now supervise "${r.name}".`));
       });
     }
     tabs.forEach((t) => t.addEventListener('click', () => { view = t.dataset.view; draw(); }));
@@ -597,7 +597,7 @@
     qsa('[data-edit-meeting]', root).forEach((b) => b.addEventListener('click', () => openMeeting(db.meetings.find((m) => m.id === b.dataset.editMeeting), null, redraw)));
     qsa('[data-cancel-meeting]', root).forEach((b) => b.addEventListener('click', () => {
       const m = db.meetings.find((x) => x.id === b.dataset.cancelMeeting);
-      confirmBox(T(`إلغاء «${m.title}»؟`, `Cancel “${m.title}”?`), T('سيصل إشعار بالإلغاء إلى المشاركين.', 'Participants will be notified of the cancellation.'), T('إلغاء الاجتماع', 'Cancel meeting'), (reason) => {
+      confirmBox(T(`إلغاء "${m.title}"؟`, `Cancel "${m.title}"?`), T('سيصل إشعار بالإلغاء إلى المشاركين.', 'Participants will be notified of the cancellation.'), T('إلغاء الاجتماع', 'Cancel meeting'), (reason) => {
         act(null, () => Api.post(`/meetings/${encodeURIComponent(m.id)}/cancel`, reason ? { reason } : {}), () => {
           redraw(); toast(T('أُلغي الاجتماع وأُبلغ الفريق.', 'Meeting cancelled and the team was notified.'));
         });
@@ -721,7 +721,7 @@
     if (params.get('ended')) {
       const ended = db.meetings.find((m) => m.id === params.get('ended'));
       history.replaceState(null, '', location.pathname);
-      if (ended) { toast(T(`غادرت اجتماع «${ended.title}». يمكنك تدوين الملاحظات الآن.`, `You left “${ended.title}”. You can write the notes now.`)); openNotes(ended.id); }
+      if (ended) { toast(T(`غادرت اجتماع "${ended.title}". يمكنك تدوين الملاحظات الآن.`, `You left "${ended.title}". You can write the notes now.`)); openNotes(ended.id); }
     }
   }
 
@@ -816,7 +816,7 @@
         typing.remove(); say('ai', `<p class="sv-late">${esc(Api.message(e))}</p>`);
       } finally { busy = false; if (send) send.disabled = false; }
     };
-    const greet = () => { thread.innerHTML = ''; say('ai', `<p>${T(`يقدّم المساعد إجابات مستندة إلى بيانات مشروع «${esc(L(project(sel.value).name))}»، ومنها الأهداف والمراحل والمهام والمواعيد وبيانات الملفات والملاحظات السابقة ودليل المشروع. اختر أحد الأسئلة المقترحة أو اكتب سؤالك.`, `The assistant answers from the records of “${esc(L(project(sel.value).name))}”, including its objectives, stages, tasks, dates, file details, previous feedback and the project handbook. Choose a suggested question or type your own.`)}</p>`); };
+    const greet = () => { thread.innerHTML = ''; say('ai', `<p>${T(`يقدّم المساعد إجابات مستندة إلى بيانات مشروع "${esc(L(project(sel.value).name))}"، ومنها الأهداف والمراحل والمهام والمواعيد وبيانات الملفات والملاحظات السابقة ودليل المشروع. اختر أحد الأسئلة المقترحة أو اكتب سؤالك.`, `The assistant answers from the records of "${esc(L(project(sel.value).name))}", including its objectives, stages, tasks, dates, file details, previous feedback and the project handbook. Choose a suggested question or type your own.`)}</p>`); };
     qsa('[data-ai]').forEach((b) => b.addEventListener('click', () => ask(b.textContent)));
     sel.addEventListener('change', greet);
     qs('#svAiForm').addEventListener('submit', (e) => {

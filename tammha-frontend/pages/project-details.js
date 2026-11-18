@@ -23,14 +23,14 @@
   }
   function render() {
     const isLeader = !!w.viewer?.isLeader;
-    if (!stages.length) { UI.state(body, 'empty', { title: T('لا توجد مراحل بعد', 'No stages yet'), text: isLeader ? T('أضف مراحل المشروع من زر «إضافة مرحلة».', 'Add the project stages with “Add stage”.') : T('يضيف قائد الفريق مراحل المشروع.', 'The Team Leader adds the project stages.') }); return; }
+    if (!stages.length) { UI.state(body, 'empty', { title: T('لا توجد مراحل بعد', 'No stages yet'), text: isLeader ? T('أضف مراحل المشروع من زر "إضافة مرحلة".', 'Add the project stages with "Add stage".') : T('يضيف قائد الفريق مراحل المشروع.', 'The Team Leader adds the project stages.') }); return; }
     // the current stage = the first one in order that is in progress (the backend starts the
     // first stage automatically when the stages are created)
     const current = stages.find((s) => s.status === 'IN_PROGRESS');
     const head = current
       ? `<p class="stages-current" role="status">${esc(T('المرحلة الحالية:', 'Current stage:'))} <strong>${esc(current.title)}</strong></p>`
       : stages.some((s) => s.status !== 'COMPLETED' && s.status !== 'CANCELLED')
-        ? `<p class="stages-current" role="status">${esc(isLeader ? T('لم تبدأ أي مرحلة بعد؛ اختر «قيد التنفيذ» للمرحلة التي بدأ الفريق العمل عليها.', 'No stage has started yet; set the stage the team is working on to “In progress”.') : T('لم تبدأ أي مرحلة بعد.', 'No stage has started yet.'))}</p>` : '';
+        ? `<p class="stages-current" role="status">${esc(isLeader ? T('لم تبدأ أي مرحلة بعد؛ اختر "قيد التنفيذ" للمرحلة التي بدأ الفريق العمل عليها.', 'No stage has started yet; set the stage the team is working on to "In progress".') : T('لم تبدأ أي مرحلة بعد.', 'No stage has started yet.'))}</p>` : '';
     body.innerHTML = head + stages.map((s, i) => {
       const status = s.isOverdue && s.status !== 'COMPLETED' ? 'OVERDUE' : s.status;
       const pr = s.progress || {};

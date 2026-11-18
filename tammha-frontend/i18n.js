@@ -129,8 +129,9 @@
     btn.setAttribute('data-lang-toggle', '');
     btn.setAttribute('data-i18n-skip', '');
     btn.setAttribute('lang', isEn ? 'ar' : 'en');
-    // sign-in / sign-up pages: the short EN / AR mark of the landing page
-    const short = document.body && document.body.classList.contains('auth-access-page');
+    // every public page (sign-in, sign-up, password pages, join by code...): the short EN / AR
+    // mark of the landing page; application pages change the language in Settings
+    const short = !document.querySelector('.topbar');
     btn.textContent = short ? (isEn ? 'AR' : 'EN') : (isEn ? 'العربية' : 'English');
     if (short) btn.classList.add('lang-toggle--short');
     btn.setAttribute('aria-label', isEn ? 'التبديل إلى العربية' : 'Switch to English');

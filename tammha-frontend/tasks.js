@@ -229,7 +229,7 @@
     });
   });
   $('taskDelete').addEventListener('click', () => {
-    const task = current; if (!task || !window.confirm(T(`حذف المهمة «${task.name}»؟`, `Delete the task “${task.name}”?`))) return;
+    const task = current; if (!task || !window.confirm(T(`حذف المهمة "${task.name}"؟`, `Delete the task "${task.name}"?`))) return;
     UI.busy($('taskDelete'), async () => { await Api.del(`/tasks/${task.id}`); tasks = tasks.filter((t) => t.id !== task.id); closeDrawer(); render(); UI.tasksChanged(); UI.toast(T('حُذفت المهمة.', 'Task deleted.'), 'success'); });
   });
 
@@ -308,11 +308,11 @@
   S.ready.then(async () => {
     me = S.user;
     try {
-      // no project chosen yet (and more than one project): choose the project first,
+      // no project chosen yet: choose the project first,
       // then its tasks are shown
       if (!new URLSearchParams(location.search).get('project')) {
         const list = await S.projects();
-        if (list.length > 1) { pickProject(list); return; }
+        if (list.length) { pickProject(list); return; }
       }
       w = await S.currentWorkspace();
       if (!w) { UI.state(body, 'empty', { title: T('لا توجد مشاريع بعد', 'No projects yet'), text: T('تظهر المهام بعد إنشاء مشروع أو الانضمام إليه.', 'Tasks appear once you create or join a project.'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } }); $('openTaskModal').hidden = true; return; }

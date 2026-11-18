@@ -17,11 +17,15 @@
   if (verifyNotice && new URLSearchParams(location.search).get('verify') === '1') verifyNotice.hidden = false;
 
   // ----- Account type -----
+  // the supervisor background is loaded early, so switching shows it at once
+  try { new Image().src = 'assets/auth-background-supervisor.jpg'; } catch (e) { /* ignore */ }
   function setRole(role) {
     if (!ROLES.includes(role)) role = 'student';
     const i = ROLES.indexOf(role);
     radios.forEach((radio) => { radio.checked = radio.value === role; });
     card.classList.toggle('is-supervisor', role === 'supervisor');
+    // the supervisor account type has its own background picture
+    document.body.classList.toggle('auth-role-supervisor', role === 'supervisor');
     form.querySelectorAll('[data-role-field]').forEach((label) => {
       const on = label.dataset.roleField === role;
       label.hidden = !on;
@@ -168,7 +172,7 @@
     try {
       if (form.dataset.authForm === 'login') {
         const [email, password] = [form.querySelector('input[type="email"]').value.trim(), form.querySelector('input[type="password"]').value];
-        // from the click until the next page opens: only the Tammha logo and «جارٍ تسجيل الدخول»
+        // from the click until the next page opens: only the Tammha logo and "جارٍ تسجيل الدخول"
         // on a plain screen (no waiting messages); on an error the form comes back with the message
         window.addEventListener('pageshow', (ev) => { if (ev.persisted) { document.querySelectorAll('.tm-loader--solid').forEach((n) => n.remove()); document.body.classList.remove('tm-loading'); } }, { once: true });
         const signing = window.TammhaLoader ? window.TammhaLoader.show({ solid: true, showSlow: false, label: isEnglish() ? 'Signing in…' : 'جارٍ تسجيل الدخول…' }) : null;

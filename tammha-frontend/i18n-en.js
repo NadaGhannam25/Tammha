@@ -594,5 +594,5 @@ window.TAMMHA_EN = {
  "إغلاق التنبيه": "Close the notice",
  "أضف مرحلة، مثل: التوثيق": "Add a stage, e.g. Documentation",
  "إرسال الملف إلى المشرف للمراجعة": "Send the file to the supervisor for review",
- "اختياري. بدونه يُحفظ الملف ويظهر للفريق مباشرة دون حالة «بانتظار المراجعة».": "Optional. Without it, the file is saved and shown to the team at once, with no “waiting for review” status.",
+ "اختياري. بدونه يُحفظ الملف ويظهر للفريق مباشرة دون حالة \"بانتظار المراجعة\".": "Optional. Without it, the file is saved and shown to the team at once, with no \"waiting for review\" status.",
 };

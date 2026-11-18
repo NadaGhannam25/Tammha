@@ -26,6 +26,12 @@ export class OfficialHandbookDto {
   @ApiProperty({ description: 'bytes' }) fileSize!: number;
   @ApiProperty({ nullable: true, type: Number }) pageCount!: number | null;
   @ApiProperty() uploadedAt!: Date;
+  @ApiProperty({
+    description:
+      'Year the handbook was released (from the version label, else the upload year)',
+    example: 2024,
+  })
+  releaseYear!: number;
 }
 
 export class HandbookUniversityNameDto {

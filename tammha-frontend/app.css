@@ -789,3 +789,41 @@ input[type="email"]::placeholder{direction:ltr;text-align:left}
 .meeting-screen__presenting button{height:30px;padding:0 12px;border:0;border-radius:7px;background:#c4314b;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .room-leave__menu button[hidden]{display:none}
 .tasks-toolbar[hidden],.tasks-table[hidden]{display:none!important}
+/* ===== QA review 5 ===== */
+/* meetings list: the cancel action is a small icon beside the join button, on the same line */
+.meeting-list-card__action{align-items:center;gap:6px}
+.meeting-cancel-btn{flex:0 0 30px;display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:8px;background:none;color:#8a9ca6;cursor:pointer}
+.meeting-cancel-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.meeting-cancel-btn:hover,.meeting-cancel-btn:focus-visible{background:#fbeff0;color:#c4314b}
+/* shared screen: the whole picture always fits inside the box (never cut) */
+.meeting-screen{min-height:260px}
+.meeting-screen__video{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none;object-fit:contain!important;object-position:center!important}
+.meeting-screen__label,.meeting-screen__expand,.meeting-screen__presenting{z-index:2}
+/* microphone state: just the icon (no grey ring), a little bigger */
+.room-mic{width:28px!important;height:28px!important;border:0!important;background:none!important;box-shadow:none!important;border-radius:0!important}
+.room-mic svg{width:20px!important;height:20px!important}
+.meeting-tile:has(.meeting-tile-video) .room-mic{background:none!important}
+.meeting-screen{width:100%;height:100%}
+/* handbook summary: one topic per full-width band, every point its own strip; page numbers in blue, no background */
+.hb-cards{grid-template-columns:1fr!important;gap:12px!important}
+.hb-card{min-height:0!important;gap:10px!important}
+.hb-card ul{gap:6px!important}
+.hb-card li{display:flex!important;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 14px!important;padding:10px 14px!important;border:0!important;border-inline-start:3px solid #0a93c4!important;border-radius:8px;background:#f5f8fa}
+.hb-card li>span[dir]{flex:1 1 320px;min-width:0}
+.hb-card li .hb-unverified{flex-basis:100%}
+.hb-page{padding:0!important;background:none!important;box-shadow:none!important;border:0!important;color:#0a6fdc!important}
+.hb-refs{gap:8px!important}
+/* invitation code: copy / new code icons, smaller still */
+.team-icon-btn{width:22px!important;height:22px!important;min-width:22px!important;padding:0!important}
+.team-icon-btn svg{width:13px!important;height:13px!important}
+/* sign-in / sign-up: the supervisor account type has its own background */
+body.auth-role-supervisor .auth-access-shell{background-image:linear-gradient(90deg,rgba(0,27,72,.10),rgba(0,27,72,.02)),url("assets/auth-background-supervisor.jpg")!important}
+[dir="ltr"] body.auth-role-supervisor .auth-access-shell,body.auth-role-supervisor[dir="ltr"] .auth-access-shell{background-image:linear-gradient(-90deg,rgba(0,27,72,.10),rgba(0,27,72,.02)),url("assets/auth-background-supervisor.jpg")!important}
+.hb-field[hidden]{display:none!important}
+@media (min-width:821px){
+  .meeting-table-header,.meeting-list-card--table{grid-template-columns:72px minmax(170px,1.5fr) minmax(130px,1.1fr) 120px 132px 168px!important}
+}
+@media (min-width:821px) and (max-width:1100px){
+  .meeting-table-header,.meeting-list-card--table{grid-template-columns:56px 1.35fr 1fr 104px 118px 158px!important}
+}
+.meeting-list-card__action{justify-content:flex-start!important}

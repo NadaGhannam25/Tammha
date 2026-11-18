@@ -65,8 +65,8 @@
   function blockedText(err) {
     const list = (err.details && err.details.blockers) || [];
     const items = list.map((b) => `<li>${esc(b.code === 'SUPERVISOR'
-      ? T(`تشرف على مشروع «${b.name}»`, `You supervise the project “${b.name}”`)
-      : T(`أنت قائد فريق «${b.name}» وفيه أعضاء آخرون`, `You lead the team “${b.name}”, which has other members`))}</li>`).join('');
+      ? T(`تشرف على مشروع "${b.name}"`, `You supervise the project "${b.name}"`)
+      : T(`أنت قائد فريق "${b.name}" وفيه أعضاء آخرون`, `You lead the team "${b.name}", which has other members`))}</li>`).join('');
     return `<p>${esc(T('لا يمكن حذف الحساب الآن:', 'The account cannot be deleted yet:'))}</p><ul class="tm-dialog__list">${items}</ul><p class="tm-dialog__muted">${esc(T('انقل قيادة الفريق إلى عضو آخر من صفحة المشروع (أو أنهِ الإشراف) ثم أعد المحاولة.', 'Hand the team leadership to another member from the project page (or end the supervision), then try again.'))}</p>`;
   }
   function askCode(info) {
@@ -103,7 +103,7 @@
     const btn = e.target.closest('[data-delete-account]'); if (!btn) return;
     const d = openDialog({
       icon: ICONS.warning, tone: 'danger', title: T('حذف الحساب نهائيًا؟', 'Delete your account permanently?'),
-      body: `<p>${esc(T('سيُحذف حسابك وبياناتك الشخصية نهائيًا ولا يمكن استرجاعها، وتخرج من جميع الأجهزة. تبقى مساهماتك في مشاريع الفريق باسم «حساب محذوف».', 'Your account and personal data are deleted permanently and cannot be restored, and you are signed out everywhere. Your contributions to team projects remain as “Deleted account”.'))}</p><p class="tm-dialog__muted">${esc(T('للتأكيد نرسل رمزًا إلى بريدك الإلكتروني.', 'To confirm, we will email you a code.'))}</p>`,
+      body: `<p>${esc(T('سيُحذف حسابك وبياناتك الشخصية نهائيًا ولا يمكن استرجاعها، وتخرج من جميع الأجهزة. تبقى مساهماتك في مشاريع الفريق باسم "حساب محذوف".', 'Your account and personal data are deleted permanently and cannot be restored, and you are signed out everywhere. Your contributions to team projects remain as "Deleted account".'))}</p><p class="tm-dialog__muted">${esc(T('للتأكيد نرسل رمزًا إلى بريدك الإلكتروني.', 'To confirm, we will email you a code.'))}</p>`,
       actions: `<button class="tm-dialog__btn" type="button" data-close>${esc(T('إلغاء', 'Cancel'))}</button><button class="tm-dialog__btn tm-dialog__btn--danger" type="button" id="tmDeleteSend">${esc(T('إرسال رمز التأكيد', 'Send confirmation code'))}</button>`,
     });
     d.querySelector('#tmDeleteSend').addEventListener('click', (ev) => UI.busy(ev.currentTarget, async () => {

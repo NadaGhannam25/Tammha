@@ -43,7 +43,7 @@
       const list = await Api.get('/documents', { query: { projectId: w.id } });
       docs = Array.isArray(list) ? list : list.items || [];
       body.innerHTML = docs.map(row).join('');
-      if (!docs.length) UI.state(body, 'empty', { title: T('لا توجد ملفات بعد', 'No files yet'), text: T('ارفع ملفات المشروع من زر «إضافة ملف».', 'Upload project files with “Add file”.') });
+      if (!docs.length) UI.state(body, 'empty', { title: T('لا توجد ملفات بعد', 'No files yet'), text: T('ارفع ملفات المشروع من زر "إضافة ملف".', 'Upload project files with "Add file".') });
       filter();
     } catch (e) { UI.state(body, 'error', { error: e, retry: load }); }
   }
@@ -60,7 +60,7 @@
     const a = b.dataset.docAction;
     if (a === 'view' || a === 'download') Docs.openDocument(d.id, a === 'download').catch((err) => UI.toast(Api.message(err), 'error'));
     if (a === 'review') UI.busy(b, async () => { await Api.post(`/documents/${encodeURIComponent(d.id)}/submit-for-review`, {}); UI.toast(T('أُرسل الملف إلى المشرف للمراجعة.', 'The file was sent to the supervisor for review.'), 'success'); load(); });
-    if (a === 'delete' && window.confirm(T(`حذف «${d.title}» وجميع إصداراته؟`, `Delete “${d.title}” and all its versions?`))) {
+    if (a === 'delete' && window.confirm(T(`حذف "${d.title}" وجميع إصداراته؟`, `Delete "${d.title}" and all its versions?`))) {
       UI.busy(b, async () => { await Api.del(`/documents/${d.id}`); UI.toast(T('حُذف الملف.', 'File deleted.'), 'success'); load(); });
     }
   });

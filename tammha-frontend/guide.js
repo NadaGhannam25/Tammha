@@ -66,19 +66,28 @@
   // ---------- Option A: university ----------
   const uniSelect = $('hbUniversity');
   function fillUniversities() {
-    uniSelect.innerHTML = `<option value="">${esc(T('اختر الجامعة', 'Select a university'))}</option>` + universities.map((u) => `<option value="${esc(u.key)}">${esc(uName(u))}${u.isMyUniversity ? esc(T(' (جامعتك)', ' (your university)')) : ''}</option>`).join('');
+    uniSelect.innerHTML = `<option value="">${esc(T('اختر الجامعة', 'Select a university'))}</option>` + universities.map((u) => `<option value="${esc(u.key)}">${esc(uName(u))}</option>`).join('');
+  }
+  // under the university: its available editions ("Edition 2024" = the year the handbook was released)
+  const editionField = $('hbEditionField'); const editionSelect = $('hbEdition');
+  const editionName = (h) => T(`إصدار ${h.releaseYear || new Date(h.uploadedAt).getFullYear()}`, `${h.releaseYear || new Date(h.uploadedAt).getFullYear()} edition`);
+  function fillEditions(uni) {
+    const h = uni && uni.handbook;
+    editionField.hidden = !h;
+    editionSelect.innerHTML = h ? `<option value="${esc(h.versionId)}">${esc(editionName(h))}</option>` : '';
   }
   function renderUniversity() {
     const box = $('hbUniversityFile'); const uni = universities.find((u) => u.key === uniSelect.value);
+    fillEditions(uni);
     if (!uni) { box.innerHTML = ''; return; }
     if (!uni.handbook) {
-      box.innerHTML = `<div class="hb-unavailable"><strong>${esc(T('الدليل غير متاح حاليًا', 'Handbook not available'))}</strong><p>${esc(T(`لم يُضف الدليل الرسمي لـ${uName(uni)} إلى المنصة بعد. يمكن رفعه من خيار «رفع دليل مخصص (PDF)».`, `The official handbook of ${uName(uni)} has not been added to the platform yet. You can upload it with “Upload a custom handbook (PDF)”.`))}</p></div>`;
+      box.innerHTML = `<div class="hb-unavailable"><strong>${esc(T('الدليل غير متاح حاليًا', 'Handbook not available'))}</strong><p>${esc(T(`لم يُضف الدليل الرسمي لـ${uName(uni)} إلى المنصة بعد. يمكن رفعه من خيار "رفع دليل مخصص (PDF)".`, `The official handbook of ${uName(uni)} has not been added to the platform yet. You can upload it with "Upload a custom handbook (PDF)".`))}</p></div>`;
       return;
     }
     const h = uni.handbook; const sel = selected();
     const inUse = sel && sel.kind === 'UNIVERSITY' && sel.key === uni.key;
     box.innerHTML = `<div class="hb-file hb-file--option"><img alt="" src="assets/file-pdf.png"/>
-      <div class="hb-file__text"><strong dir="auto">${esc(h.fileName)}</strong><small>${esc(UI.fmtSize(h.fileSize))}${h.pageCount ? ` · ${esc(h.pageCount)} ${esc(T('صفحة', 'pages'))}` : ''} · ${esc(T('أُضيف في', 'added'))} ${esc(UI.fmtDate(h.uploadedAt))}</small></div></div>
+      <div class="hb-file__text"><strong dir="auto">${esc(T(`دليل ${uName(uni)}`, `${uName(uni)} handbook`))} · ${esc(editionName(h))}</strong><small>${esc(UI.fmtSize(h.fileSize))}${h.pageCount ? ` · ${esc(h.pageCount)} ${esc(T('صفحة', 'pages'))}` : ''} · ${esc(T('أُضيف في', 'added'))} ${esc(UI.fmtDate(h.uploadedAt))}</small></div></div>
       <div class="hb-actions"><button class="hb-btn hb-btn--ghost" data-view-university type="button">${esc(T('عرض الملف', 'View file'))}</button>
       ${inUse ? '' : `<button class="hb-btn" data-use-university ${isLeader() ? '' : 'disabled'} type="button">${esc(T('اعتماد الدليل للمشروع', 'Use for the project'))}</button>`}</div>
       ${isLeader() ? '' : `<p class="hb-note">${esc(T('يعتمد دليل المشروع قائد الفريق.', 'The Team Leader sets the project handbook.'))}</p>`}`;
@@ -125,7 +134,7 @@
       await waitForProcessing();
       const sel = selected();
       if (sel && sel.failed) { showChosen(file, T('تعذّرت قراءة النص', 'Text could not be read')); showFileError(T('تعذّرت قراءة نص الدليل. ارفع ملف PDF يحتوي على نص قابل للتحديد.', 'The handbook text could not be read. Upload a PDF with selectable text.')); }
-      else { showChosen(file, T('رُفع واعتُمد دليلًا للمشروع', 'Uploaded and set as the project handbook')); toast(T(`رُفع «${file.name}» واعتُمد دليلًا للمشروع.`, `“${file.name}” was uploaded and set as the project handbook.`)); }
+      else { showChosen(file, T('رُفع واعتُمد دليلًا للمشروع', 'Uploaded and set as the project handbook')); toast(T(`رُفع "${file.name}" واعتُمد دليلًا للمشروع.`, `"${file.name}" was uploaded and set as the project handbook.`)); }
     } catch (error) { showChosen(file, T('لم يُرفع', 'Not uploaded')); showFileError(Api.message(error)); }
     fileInput.value = '';
   }
@@ -223,7 +232,7 @@
         const done = suggestions.applied.has(s.id);
         return `<li class="handbook-item${done ? ' is-added' : ''}">
           <label class="handbook-check"><input data-sugg="${esc(s.id)}" type="checkbox"${done || !canApply ? ' disabled' : ''}${done ? ' checked' : ''} aria-label="${esc(T('تحديد', 'Select'))}: ${esc(s.title)}"/></label>
-          <div class="handbook-item__text"><strong dir="auto">${esc(s.title)}</strong><small dir="auto">${esc(s.description || '')}</small>${s.quote ? `<small class="hb-quote" dir="auto">«${esc(s.quote)}»</small>` : ''}</div>
+          <div class="handbook-item__text"><strong dir="auto">${esc(s.title)}</strong><small dir="auto">${esc(s.description || '')}</small>${s.quote ? `<small class="hb-quote" dir="auto">"${esc(s.quote)}"</small>` : ''}</div>
           <div class="handbook-item__meta">${pageChips(s.pages)}${canApply && !done ? `<select class="hb-owner" data-owner="${esc(s.id)}" aria-label="${esc(T('المسؤول', 'Owner'))}">${owners}</select>` : ''}</div>
           ${done ? `<a class="handbook-item__done" href="tasks.html?project=${encodeURIComponent(projectId)}">${esc(T('مضافة إلى المهام', 'In tasks'))}</a>` : ''}
         </li>`;

@@ -256,7 +256,7 @@
       const [unis, sups] = await Promise.allSettled([Api.get('/handbooks/universities'), Api.get('/supervision-requests/supervisors')]);
       if (unis.status === 'fulfilled') {
         universities = unis.value || [];
-        $('wizardHandbookUniversity').insertAdjacentHTML('beforeend', universities.map((u) => `<option value="${esc(u.key)}">${esc(uName(u))}${u.isMyUniversity ? esc(T(' (جامعتك)', ' (your university)')) : ''}${u.handbook ? '' : esc(T(' — غير متاح', ' — not available'))}</option>`).join(''));
+        $('wizardHandbookUniversity').insertAdjacentHTML('beforeend', universities.map((u) => `<option value="${esc(u.key)}">${esc(uName(u))}${u.handbook ? '' : esc(T(' — غير متاح', ' — not available'))}</option>`).join(''));
       } else setErr('wizardHandbook', Api.message(unis.reason));
     }
   }
@@ -318,7 +318,7 @@
       const t0 = new Date(`${start}T00:00:00`).getTime(); const t1 = new Date(`${end}T00:00:00`).getTime();
       for (const [i, title] of names.entries()) {
         const due = UI.isoDay(new Date(t0 + ((t1 - t0) * (i + 1)) / names.length));
-        await run(T(`المرحلة «${title}»`, `Stage “${title}”`), () => Api.post('/milestones', { projectId: pid, title, dueDate: due, order: i + 1 }));
+        await run(T(`المرحلة "${title}"`, `Stage "${title}"`), () => Api.post('/milestones', { projectId: pid, title, dueDate: due, order: i + 1 }));
       }
       if (srcOf() === 'UNIVERSITY') {
         await run(T('دليل الجامعة', 'University handbook'), () => Api.put(`/projects/${pid}/handbook/university-selection`, { universityKey: $('wizardHandbookUniversity').value }));

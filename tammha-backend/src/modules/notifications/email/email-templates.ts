@@ -15,7 +15,7 @@ export interface RenderedEmail {
 type Details = Record<string, unknown>;
 const value = (data: Details, key: string): string =>
   typeof data[key] === 'string' ? (data[key] as string).slice(0, 200) : '';
-const label = (text: string): string => `«${text}»`;
+const label = (text: string): string => `"${text}"`;
 const quote = (text: string): string => `"${text}"`;
 const fallback = (
   input: { title: string; message: string },
@@ -330,7 +330,7 @@ export function renderNotificationEmail(input: {
         set(
           'تحديث حالة التسليم',
           'Submission Status Updated',
-          `تم تحديث حالة ${label(document)} إلى «${status(decision, lang)}». يمكنك مراجعة قرار المشرف وملاحظاته.`,
+          `تم تحديث حالة ${label(document)} إلى "${status(decision, lang)}". يمكنك مراجعة قرار المشرف وملاحظاته.`,
           `The status of ${quote(document)} was updated to ${status(decision, lang)}. You can review your supervisor's feedback.`,
           'عرض نتيجة المراجعة',
           'View Review Decision',
@@ -359,7 +359,7 @@ export function renderNotificationEmail(input: {
       set(
         'تحديث حالة مشروعك',
         'Project Status Updated',
-        `تغيرت حالة مشروع ${label(project)} من «${status(value(data, 'from'), lang)}» إلى «${status(value(data, 'to'), lang)}».`,
+        `تغيرت حالة مشروع ${label(project)} من "${status(value(data, 'from'), lang)}" إلى "${status(value(data, 'to'), lang)}".`,
         `The status of ${quote(project)} changed from ${status(value(data, 'from'), lang)} to ${status(value(data, 'to'), lang)}.`,
         'عرض المشروع',
         'View Project',

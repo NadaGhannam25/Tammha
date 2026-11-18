@@ -43,7 +43,7 @@
 
   /** version history + upload of a new version (canEdit = uploader or Team Leader) */
   async function versions(doc, canEdit, onChange) {
-    const m = modal(T(`إصدارات «${doc.title}»`, `Versions of “${doc.title}”`), `<ul class="app-list" data-list><li>${esc(T('جارٍ التحميل…', 'Loading…'))}</li></ul>
+    const m = modal(T(`إصدارات "${doc.title}"`, `Versions of "${doc.title}"`), `<ul class="app-list" data-list><li>${esc(T('جارٍ التحميل…', 'Loading…'))}</li></ul>
       ${canEdit ? `<form class="app-inline-form" data-new-version style="margin-top:12px"><input type="file" required aria-label="${esc(T('ملف الإصدار الجديد', 'New version file'))}"/><button class="app-btn app-btn--primary" type="submit">${esc(T('رفع إصدار جديد', 'Upload a new version'))}</button></form>` : ''}<p class="app-muted" data-msg></p>`);
     const list = m.querySelector('[data-list]');
     async function load() {

@@ -505,6 +505,8 @@ export class HandbookLibraryService {
         fileName: true,
         fileSize: true,
         pageCount: true,
+        version: true,
+        versionLabel: true,
         extractedChars: true,
         extractedText: true,
         uploadedAt: true,
@@ -643,6 +645,7 @@ function toOfficialView(v: {
   fileSize: number;
   pageCount: number | null;
   uploadedAt: Date;
+  versionLabel?: string | null;
 }): OfficialHandbookDto {
   return {
     versionId: v.id,
@@ -651,7 +654,20 @@ function toOfficialView(v: {
     fileSize: v.fileSize,
     pageCount: v.pageCount,
     uploadedAt: v.uploadedAt,
+    releaseYear: releaseYear(v.versionLabel, v.uploadedAt),
   };
+}
+
+/**
+ * The year the handbook was released, shown as "Edition <year>": the year written in the
+ * version label (e.g. "2024" or "2024-2025" -> 2024), otherwise the year it was added.
+ */
+export function releaseYear(
+  label: string | null | undefined,
+  uploadedAt: Date,
+): number {
+  const m = /(?:^|\D)((?:19|20)\d{2})(?!\d)/.exec(label ?? '');
+  return m ? Number(m[1]) : new Date(uploadedAt).getUTCFullYear();
 }
 
 function toVersionView(v: VersionRow): LibraryVersionDto {
