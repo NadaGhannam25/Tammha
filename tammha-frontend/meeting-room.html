@@ -26,10 +26,15 @@
       <div class="room-head__title"><span data-en="Meeting">اجتماع</span><h1 id="roomTitle"></h1></div>
     </div>
     <div class="room-head__actions">
-      <span class="room-head__status" id="roomConn" role="status" data-state="pending">جارٍ الاتصال…</span>
+      <span class="room-head__status visually-hidden" id="roomConn" role="status" data-state="pending">جارٍ الاتصال…</span>
       <b class="room-head__time" id="roomTime" aria-label="مدة الاجتماع">00:00</b>
-      <button class="room-head__btn" id="exitMeeting" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9"></path></svg><span data-en="Leave">مغادرة</span></button>
-      <button class="room-head__btn room-head__btn--end" hidden id="endMeeting" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4.5 14.5c4.6-4 10.4-4 15 0l-2 2.3-3-1.3v-2.2a10 10 0 0 0-5 0v2.2l-3 1.3Z"></path></svg><span data-en="End meeting">إنهاء الاجتماع</span></button>
+      <div class="room-leave" id="leaveSplit">
+        <button class="room-leave__main" id="exitMeeting" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4.5 14.5c4.6-4 10.4-4 15 0l-2 2.3-3-1.3v-2.2a10 10 0 0 0-5 0v2.2l-3 1.3Z"></path></svg><span data-en="Leave">مغادرة</span></button>
+        <button class="room-leave__more" hidden id="leaveMore" type="button" aria-expanded="false" aria-haspopup="true" aria-label="خيارات المغادرة" data-en-aria-label="Leave options"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></button>
+        <div class="room-leave__menu" hidden id="leaveMenu" role="menu">
+          <button hidden id="endMeeting" role="menuitem" type="button"><span data-en="End meeting">إنهاء الاجتماع</span></button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -66,6 +71,15 @@
     <button type="button" class="meeting-tool" data-room-panel="chat" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H9l-4 4V5Z"></path><path d="M8 9h8M8 12h5"></path></svg><span>المحادثة</span></button>
     <button type="button" class="meeting-tool" data-room-panel="people" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 19c.7-3.2 2.7-5 5.5-5s4.8 1.8 5.5 5"></path><path d="M15.5 5.5a3 3 0 0 1 0 5.6M17.5 14.3c1.6.6 2.6 2.2 3 4.7"></path></svg><span>المشاركون <small id="roomPeopleCount">0</small></span></button>
   </footer>
+  <div class="room-confirm" hidden id="endDialog">
+    <div class="room-confirm__box" role="alertdialog" aria-modal="true" aria-labelledby="endDialogText">
+      <p id="endDialogText" data-en="End the meeting for everyone? All participants will be removed and nobody can join again.">إنهاء الاجتماع للجميع؟ سيُخرج جميع المشاركين ولن يمكن الانضمام إليه مرة أخرى.</p>
+      <div class="room-confirm__actions">
+        <button class="room-confirm__cancel" id="endCancel" type="button" data-en="Cancel">إلغاء</button>
+        <button class="room-confirm__ok" id="endConfirm" type="button" data-en="End meeting">إنهاء الاجتماع</button>
+      </div>
+    </div>
+  </div>
 </main>
 <script src="vendor/livekit-client/livekit-client.umd.js"></script>
 <script src="pages/meeting-room.js"></script>

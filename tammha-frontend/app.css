@@ -702,3 +702,90 @@ input[type="email"]::placeholder{direction:ltr;text-align:left}
 .stages-row__icon--danger:hover{border-color:#e3a5aa;color:#c23b44}
 .stages-row__icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:900px){.stages-row{grid-template-columns:minmax(0,1fr) auto!important}.stages-row>:nth-child(2),.stages-row>:nth-child(3),.stages-row>:nth-child(4){display:none}.stages-row--head>:last-child{display:none}}
+
+/* ===== QA review 4 ===== */
+/* wizard stages: "current stage" is plain text (no tinted pill) */
+.wz-stage__tag{padding:0!important;background:none!important;box-shadow:none!important;border:0!important;border-radius:0!important;color:#0a6fdc}
+/* stages page: no numbering, no "current" tag */
+.stages-row--head>span:first-child{padding-right:0!important;padding-inline-start:0}
+/* invitation code: small grey icons without a frame; blue when pressed */
+.team-icon-btn{width:28px!important;height:28px!important;border:0!important;background:none!important;color:#8a9ca6!important;border-radius:6px}
+.team-icon-btn svg{width:16px!important;height:16px!important}
+.team-icon-btn:hover{color:#5d7684!important}
+.team-icon-btn:active,.team-icon-btn.is-done,.team-icon-btn:focus-visible{color:#0a6fdc!important}
+/* onboarding: step dots (not boxes) and a simple list */
+.onb__dots{display:flex;justify-content:center;gap:8px;list-style:none;margin:0 0 18px;padding:0}
+.onb__dots li{width:8px;height:8px;border-radius:999px;background:#dbe4ea;transition:width .2s,background-color .2s}
+.onb__dots li.is-done{background:#9fd3e6}
+.onb__dots li.is-active{width:24px;background:#008bbf}
+.onb__tour{gap:14px!important;margin-top:10px!important}
+.onb__tour li{padding:0!important;border:0!important;border-radius:0!important;align-items:center!important}
+.onb__tour-icon{width:34px!important;height:34px!important;border-radius:50%!important}
+.onb__page h3{text-align:center}
+.onb__page>p{text-align:center}
+/* tasks: choose the project first */
+.tasks-pick{margin-top:18px;padding:20px;background:#fff;border:1px solid #e6edf0;border-radius:14px}
+.tasks-pick h2{margin:0 0 4px;font-size:17px;color:#173d57}
+.tasks-pick>p{margin:0 0 14px;color:#7d909b;font-size:12.5px}
+.tasks-pick__list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.tasks-pick__item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e3e9ee;border-radius:12px;background:#fff;text-decoration:none;color:inherit;transition:border-color .15s,box-shadow .15s}
+.tasks-pick__item:hover{border-color:#bfe0ec;box-shadow:0 6px 16px rgba(0,27,72,.05)}
+.tasks-pick__img{flex:0 0 72px;width:72px;height:46px;border-radius:9px}
+.tasks-pick__img svg{width:18px;height:18px}
+.tasks-pick__text{display:grid;gap:2px;min-width:0;flex:1}
+.tasks-pick__text b{font-size:14px;color:#173d57;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tasks-pick__text small{font-size:11.5px;color:#8a9ca6}
+.tasks-pick__pct{font-size:13px;font-weight:800;color:#008bbf}
+/* files: the cards keep the white panel with its title (like the table) */
+.project-files-panel.is-card-view{padding:18px!important;background:#fff!important;border:1px solid #edf1f3!important;border-radius:14px!important}
+/* dashboard meetings: the same blue bar + camera icon as the meetings page */
+.dash-meeting{grid-template-columns:auto minmax(0,1fr) auto auto!important}
+.dash-meeting__kind{display:flex;align-items:center;gap:10px}
+.dash-meeting__kind .meeting-kind-line{height:38px}
+/* calendar: tasks and meetings of a day turn grey (not blue) on hover / touch */
+.calendar-agenda__item,.calendar-agenda__item:hover,.calendar-agenda__item:focus,.calendar-agenda__item:active{border-color:#e6edf0!important}
+.calendar-agenda__item:hover,.calendar-agenda__item:focus-visible,.calendar-agenda__item:active{background:#f3f5f7!important;box-shadow:none!important}
+.calendar-agenda__item:hover strong,.calendar-agenda__item:active strong{color:#173d57!important}
+.calendar-agenda__item{-webkit-tap-highlight-color:transparent}
+/* projects page: smaller join / add buttons, a little higher above the tabs line */
+.projects-page .app-inline-form:has(#openProjectWizard){align-self:center;margin-bottom:10px!important}
+.projects-page .app-inline-form:has(#openProjectWizard)>a,
+.projects-page .app-inline-form:has(#openProjectWizard)>button{min-width:0!important;height:36px!important;min-height:36px!important;padding:0 14px!important;font-size:12.5px!important;border-radius:9px!important}
+@media(max-width:700px){.projects-page .app-inline-form:has(#openProjectWizard)>a,.projects-page .app-inline-form:has(#openProjectWizard)>button{flex:1 1 0!important}}
+/* header photo and the AR/EN button on sign-in pages: no grey frame */
+.topbar .profile__avatar,.sv-topbar .profile__avatar{border:0!important;box-shadow:none!important}
+.lang-toggle.lang-toggle--short{border:0!important;box-shadow:none!important}
+/* the bell keeps its place while the page loads */
+.app-bell{flex:0 0 36px;width:36px;height:36px}
+/* meeting room: the status word is hidden (the timer stays) */
+.room-head__status.visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* "Leave" + arrow (like Teams); the arrow opens "End meeting" under it */
+.room-leave{position:relative;display:inline-flex;align-items:stretch;height:36px;border-radius:9px;background:#c4314b;color:#fff}
+.room-leave button{border:0;background:none;color:inherit;font-family:inherit;cursor:pointer}
+.room-leave__main{display:inline-flex;align-items:center;gap:7px;padding:0 14px;font-size:12.5px;font-weight:700;border-radius:9px}
+.room-leave.has-menu .room-leave__main{border-start-end-radius:0;border-end-end-radius:0}
+.room-leave__more{display:grid;place-items:center;width:32px;border-inline-start:1px solid rgba(255,255,255,.35)!important;border-start-end-radius:9px;border-end-end-radius:9px}
+.room-leave__more[hidden]{display:none}
+.room-leave button:hover{background:rgba(0,0,0,.12)}
+.room-leave svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.room-leave__menu{position:absolute;top:calc(100% + 6px);inset-inline-end:0;z-index:40;min-width:170px;padding:6px;border:1px solid #e3e9ee;border-radius:10px;background:#fff;box-shadow:0 12px 28px rgba(0,27,72,.14)}
+.room-leave__menu[hidden]{display:none}
+.room-leave__menu button{display:block;width:100%;padding:9px 12px;border-radius:7px;color:#b3363e;font-size:13px;font-weight:700;text-align:start}
+.room-leave__menu button:hover{background:#fbeff0}
+/* the end-meeting question: text and buttons only */
+.room-confirm{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:rgba(10,25,38,.45)}
+.room-confirm[hidden]{display:none}
+.room-confirm__box{width:min(400px,100%);padding:22px;border-radius:14px;background:#fff;box-shadow:0 20px 50px rgba(0,27,72,.2)}
+.room-confirm__box p{margin:0 0 18px;color:#173d57;font-size:14.5px;font-weight:600;line-height:1.8}
+.room-confirm__actions{display:flex;gap:8px;justify-content:flex-end}
+.room-confirm__actions button{height:38px;padding:0 16px;border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.room-confirm__cancel{border:1px solid #d9e2e7;background:#fff;color:#173d57}
+.room-confirm__ok{border:0;background:#c4314b;color:#fff}
+.room-confirm__ok:hover{background:#a92a40}
+/* your own shared screen, live */
+.meeting-screen__video--self{cursor:default}
+.meeting-screen__presenting{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:10px;padding:6px 6px 6px 12px;border-radius:10px;background:rgba(15,29,39,.82);color:#fff;font-size:12.5px;white-space:nowrap}
+[dir="rtl"] .meeting-screen__presenting{padding:6px 12px 6px 6px}
+.meeting-screen__presenting button{height:30px;padding:0 12px;border:0;border-radius:7px;background:#c4314b;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.room-leave__menu button[hidden]{display:none}
+.tasks-toolbar[hidden],.tasks-table[hidden]{display:none!important}

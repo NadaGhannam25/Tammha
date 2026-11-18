@@ -50,7 +50,7 @@
       if (!items.length) { UI.state(meetingsBox, 'empty', { title: T('لا توجد اجتماعات قادمة', 'No upcoming meetings'), text: T('تظهر هنا الاجتماعات المجدولة لمشاريعك.', 'Scheduled meetings of your projects appear here.') }); return; }
       // one tidy row per meeting: icon, title + project, date and time, join (when open)
       meetingsBox.innerHTML = `<ul class="dash-meetings">${items.map((m) => `<li class="dash-meeting">
-        <span class="dash-meeting__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"></rect><path d="m16 10 5-3v10l-5-3"></path></svg></span>
+        <span class="dash-meeting__kind" aria-hidden="true"><span class="meeting-kind-line"></span><span class="meeting-kind-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"></rect><path d="m16 10 5-3v10l-5-3"></path></svg></span></span>
         <div class="dash-meeting__info"><b>${esc(m.title)}</b><small>${esc(projectNames[m.projectId] || UI.personName(m.createdBy))}</small></div>
         <div class="dash-meeting__when"><b>${esc(UI.fmtDate(m.scheduledAt))}</b><small dir="ltr">${esc(UI.fmtTime(m.scheduledAt))} - ${esc(UI.fmtTime(m.endsAt))}</small></div>
         ${m.join?.isOpen && m.isParticipant ? `<a class="dash-meeting__join" href="meeting-prejoin.html?id=${encodeURIComponent(m.id)}">${esc(T('انضمام', 'Join'))}</a>` : '<span class="dash-meeting__join dash-meeting__join--none"></span>'}

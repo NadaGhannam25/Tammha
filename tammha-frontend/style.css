@@ -2834,7 +2834,7 @@ a.link-button, a.round-arrow { text-decoration: none; }
 
 /* ===== V37 login/register ===== */
 .auth-access-page{margin:0;min-height:100vh;font-family:var(--font-family);background:#0b4f85;overflow:auto;}
-.auth-access-shell{min-height:100vh;box-sizing:border-box;padding:24px clamp(18px,6vw,90px);display:flex;align-items:center;justify-content:flex-start;background:linear-gradient(90deg,rgba(0,27,72,.10),rgba(0,27,72,.02)),url("assets/auth-background.png") center/cover no-repeat;}
+.auth-access-shell{min-height:100vh;box-sizing:border-box;padding:24px clamp(18px,6vw,90px);display:flex;align-items:center;justify-content:flex-start;background:linear-gradient(90deg,rgba(0,27,72,.10),rgba(0,27,72,.02)),url("assets/auth-background.jpg") center/cover no-repeat;}
 /* Login / register card: one clean white form, every field the same width and height. */
 .auth-access-card{box-sizing:border-box;width:min(380px,100%);padding:28px 30px 24px;display:flex;flex-direction:column;background:#fff;border-radius:14px;box-shadow:0 12px 32px rgba(0,27,72,.18);}
 .auth-access-card--register{width:min(480px,100%);padding:22px 28px 20px;}
@@ -3262,7 +3262,7 @@ textarea[aria-invalid="true"]:focus {
 
 /* Login/register: gently zoom the existing background image without changing the card. */
 .auth-access-shell {
-  background-image: linear-gradient(90deg,rgba(0,27,72,.10),rgba(0,27,72,.02)), url("assets/auth-background.png") !important;
+  background-image: linear-gradient(90deg,rgba(0,27,72,.10),rgba(0,27,72,.02)), url("assets/auth-background.jpg") !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
   background-size: 108% auto !important;

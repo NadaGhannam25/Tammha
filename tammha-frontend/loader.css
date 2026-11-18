@@ -23,14 +23,14 @@
   border-radius: 12px;
 }
 .tm-loader__logo {
-  /* compact: an application loading indicator, not an opening animation (72 / 64 / 56 px wide) */
+  /* compact: an application loading indicator, not an opening animation (96 / 84 / 76 px wide) */
   position: relative;
-  width: 72px;
+  width: 96px;
   aspect-ratio: 3 / 1;
 }
-.tm-loader--inline .tm-loader__logo { width: 64px; }
+.tm-loader--inline .tm-loader__logo { width: 84px; }
 @media (max-width: 480px) {
-  .tm-loader__logo, .tm-loader--inline .tm-loader__logo { width: 56px; }
+  .tm-loader__logo, .tm-loader--inline .tm-loader__logo { width: 76px; }
 }
 .tm-loader__logo img {
   position: absolute;

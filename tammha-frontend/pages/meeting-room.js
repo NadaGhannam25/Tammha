@@ -84,8 +84,9 @@
     const local = presenter === room.localParticipant;
     screenBox.innerHTML = '';
     if (local) {
-      // your own screen is not shown back to you (it would repeat itself endlessly)
-      screenBox.insertAdjacentHTML('beforeend', `<div class="meeting-screen__self">${ICON.screen}<b>${esc(T('أنت تعرض شاشتك الآن', 'You are presenting your screen'))}</b><button class="room-head__btn" type="button" data-stop-share>${esc(T('إيقاف المشاركة', 'Stop sharing'))}</button></div>`);
+      // your own shared screen is shown live (as the others see it), with a stop button
+      const v = videoFor(pub); v.className = 'meeting-screen__video meeting-screen__video--self'; screenBox.append(v);
+      screenBox.insertAdjacentHTML('beforeend', `<div class="meeting-screen__presenting"><b>${esc(T('أنت تعرض شاشتك الآن', 'You are presenting your screen'))}</b><button type="button" data-stop-share>${esc(T('إيقاف المشاركة', 'Stop sharing'))}</button></div>`);
     } else {
       const v = videoFor(pub); v.className = 'meeting-screen__video'; screenBox.append(v);
       screenBox.insertAdjacentHTML('beforeend', `<button class="meeting-screen__expand" type="button" data-expand>${ICON.expand}<span>${esc(T('ملء الشاشة', 'Full screen'))}</span></button>`);
@@ -226,12 +227,23 @@
     leaving = true;
   }
   $('exitMeeting').onclick = () => leave();
-  $('endMeeting').onclick = () => {
-    if (!window.confirm(T('إنهاء الاجتماع للجميع؟ سيُخرج جميع المشاركين ولن يمكن الانضمام إليه مرة أخرى.', 'End the meeting for everyone? All participants will be removed and nobody can join again.'))) return;
-    UI.busy($('endMeeting'), async () => {
+  // "Leave" with an arrow beside it (like Teams): the arrow opens "End meeting" under it (managers only)
+  const leaveMenu = $('leaveMenu');
+  const setLeaveMenu = (open) => { leaveMenu.hidden = !open; $('leaveMore').setAttribute('aria-expanded', String(open)); };
+  $('leaveMore').onclick = (e) => { e.stopPropagation(); setLeaveMenu(leaveMenu.hidden); };
+  document.addEventListener('click', (e) => { if (!e.target.closest('#leaveSplit')) setLeaveMenu(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { setLeaveMenu(false); closeEndDialog(); } });
+  const endDialog = $('endDialog');
+  function closeEndDialog() { endDialog.hidden = true; }
+  $('endMeeting').onclick = () => { setLeaveMenu(false); endDialog.hidden = false; $('endConfirm').focus(); };
+  $('endCancel').onclick = closeEndDialog;
+  endDialog.addEventListener('click', (e) => { if (e.target === endDialog) closeEndDialog(); });
+  $('endConfirm').onclick = () => {
+    UI.busy($('endConfirm'), async () => {
       // tell everyone first (works even if closing the room on the server is slow)
       try { if (room) await room.localParticipant.publishData(encoder.encode(JSON.stringify({ type: 'end' })), { reliable: true, topic: 'control' }); } catch (e) { /* ignore */ }
       await Api.post(`/meetings/${encodeURIComponent(id)}/end`, {});
+      closeEndDialog();
       await leave();
     });
   };
@@ -267,7 +279,7 @@
     try {
       meeting = await Api.get(`/meetings/${encodeURIComponent(id)}`);
       $('roomTitle').textContent = meeting.title; document.title = `${T('تممها', 'Tammha')} | ${meeting.title}`;
-      $('endMeeting').hidden = !meeting.canManage;
+      $('endMeeting').hidden = !meeting.canManage; $('leaveMore').hidden = !meeting.canManage; $('leaveSplit').classList.toggle('has-menu', !!meeting.canManage);
     } catch (e) { fail(Api.message(e)); $('roomRetry').hidden = true; return; }
     connect();
   });

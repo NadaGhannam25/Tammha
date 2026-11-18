@@ -115,7 +115,7 @@
   function updateNote() {
     const n = $('wizardHandbookNote'); const u = srcOf() === 'UNIVERSITY' ? uni($('wizardHandbookUniversity').value) : null;
     n.textContent = !u ? '' : !u.handbook ? T(`لم يُضف الدليل الرسمي لـ${uName(u)} إلى المنصة بعد؛ يمكن رفع الدليل يدويًا.`, `The official handbook of ${uName(u)} has not been added to the platform yet; you can upload it manually.`)
-      : !u.isMyUniversity ? T(`استخدام دليل ${uName(u)} (${u.handbook.fileName}) لا يغيّر الجامعة المسجلة في حسابك.`, `Using the handbook of ${uName(u)} (${u.handbook.fileName}) does not change the university registered in your account.`) : T(`الدليل: ${u.handbook.fileName}`, `Handbook: ${u.handbook.fileName}`);
+      : !u.isMyUniversity ? T(`استخدام دليل ${uName(u)} لا يغيّر الجامعة المسجلة في حسابك.`, `Using the handbook of ${uName(u)} does not change the university registered in your account.`) : '';
     n.hidden = !n.textContent;
   }
   const syncSource = () => { document.querySelectorAll('[data-handbook-source]').forEach((el) => { el.hidden = el.dataset.handbookSource !== srcOf(); }); updateNote(); };
@@ -258,7 +258,6 @@
         universities = unis.value || [];
         $('wizardHandbookUniversity').insertAdjacentHTML('beforeend', universities.map((u) => `<option value="${esc(u.key)}">${esc(uName(u))}${u.isMyUniversity ? esc(T(' (جامعتك)', ' (your university)')) : ''}${u.handbook ? '' : esc(T(' — غير متاح', ' — not available'))}</option>`).join(''));
       } else setErr('wizardHandbook', Api.message(unis.reason));
-      if (sups.status === 'fulfilled') $('supervisorOptions').innerHTML = (sups.value || []).map((x) => `<option value="${esc(x.email)}">${esc(UI.personName(x))}</option>`).join('');
     }
   }
   const close = () => {

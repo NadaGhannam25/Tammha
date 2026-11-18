@@ -48,11 +48,11 @@
     } catch (e) { UI.state(body, 'error', { error: e, retry: load }); }
   }
   function filter() {
-    const q = ($('projectFilesSearch').value || '').trim().toLowerCase(); let v = 0;
+    const q = ($('projectFilesSearch')?.value || '').trim().toLowerCase(); let v = 0;
     body.querySelectorAll('.pfile-card').forEach((r) => { const ok = !q || r.dataset.fileName.includes(q) || r.textContent.toLowerCase().includes(q); r.hidden = !ok; if (ok) v += 1; });
     $('projectFilesEmpty').hidden = !(docs.length && v === 0);
   }
-  $('projectFilesSearch').addEventListener('input', filter);
+  $('projectFilesSearch')?.addEventListener('input', filter);
 
   body.addEventListener('click', (e) => {
     const b = e.target.closest('[data-doc-action]'); if (!b) return;

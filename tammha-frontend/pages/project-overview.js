@@ -108,9 +108,8 @@
       const rejected = (reqs || []).filter((r) => r.status === 'REJECTED');
       let html = pending ? `<p>${esc(T('طلب إشراف بانتظار الرد من', 'Supervision request waiting for'))} <strong>${esc(UI.personName(pending.supervisor))}</strong> ${isLeader ? `<button class="app-btn app-btn--ghost" type="button" data-cancel-request="${esc(pending.id)}">${esc(T('إلغاء الطلب', 'Cancel the request'))}</button>` : ''}</p>` : `<p class="app-muted">${esc(T('لا يوجد مشرف للمشروع بعد.', 'The project has no supervisor yet.'))}</p>`;
       if (rejected.length) html += `<p class="app-muted">${esc(T('اعتذر عن الإشراف:', 'Declined:'))} ${rejected.map((r) => esc(UI.personName(r.supervisor))).join('، ')}</p>`;
-      if (isLeader && !pending) html += `<form class="app-inline-form" id="ovSupForm"><input id="ovSupEmail" list="ovSupList" type="email" placeholder="${esc(T('البريد الجامعي للمشرف', "Supervisor's university email"))}" aria-label="${esc(T('البريد الجامعي للمشرف', "Supervisor's university email"))}"/><datalist id="ovSupList"></datalist><button class="app-btn app-btn--primary" type="submit">${esc(T('إرسال طلب إشراف', 'Send supervision request'))}</button></form>`;
+      if (isLeader && !pending) html += `<form class="app-inline-form" id="ovSupForm"><input id="ovSupEmail" type="email" autocomplete="off" placeholder="${esc(T('البريد الجامعي للمشرف', "Supervisor's university email"))}" aria-label="${esc(T('البريد الجامعي للمشرف', "Supervisor's university email"))}"/><button class="app-btn app-btn--primary" type="submit">${esc(T('إرسال طلب إشراف', 'Send supervision request'))}</button></form>`;
       body.innerHTML = html;
-      if (isLeader && !pending) Api.get('/supervision-requests/supervisors').then((s) => { $('ovSupList').innerHTML = (s || []).map((x) => `<option value="${esc(x.email)}">${esc(UI.personName(x))}</option>`).join(''); }).catch(() => {});
     } catch (e) { UI.state(body, 'error', { error: e }); }
   }
 
@@ -141,6 +140,7 @@
     const t = e.target.closest('button'); if (!t) return;
     const d = t.dataset;
     if (d.teamTool) { toggleTool(d.teamTool); return; }
+    if (t.classList.contains('team-icon-btn')) { t.classList.add('is-done'); setTimeout(() => t.classList.remove('is-done'), 1500); }
     if (d.copy) { navigator.clipboard?.writeText(d.copy).then(() => UI.toast(T('نُسخ الرابط.', 'Link copied.'), 'success'), () => UI.toast(d.copy)); }
     if ('regenerate' in d) UI.busy(t, async () => { await Api.post(`/teams/${w.team.id}/invitation/regenerate`, {}); loadInvitationCode(); });
     if (d.cancelInvite) UI.busy(t, async () => { await Api.post(`/team-invitations/${d.cancelInvite}/cancel`, {}); loadSentInvitations(); });

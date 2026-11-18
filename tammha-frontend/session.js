@@ -250,17 +250,9 @@
   // Three short pages, once per account: welcome → college and major (PATCH /users/me) →
   // a quick tour. Finishing (or "Later") calls POST /users/me/onboarding/complete.
   // College and major can be changed later in Settings.
-  const MAJORS = [
-    ['الذكاء الاصطناعي', 'Artificial Intelligence'], ['علوم الحاسب', 'Computer Science'], ['هندسة البرمجيات', 'Software Engineering'],
-    ['نظم المعلومات', 'Information Systems'], ['تقنية المعلومات', 'Information Technology'], ['الأمن السيبراني', 'Cybersecurity'],
-    ['علم البيانات', 'Data Science'], ['هندسة الحاسب', 'Computer Engineering'], ['الهندسة الكهربائية', 'Electrical Engineering'],
-    ['الهندسة الصناعية', 'Industrial Engineering'], ['الهندسة الميكانيكية', 'Mechanical Engineering'], ['الهندسة المدنية', 'Civil Engineering'],
-    ['الهندسة الطبية الحيوية', 'Biomedical Engineering'], ['إدارة الأعمال', 'Business Administration'], ['المحاسبة', 'Accounting'], ['التسويق', 'Marketing'],
-  ];
-  const suggestions = (id, list) => `<datalist id="${id}">${list.map((x) => `<option value="${esc(L(x))}"></option>`).join('')}</datalist>`;
   function collegeMajorFields(prefix, u) {
     return `<label class="onb-field"><span>${esc(T('الكلية', 'College'))}</span><input id="${prefix}College" maxlength="160" autocomplete="off" placeholder="${esc(T('مثال: كلية الهندسة وعلوم الحاسب', 'e.g. College of Engineering and Computer Science'))}" value="${esc(u.college || '')}"></label>
-      <label class="onb-field"><span>${esc(T('التخصص', 'Major'))}</span><input id="${prefix}Major" list="${prefix}MajorList" maxlength="160" autocomplete="off" placeholder="${esc(T('مثال: الذكاء الاصطناعي', 'e.g. Artificial Intelligence'))}" value="${esc(u.major || '')}">${suggestions(`${prefix}MajorList`, MAJORS)}</label>`;
+      <label class="onb-field"><span>${esc(T('التخصص', 'Major'))}</span><input id="${prefix}Major" maxlength="160" autocomplete="off" placeholder="${esc(T('مثال: الذكاء الاصطناعي', 'e.g. Artificial Intelligence'))}" value="${esc(u.major || '')}"></label>`;
   }
   function onboarding(u) {
     if (u.role !== 'STUDENT' || u.onboardingCompleted) return;
@@ -282,7 +274,7 @@
         <div class="onb__actions">${later}<button class="app-btn app-btn--primary" type="button" data-onb-go="1">${esc(T('التالي', 'Next'))}</button></div>
       </section>
       <div class="onb__tabs-wrap" hidden>
-        <div class="onb__tabs" role="tablist">${TABS.map((t, i) => `<span class="onb__tab" role="tab" data-onb-tab="${i + 1}" aria-selected="false"><i>${i + 1}</i>${esc(t)}</span>`).join('')}</div>
+        <ol class="onb__dots" aria-label="${esc(T('خطوات التعريف', 'Introduction steps'))}">${TABS.map((t, i) => `<li data-onb-tab="${i + 1}" aria-label="${esc(t)}"></li>`).join('')}</ol>
         <section class="onb__page" data-onb-step="1" hidden>
           <h3>${esc(T('كليتك وتخصصك', 'Your college and major'))}</h3>
           <p>${esc(T('تظهر في ملفك الشخصي، ويمكنك تعديلها لاحقًا من الإعدادات.', 'They appear on your profile; you can change them later in Settings.'))}</p>
@@ -306,7 +298,7 @@
       dlg.querySelector('[data-onb-step="0"]').hidden = n !== 0;
       dlg.querySelector('.onb__tabs-wrap').hidden = n === 0;
       dlg.querySelectorAll('.onb__page').forEach((p) => { p.hidden = p.dataset.onbStep !== String(n); });
-      dlg.querySelectorAll('[data-onb-tab]').forEach((t) => { const k = +t.dataset.onbTab; t.classList.toggle('is-active', k === n); t.classList.toggle('is-done', k < n); t.setAttribute('aria-selected', String(k === n)); });
+      dlg.querySelectorAll('[data-onb-tab]').forEach((t) => { const k = +t.dataset.onbTab; t.classList.toggle('is-active', k === n); t.classList.toggle('is-done', k < n); if (k === n) t.setAttribute('aria-current', 'step'); else t.removeAttribute('aria-current'); });
       const f = dlg.querySelector(`[data-onb-step="${n}"] input, [data-onb-step="${n}"] .app-btn--primary`); if (f) f.focus();
     };
     dlg.querySelector('#onbForm').addEventListener('submit', async (e) => {
@@ -402,6 +394,8 @@
       return;
     }
     if (s.user) fillShell(s.user); // last known name while the real one loads
+    // the bell is placed at once (from the last known role), so the header does not shift when the account loads
+    if (s.user?.role === 'STUDENT' && (!role || role === 'STUDENT')) mountStudentBell();
     try {
       user = await Api.get('/auth/me');
       Api.saveUser(user);

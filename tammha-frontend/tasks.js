@@ -293,9 +293,27 @@
   });
   document.addEventListener('keydown', (event) => { if (event.key !== 'Escape') return; if (!modal.hidden) hideModal(); else closeDrawer(); });
 
+  function pickProject(list) {
+    document.querySelector('.tasks-toolbar').hidden = true;
+    document.querySelector('.tasks-table').hidden = true;
+    const box = document.createElement('section');
+    box.className = 'tasks-pick'; box.setAttribute('aria-labelledby', 'tasksPickTitle');
+    box.innerHTML = `<h2 id="tasksPickTitle">${esc(T('اختر المشروع', 'Choose a project'))}</h2><p>${esc(T('اختر المشروع لعرض مهامه.', 'Choose a project to see its tasks.'))}</p>
+      <div class="tasks-pick__list">${list.map((x) => { const pct = Math.round(x.progress?.percent ?? 0); return `<a class="tasks-pick__item" href="tasks.html?project=${encodeURIComponent(x.id)}">
+        ${UI.projectImageSlot(x.project, false, 'tasks-pick__img')}<span class="tasks-pick__text"><b>${esc(x.name)}</b><small>${esc(x.team?.name || '')}</small></span>
+        <span class="tasks-pick__pct">${pct}%</span></a>`; }).join('')}</div>`;
+    document.querySelector('.tasks-toolbar').before(box);
+  }
+
   S.ready.then(async () => {
     me = S.user;
     try {
+      // no project chosen yet (and more than one project): choose the project first,
+      // then its tasks are shown
+      if (!new URLSearchParams(location.search).get('project')) {
+        const list = await S.projects();
+        if (list.length > 1) { pickProject(list); return; }
+      }
       w = await S.currentWorkspace();
       if (!w) { UI.state(body, 'empty', { title: T('لا توجد مشاريع بعد', 'No projects yet'), text: T('تظهر المهام بعد إنشاء مشروع أو الانضمام إليه.', 'Tasks appear once you create or join a project.'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } }); $('openTaskModal').hidden = true; return; }
       isLeader = !!w.viewer?.isLeader;
