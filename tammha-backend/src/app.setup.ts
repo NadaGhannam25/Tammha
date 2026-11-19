@@ -211,7 +211,7 @@ export function createSwaggerDocument(app: INestApplication) {
     )
     .addTag(
       'University Handbooks',
-      "The four handbook universities (almaarefa, jouf, pnu, tabuk) and their official handbook PDF (real file name, or null when not available); any of them can be chosen without changing the user's university",
+      "The four handbook universities (almaarefa, najran, pnu, tabuk) and their official handbook PDF (real file name, or null when not available); any of them can be chosen without changing the user's university",
     )
     .addTag(
       'Reference',

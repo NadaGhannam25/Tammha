@@ -20,6 +20,11 @@ export interface AiTextRequest {
   responseSchema?: Record<string, unknown>;
   /** P13: overrides AI_REQUEST_TIMEOUT_MS for this call */
   timeoutMs?: number;
+  /**
+   * Ask the model to think briefly (Gemini 3 "low" thinking level): much faster for long
+   * extraction work, and the thinking no longer uses up the output tokens.
+   */
+  lightThinking?: boolean;
 }
 
 export interface AiTextResult {

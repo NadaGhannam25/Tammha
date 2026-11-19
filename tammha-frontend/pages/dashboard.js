@@ -32,9 +32,9 @@
       }
       box.innerHTML = items.slice(0, 2).map((w) => {
         const p = w.project; const pct = Math.round(w.progress?.percent ?? 0);
-        const role = w.viewer?.isLeader ? T('قائد الفريق', 'Team Leader') : T('عضو في الفريق', 'Team member');
-        return `<article class="project-card">${UI.projectImageSlot(p, !!w.viewer?.isLeader, 'project-card__visual')}<div class="project-card__body">
-          <div class="project-card__topline"><div><h3>${esc(p.name)}</h3><p>${esc(w.team?.name || '')} · ${esc(role)}</p></div>
+        // on the dashboard the picture is only shown (it is changed from the project pages)
+        return `<article class="project-card">${UI.projectImageSlot(p, false, 'project-card__visual')}<div class="project-card__body">
+          <div class="project-card__topline"><div><h3>${esc(p.name)}</h3><p>${esc(w.team?.name || '')}</p></div>
           <a aria-label="${esc(T('فتح المشروع', 'Open project'))}" class="round-arrow" href="project-overview.html?project=${encodeURIComponent(p.id)}">${ICON_ARROW}</a></div>
           <div class="progress-row"><div aria-label="${esc(T(`نسبة إنجاز المشروع ${pct} بالمئة`, `Project completion ${pct} percent`))}" class="progress-track"><span style="width: ${pct}%"></span></div><strong>${pct}%</strong></div>
           <p class="project-card__date">${esc(T('آخر تحديث:', 'Last updated:'))} ${esc(UI.fmtDate(p.updatedAt))}</p></div></article>`;

@@ -283,10 +283,7 @@ function renderLanguageSelection(language) {
     if (!selected && check) check.remove();
 
     const subtitle = option.querySelector('small');
-    if (subtitle) {
-      if (selected) subtitle.textContent = language === 'ar' ? 'اللغة الحالية' : 'Current language';
-      else subtitle.textContent = option.dataset.language === 'ar' ? 'واجهة عربية' : 'English interface';
-    }
+    if (subtitle) subtitle.remove(); // only the language name is shown
     option.setAttribute('role', 'radio');
     option.setAttribute('aria-checked', String(selected));
   });

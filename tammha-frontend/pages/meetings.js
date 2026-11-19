@@ -24,7 +24,7 @@
 
   function action(m) {
     if (m.status === 'CANCELLED') return `<span class="app-chip app-chip--muted">${esc(T('ملغى', 'Cancelled'))}</span>`;
-    if (isPast(m)) return `<button class="meeting-action-button meeting-action-button--notes" data-notes="${esc(m.id)}" type="button">${esc(m.hasNotes ? T('عرض الملاحظات', 'View notes') : T('كتابة الملاحظات', 'Write notes'))}</button>`;
+    if (isPast(m)) return `<button class="meeting-action-button meeting-action-button--notes" data-notes="${esc(m.id)}" type="button">${esc(T('التفاصيل', 'Details'))}</button>`;
     const cancel = m.canManage ? `<button class="meeting-cancel-btn" data-cancel="${esc(m.id)}" type="button" title="${esc(T('إلغاء الاجتماع', 'Cancel meeting'))}" aria-label="${esc(T('إلغاء الاجتماع', 'Cancel meeting'))}"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m9 9 6 6m0-6-6 6"></path></svg></button>` : '';
     if (m.join?.isOpen && m.isParticipant) return `<a class="meeting-action-button meeting-action-button--join" href="meeting-prejoin.html?id=${encodeURIComponent(m.id)}">${esc(T('انضمام', 'Join'))}</a>${cancel}`;
     return `<span class="app-chip app-chip--muted" title="${esc(T('يُفتح الدخول قبل الموعد بقليل', 'Opens shortly before the start'))}">${esc(T(`يُفتح ${UI.fmtTime(m.join?.opensAt)}`, `Opens ${UI.fmtTime(m.join?.opensAt)}`))}</span>${cancel}`;
@@ -129,7 +129,7 @@
     if (!m) return;
     notesMeeting = m; notesModal.hidden = false;
     $('meetingNotesTitle').textContent = m.title;
-    $('meetingNotesSubtitle').textContent = `${projectName(m.projectId)} · ${UI.fmtDate(m.scheduledAt)}`;
+    $('meetingNotesSubtitle').textContent = projectName(m.projectId);
     const sections = notesModal.querySelector('.meeting-notes-sections');
     UI.state(sections, 'loading');
     try { notesData = await Api.get(`/meetings/${m.id}/notes`); renderNotes(false); } catch (e) { UI.state(sections, 'error', { error: e }); }
@@ -140,11 +140,19 @@
     meta.textContent = notesData?.exists ? T(`آخر تحديث لملاحظاتك: ${UI.fmtDateTime(notesData.updatedAt)}`, `Your notes were last updated: ${UI.fmtDateTime(notesData.updatedAt)}`) : '';
     meta.hidden = !meta.textContent;
     const cancelled = notesMeeting.status === 'CANCELLED';
+    // meeting details: length and who attended
+    const m = notesMeeting; const mins = Number(m.durationMinutes) || 0;
+    const hrs = Math.floor(mins / 60); const rest = mins % 60;
+    const hoursAr = hrs === 1 ? 'ساعة' : hrs === 2 ? 'ساعتان' : `${hrs} ساعات`;
+    const length = hrs ? T(`${hoursAr}${rest ? ` و${rest} دقيقة` : ''}`, `${hrs} h${rest ? ` ${rest} min` : ''}`) : T(`${mins} دقيقة`, `${mins} min`);
+    const people = (m.participants || []).map((p) => { const came = p.attendance === 'ATTENDED' || !!p.joinedAt; return `<li><span>${esc(UI.personName(p.user))}</span><small class="${came ? 'is-came' : ''}">${esc(came ? T('حضر', 'Attended') : T('لم يحضر', 'Did not attend'))}</small></li>`; }).join('');
+    const details = `<section class="meeting-details"><dl><div><dt>${esc(T('التاريخ', 'Date'))}</dt><dd>${esc(UI.fmtDate(m.scheduledAt))}</dd></div><div><dt>${esc(T('الوقت', 'Time'))}</dt><dd>${esc(UI.fmtTime(m.scheduledAt))} - ${esc(UI.fmtTime(m.endsAt))}</dd></div><div><dt>${esc(T('المدة', 'Length'))}</dt><dd>${esc(length)}</dd></div></dl>
+      <h3>${esc(T('الحاضرون', 'Attendees'))}</h3>${people ? `<ul class="meeting-details__people">${people}</ul>` : `<p class="meeting-details__empty">${esc(T('لا يوجد مدعوون.', 'No one was invited.'))}</p>`}</section>`;
     // the supervisor's notes: shared with the team, read-only for students
     const shared = (notesData?.shared || []).map((n) => `<section class="meeting-notes-field meeting-notes-field--shared"><h3>${esc(T('ملاحظات المشرف', 'Supervisor notes'))}<small>${esc(UI.personName(n.author))} · ${esc(UI.fmtDateTime(n.updatedAt))}</small></h3><div class="meeting-notes-box"><p>${esc(n.content)}</p></div></section>`).join('');
     const privacy = `<p class="meeting-notes-privacy">${esc(T('ملاحظاتك خاصة بك، لا يراها أعضاء الفريق ولا المشرف.', 'Your notes are private: neither the team nor the supervisor can see them.'))}</p>`;
     if (!editing) {
-      sections.innerHTML = `${shared}<section class="meeting-notes-field"><h3>${esc(T('ملاحظاتي', 'My notes'))}</h3><div class="meeting-notes-box"><p></p></div></section><section class="meeting-notes-field meeting-notes-field--improvements"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3><div class="meeting-notes-box"><p></p></div></section>`;
+      sections.innerHTML = `${details}${shared}<section class="meeting-notes-field"><h3>${esc(T('ملاحظاتي', 'My notes'))}</h3><div class="meeting-notes-box"><p></p></div></section><section class="meeting-notes-field meeting-notes-field--improvements"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3><div class="meeting-notes-box"><p></p></div></section>`;
       const own = sections.querySelectorAll('.meeting-notes-field:not(.meeting-notes-field--shared) p');
       own[0].textContent = parts.notes || T('لم تكتب ملاحظات بعد.', 'You have not written notes yet.'); own[1].textContent = parts.improvements || T('لا توجد نقاط تحسين إضافية.', 'No additional improvement points.');
       $('meetingNotesEdit').hidden = cancelled; $('meetingNotesSave').hidden = true; return;

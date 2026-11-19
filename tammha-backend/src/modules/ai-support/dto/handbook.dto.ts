@@ -150,7 +150,7 @@ export class ProjectLibraryVersionRefDto {
     nullable: true,
     type: String,
     description:
-      'Handbook university key (almaarefa, jouf, pnu, tabuk); null for an older selection of another university',
+      'Handbook university key (almaarefa, najran, pnu, tabuk); null for an older selection of another university',
   })
   universityKey!: string | null;
   @ApiProperty({ nullable: true, type: Number }) pageCount!: number | null;

@@ -70,7 +70,7 @@
   }
   // under the university: its available editions ("Edition 2024" = the year the handbook was released)
   const editionField = $('hbEditionField'); const editionSelect = $('hbEdition');
-  const editionName = (h) => T(`إصدار ${h.releaseYear || new Date(h.uploadedAt).getFullYear()}`, `${h.releaseYear || new Date(h.uploadedAt).getFullYear()} edition`);
+  const editionName = (h) => (h.releaseYear ? T(`إصدار ${h.releaseYear}`, `${h.releaseYear} edition`) : T('الإصدار الحالي', 'Current edition'));
   function fillEditions(uni) {
     const h = uni && uni.handbook;
     editionField.hidden = !h;
@@ -88,7 +88,7 @@
     const inUse = sel && sel.kind === 'UNIVERSITY' && sel.key === uni.key;
     box.innerHTML = `<div class="hb-file hb-file--option"><img alt="" src="assets/file-pdf.png"/>
       <div class="hb-file__text"><strong dir="auto">${esc(T(`دليل ${uName(uni)}`, `${uName(uni)} handbook`))} · ${esc(editionName(h))}</strong><small>${esc(UI.fmtSize(h.fileSize))}${h.pageCount ? ` · ${esc(h.pageCount)} ${esc(T('صفحة', 'pages'))}` : ''} · ${esc(T('أُضيف في', 'added'))} ${esc(UI.fmtDate(h.uploadedAt))}</small></div></div>
-      <div class="hb-actions"><button class="hb-btn hb-btn--ghost" data-view-university type="button">${esc(T('عرض الملف', 'View file'))}</button>
+      <div class="hb-actions"><button class="hb-btn hb-btn--primary" data-view-university type="button">${esc(T('عرض الملف', 'View file'))}</button>
       ${inUse ? '' : `<button class="hb-btn" data-use-university ${isLeader() ? '' : 'disabled'} type="button">${esc(T('اعتماد الدليل للمشروع', 'Use for the project'))}</button>`}</div>
       ${isLeader() ? '' : `<p class="hb-note">${esc(T('يعتمد دليل المشروع قائد الفريق.', 'The Team Leader sets the project handbook.'))}</p>`}`;
   }

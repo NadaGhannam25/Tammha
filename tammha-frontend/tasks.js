@@ -305,6 +305,9 @@
     document.querySelector('.tasks-toolbar').before(box);
   }
 
+  // while the page loads only the usual loading animation shows; the tabs and the table appear together
+  const boot = $('tasksBoot'); if (boot) UI.state(boot, 'loading');
+  const booted = () => { document.querySelector('.tasks-main-content')?.classList.remove('is-booting'); boot?.remove(); };
   S.ready.then(async () => {
     me = S.user;
     try {
@@ -326,7 +329,8 @@
         loadTasks()
       ]);
       members = m; stages = st;
+      booted();
       const open = new URLSearchParams(location.search).get('task'); if (open) openTask(open);
-    } catch (e) { UI.state(body, 'error', { error: e, retry: () => location.reload() }); }
-  });
+    } catch (e) { booted(); UI.state(body, 'error', { error: e, retry: () => location.reload() }); } finally { booted(); }
+  }, () => booted());
 })();

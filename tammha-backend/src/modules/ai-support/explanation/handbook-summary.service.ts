@@ -238,6 +238,7 @@ export class HandbookSummaryService {
           unknown
         >,
         timeoutMs: Math.max(this.aiSupport.timeoutMs, 90_000),
+        lightThinking: true,
       });
       const { suggestions, dropped } = parseHandbookTasks(
         output.text,

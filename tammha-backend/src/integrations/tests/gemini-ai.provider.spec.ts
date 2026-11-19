@@ -200,4 +200,39 @@ describe('GeminiAiTextProvider (mocked fetch)', () => {
     expect(error.code).toBe('AI_PROVIDER_UNAVAILABLE');
     expect(error.message).toBe('AI_PROVIDER_UNAVAILABLE');
   });
+
+  it('light thinking asks for the "low" level; a model that refuses it is asked again without it', async () => {
+    const bodies: Record<string, any>[] = [];
+    let calls = 0;
+    const fetchFn: FetchLike = jest.fn(async (_url, init) => {
+      bodies.push(JSON.parse(String((init as { body: string }).body)));
+      calls++;
+      if (calls === 1)
+        return {
+          ok: false,
+          status: 400,
+          json: async () => ({ error: { status: 'INVALID_ARGUMENT' } }),
+        };
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          candidates: [
+            { content: { parts: [{ text: '{}' }] }, finishReason: 'STOP' },
+          ],
+        }),
+      };
+    });
+    const provider = new GeminiAiTextProvider(config, fetchFn);
+    await provider.generateText({ prompt: 'x', lightThinking: true });
+    expect(bodies[0].generationConfig.thinkingConfig).toEqual({
+      thinkingLevel: 'low',
+    });
+    expect(bodies[1].generationConfig.thinkingConfig).toBeUndefined();
+    // not sent again once refused; never sent without the option
+    await provider.generateText({ prompt: 'y', lightThinking: true });
+    await provider.generateText({ prompt: 'z' });
+    expect(bodies[2].generationConfig.thinkingConfig).toBeUndefined();
+    expect(bodies[3].generationConfig.thinkingConfig).toBeUndefined();
+  });
 });

@@ -111,7 +111,7 @@ async function main() {
   // The four handbook universities (+ one other, never offered for handbooks).
   const domains: Record<string, string[]> = {
     almaarefa: ['um.edu.sa', 'student.um.edu.sa'],
-    jouf: ['ju.edu.sa'],
+    najran: ['nu.edu.sa'],
     pnu: ['pnu.edu.sa'],
     tabuk: ['ut.edu.sa'],
   };
@@ -160,7 +160,7 @@ async function main() {
       join(ROOT, 'src', 'testing', 'fixtures', 'handbook-sample.pdf'),
     );
     await app.get(HandbookService).upsert({
-      universityId: unis.jouf.id,
+      universityId: unis.najran.id,
       title: 'Sample handbook (local test fixture)',
       file: {
         originalname: 'sample-handbook-fixture.pdf',

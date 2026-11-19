@@ -28,10 +28,12 @@ export class OfficialHandbookDto {
   @ApiProperty() uploadedAt!: Date;
   @ApiProperty({
     description:
-      'Year the handbook was released (from the version label, else the upload year)',
+      'Year the handbook was released (from the version label); null when not known',
     example: 2024,
+    nullable: true,
+    type: Number,
   })
-  releaseYear!: number;
+  releaseYear!: number | null;
 }
 
 export class HandbookUniversityNameDto {

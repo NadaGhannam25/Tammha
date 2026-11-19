@@ -80,7 +80,7 @@ describe('Pre-integration features (AppModule integration)', () => {
       data: { id: 'uni-a', name: 'Almaarefa University', code: 'UM' },
     });
     await db.university.create({
-      data: { id: 'uni-b', name: 'Jouf University', code: 'JU' },
+      data: { id: 'uni-b', name: 'Najran University', code: 'NU' },
     });
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PrismaService)
@@ -448,7 +448,7 @@ describe('Pre-integration features (AppModule integration)', () => {
         .expect(200);
       expect(res.body.map((u: any) => u.key)).toEqual([
         'almaarefa',
-        'jouf',
+        'najran',
         'pnu',
         'tabuk',
       ]);
@@ -461,7 +461,7 @@ describe('Pre-integration features (AppModule integration)', () => {
         handbook: { fileName: 'alpha-gp-handbook.pdf', pageCount: 4 },
       });
       expect(res.body[1]).toMatchObject({
-        key: 'jouf',
+        key: 'najran',
         universityId: 'uni-b',
         isMyUniversity: false,
         handbook: { fileName: 'beta-gp-handbook.pdf' },
@@ -483,7 +483,7 @@ describe('Pre-integration features (AppModule integration)', () => {
       lib.betaVersion = res.body[1].handbook.versionId;
       // the PDF itself through a short-lived signed URL; none for pnu / tabuk / others
       const file = await http()
-        .get(`${API}/handbooks/universities/jouf/file`)
+        .get(`${API}/handbooks/universities/najran/file`)
         .set(as('supA'))
         .expect(200);
       expect(file.body.fileName).toBe('beta-gp-handbook.pdf');
@@ -519,18 +519,18 @@ describe('Pre-integration features (AppModule integration)', () => {
       const denied = await http()
         .put(url)
         .set(as('noor'))
-        .send({ universityKey: 'jouf' })
+        .send({ universityKey: 'najran' })
         .expect(403);
       expect(denied.body.code).toBe('NOT_TEAM_LEADER');
       await http()
         .put(url)
         .set(as('omar'))
-        .send({ universityKey: 'jouf' })
+        .send({ universityKey: 'najran' })
         .expect(403); // not in this project
       await http()
         .put(url)
         .set(as('supA'))
-        .send({ universityKey: 'jouf' })
+        .send({ universityKey: 'najran' })
         .expect(403); // supervisors never change a project's handbook
       const none = await http()
         .put(url)
@@ -553,7 +553,7 @@ describe('Pre-integration features (AppModule integration)', () => {
       const res = await http()
         .put(url)
         .set(as('leila'))
-        .send({ universityKey: 'jouf' })
+        .send({ universityKey: 'najran' })
         .expect(200);
       expect(res.body).toMatchObject({
         state: 'READY',
@@ -561,8 +561,8 @@ describe('Pre-integration features (AppModule integration)', () => {
         libraryVersion: {
           id: lib.betaVersion,
           fileName: 'beta-gp-handbook.pdf',
-          universityName: 'Jouf University',
-          universityKey: 'jouf',
+          universityName: 'Najran University',
+          universityKey: 'najran',
         },
         canSelect: true,
         myUniversityHandbookAvailable: true,
@@ -688,7 +688,7 @@ describe('Pre-integration features (AppModule integration)', () => {
           source: 'LIBRARY',
           id: lib.betaVersion,
           fileName: 'beta-gp-handbook.pdf',
-          universityName: 'Jouf University',
+          universityName: 'Najran University',
         },
         coverage: { pagesIncluded: 4, truncated: false },
         advisoryOnly: true,

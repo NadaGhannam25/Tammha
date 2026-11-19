@@ -69,7 +69,14 @@ export class GeminiAiTextProvider implements AiTextProvider {
     return true;
   }
 
+  /** Set when the model rejected the thinking level once (it is not sent again). */
+  private thinkingRejected = false;
+
   async generateText(request: AiTextRequest): Promise<AiTextResult> {
+    const light =
+      !!request.lightThinking &&
+      !this.thinkingRejected &&
+      /^gemini-[3-9]/.test(this.model);
     const body = {
       ...(request.system && {
         systemInstruction: { parts: [{ text: request.system }] },
@@ -83,6 +90,7 @@ export class GeminiAiTextProvider implements AiTextProvider {
           responseMimeType: 'application/json',
           responseSchema: request.responseSchema,
         }),
+        ...(light && { thinkingConfig: { thinkingLevel: 'low' } }),
       },
     };
 
@@ -94,6 +102,20 @@ export class GeminiAiTextProvider implements AiTextProvider {
         payload = await this.callOnce(body, request.timeoutMs);
         break;
       } catch (error) {
+        // a model that does not accept the thinking level: ask again without it (once)
+        if (
+          light &&
+          !this.thinkingRejected &&
+          error instanceof AiProviderError &&
+          error.code === 'AI_PROVIDER_REJECTED' &&
+          error.providerStatus === 400
+        ) {
+          this.thinkingRejected = true;
+          delete (body.generationConfig as Record<string, unknown>)
+            .thinkingConfig;
+          this.logger.warn('thinking level not accepted; asking without it');
+          continue;
+        }
         const retryable =
           error instanceof AiProviderError &&
           error.code === 'AI_PROVIDER_UNAVAILABLE' &&

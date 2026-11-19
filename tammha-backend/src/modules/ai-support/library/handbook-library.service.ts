@@ -654,20 +654,18 @@ function toOfficialView(v: {
     fileSize: v.fileSize,
     pageCount: v.pageCount,
     uploadedAt: v.uploadedAt,
-    releaseYear: releaseYear(v.versionLabel, v.uploadedAt),
+    releaseYear: releaseYear(v.versionLabel),
   };
 }
 
 /**
  * The year the handbook was released, shown as "Edition <year>": the year written in the
- * version label (e.g. "2024" or "2024-2025" -> 2024), otherwise the year it was added.
+ * version label (e.g. "2024" or "2024-2025" -> 2024); null when the label has no year
+ * (shown as "Current edition").
  */
-export function releaseYear(
-  label: string | null | undefined,
-  uploadedAt: Date,
-): number {
+export function releaseYear(label: string | null | undefined): number | null {
   const m = /(?:^|\D)((?:19|20)\d{2})(?!\d)/.exec(label ?? '');
-  return m ? Number(m[1]) : new Date(uploadedAt).getUTCFullYear();
+  return m ? Number(m[1]) : null;
 }
 
 function toVersionView(v: VersionRow): LibraryVersionDto {

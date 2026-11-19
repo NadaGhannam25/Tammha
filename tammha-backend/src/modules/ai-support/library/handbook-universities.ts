@@ -17,9 +17,9 @@ export const HANDBOOK_UNIVERSITIES = [
     name: { en: 'Almaarefa University', ar: 'جامعة المعرفة' },
   },
   {
-    key: 'jouf',
-    code: 'JU',
-    name: { en: 'Jouf University', ar: 'جامعة الجوف' },
+    key: 'najran',
+    code: 'NU',
+    name: { en: 'Najran University', ar: 'جامعة نجران' },
   },
   {
     key: 'pnu',

@@ -3,11 +3,12 @@
  *
  *   npm run handbook -- setup-universities
  *   npm run handbook -- list
+ *   npm run handbook -- set-year --university <key> --year <yyyy|none>
  *   npm run handbook -- show   --university <key|code|id>
  *   npm run handbook -- upload --university <key|code|id> --file <path/to/handbook.pdf> --title "..." [--description "..."]
  *   npm run handbook -- remove --university <key|code|id> --yes
  *
- * <key> = almaarefa | jouf | pnu | tabuk (the four handbook universities, handbook-universities.ts).
+ * <key> = almaarefa | najran | pnu | tabuk (the four handbook universities, handbook-universities.ts).
  * setup-universities creates any of the four that does not exist yet (name + code only; it never
  * changes or deletes an existing university). Uploading makes the PDF the university's current
  * official handbook (earlier versions stay for projects that use them).
@@ -47,6 +48,7 @@ class HandbookCliModule {}
 const USAGE = `Usage:
   npm run handbook -- setup-universities
   npm run handbook -- list
+  npm run handbook -- set-year --university <key> --year <yyyy|none>
   npm run handbook -- show   --university <key|code|id>
   npm run handbook -- upload --university <key|code|id> --file <handbook.pdf> --title "Title" [--description "..."]
   npm run handbook -- remove --university <key|code|id> --yes
@@ -72,9 +74,14 @@ async function main() {
   const { command, flags } = args();
   if (
     !command ||
-    !['setup-universities', 'list', 'show', 'upload', 'remove'].includes(
-      command,
-    )
+    ![
+      'setup-universities',
+      'list',
+      'set-year',
+      'show',
+      'upload',
+      'remove',
+    ].includes(command)
   ) {
     console.log(USAGE);
     process.exit(command ? 1 : 0);
@@ -130,14 +137,39 @@ async function main() {
     }
 
     if (command === 'list') {
-      const rows = await handbooks.list();
-      if (rows.length === 0) console.log('No handbooks yet.');
-      for (const h of rows) {
+      // the four handbook universities, each with its current official PDF (or none)
+      for (const { def, row } of await library.resolveHandbookUniversities()) {
+        if (!row) {
+          console.log(
+            `${def.key}: university not set up (run setup-universities)`,
+          );
+          continue;
+        }
+        const v = await library.currentDefaultVersion(row.id);
         console.log(
-          `${h.universityName} (${h.universityId}): "${h.title}" — ${h.pageCount ?? '?'} pages, ` +
-            `${h.extractedChars} chars, updated ${h.updatedAt.toISOString()}`,
+          v
+            ? `${def.key}: UPLOADED "${v.fileName}" — ${v.pageCount ?? '?'} pages, ` +
+                `edition label "${v.versionLabel}", added ${v.uploadedAt.toISOString().slice(0, 10)}`
+            : `${def.key}: NO HANDBOOK (${row.name}, code ${row.code})`,
         );
       }
+    }
+
+    if (command === 'set-year') {
+      // the release year shown to students ("Edition 2024"), kept in the version label
+      const u = await university();
+      const year = flags.year;
+      if (typeof year !== 'string' || !/^((19|20)\d{2}|none)$/.test(year))
+        throw new Error('--year <yyyy|none> is required');
+      const v = await library.currentDefaultVersion(u.id);
+      if (!v) throw new Error(`${u.name} has no official handbook yet`);
+      await prisma.universityHandbook.update({
+        where: { id: v.id },
+        data: { versionLabel: year === 'none' ? String(v.version) : year },
+      });
+      console.log(
+        `${u.name}: edition ${year === 'none' ? '(no year)' : year} for "${v.fileName}"`,
+      );
     }
 
     if (command === 'show') {

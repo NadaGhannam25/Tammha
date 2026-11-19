@@ -95,7 +95,7 @@
         <dl class="storage-compact__meta"><div><dt>${esc(T('ملفات المشاريع', 'Project files'))}</dt><dd dir="ltr">${esc(UI.fmtSize(s.breakdown?.documentBytes))}</dd></div>
         <div><dt>${esc(T('أدلة المشاريع', 'Project handbooks'))}</dt><dd dir="ltr">${esc(UI.fmtSize(s.breakdown?.handbookBytes))}</dd></div>
         <div><dt>${esc(T('المتبقي', 'Remaining'))}</dt><dd dir="ltr">${esc(UI.fmtSize(s.remainingBytes))}</dd></div></dl>
-        ${(s.projects || []).length ? `<section class="storage-projects" aria-labelledby="storageProjectsTitle"><h3 id="storageProjectsTitle">${esc(T('المساحة حسب المشروع', 'Space by project'))}</h3><ul class="storage-projects__list">${s.projects.map((p) => { const share = s.usedBytes ? Math.round((p.usedBytes / s.usedBytes) * 100) : 0; return `<li><span class="storage-projects__name">${esc(p.projectName)}</span><span class="storage-projects__bar" aria-hidden="true"><i style="width:${Math.max(share, p.usedBytes ? 2 : 0)}%"></i></span><span class="storage-projects__size" dir="ltr">${esc(UI.fmtSize(p.usedBytes))}</span></li>`; }).join('')}</ul></section>` : ''}`;
+        `;  // the space per project is not shown
     } catch (e) { UI.state(box, 'error', { error: e, retry: storage }); }
   }
 

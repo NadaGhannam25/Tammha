@@ -29,7 +29,7 @@ export class UniversityHandbooksController {
   @ApiOperation({
     summary: 'The four handbook universities and their official handbook',
     description:
-      'Any signed-in user. Always exactly four, in this order: almaarefa, jouf, pnu, tabuk (other universities ' +
+      'Any signed-in user. Always exactly four, in this order: almaarefa, najran, pnu, tabuk (other universities ' +
       'are never offered). isMyUniversity marks your registered university. handbook = null means the official ' +
       'PDF is not available yet (the UI shows "الدليل غير متاح حاليًا"); universityId = null means that university ' +
       'has not been set up on the server yet. Choosing one never changes your registered university.',
