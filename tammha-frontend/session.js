@@ -511,5 +511,21 @@
     projects, currentProjectId, currentWorkspace, setCurrentProject, projectSwitcher, projectHeroProgress, refreshBadge, logout, assignees,
     invalidateProjects() { projectsCache = null; }
   });
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  // ---------- one loading screen over the whole page at the start ----------
+  // Every app page (not the dashboard, which has its own) shows the loading animation over the
+  // page area from the first moment; when the account is loaded and the page's first requests
+  // have finished, everything appears together.
+  const PAGE = location.pathname.split('/').pop() || 'index.html';
+  const OWN_LOADER = ['dashboard.html', 'meeting-room.html', 'meeting-prejoin.html'];
+  const pageBoot = !OWN_LOADER.includes(PAGE) && !!window.TammhaLoader;
+  if (pageBoot) document.documentElement.classList.add('tm-page-booting');
+  function startPageLoader() {
+    const main = document.querySelector('.main-content');
+    if (!pageBoot || !main) { document.documentElement.classList.remove('tm-page-booting'); return; }
+    const h = window.TammhaLoader.show({ target: main, cover: true, label: T('جارٍ التحميل…', 'Loading…'), showSlow: false });
+    const reveal = () => { document.documentElement.classList.remove('tm-page-booting'); h.done(); };
+    ready.then(() => Api.idle(250, 12000), () => null).then(reveal, reveal);
+  }
+  const boot = () => { startPageLoader(); start(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

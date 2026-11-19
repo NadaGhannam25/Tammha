@@ -241,13 +241,59 @@ export function handbookPagesForPrompt(
   return { pages, pageCount: all.length, truncated: false };
 }
 
+/**
+ * Pages for task extraction: when the handbook summary already points at pages, only those
+ * pages and the pages around each (a requirement may start or continue there) are sent; otherwise the
+ * first pages up to `maxChars`. A smaller prompt answers much faster and stays within the time limit.
+ */
+export function taskPagesForPrompt(
+  extractedText: string,
+  citedPages: number[],
+  maxChars: number,
+): {
+  pages: { page: number; text: string }[];
+  pageCount: number;
+  truncated: boolean;
+} {
+  const wanted = new Set<number>();
+  for (const p of citedPages) {
+    if (Number.isInteger(p) && p > 0) {
+      wanted.add(p - 1);
+      wanted.add(p);
+      wanted.add(p + 1);
+    }
+  }
+  if (!wanted.size) return handbookPagesForPrompt(extractedText, maxChars);
+  const all = extractedText.split('\f');
+  const pages: { page: number; text: string }[] = [];
+  let used = 0;
+  let truncated = false;
+  for (let i = 0; i < all.length; i++) {
+    const text = all[i].trim();
+    if (!text || !wanted.has(i + 1)) continue;
+    if (used + text.length > maxChars && pages.length > 0) {
+      truncated = true;
+      break;
+    }
+    pages.push({ page: i + 1, text: text.slice(0, maxChars) });
+    used += text.length;
+  }
+  if (!pages.length) return handbookPagesForPrompt(extractedText, maxChars);
+  // pages that were not sent are not "the rest of the handbook": the prompt says so
+  return {
+    pages,
+    pageCount: all.length,
+    truncated: truncated || pages.length < all.length,
+  };
+}
+
 function handbookBlock(
   pages: { page: number; text: string }[],
   truncated: boolean,
 ) {
   return [
     truncated
-      ? 'NOTE: only the first part of the handbook fits; use only what is below.'
+      ? 'NOTE: only part of the handbook is included; use only what is below.'
       : '',
     '--- HANDBOOK TEXT ---',
     ...pages.map((p) => `[Page ${p.page}]\n${p.text}`),

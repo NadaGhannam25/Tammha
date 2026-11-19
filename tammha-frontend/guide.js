@@ -182,7 +182,7 @@
   function showSummary(result) {
     const meta = result.coverage && result.coverage.truncated ? `<p class="hb-note">${esc(T(`شمل الملخص ${result.coverage.pagesIncluded} من ${result.coverage.pageCount} صفحة لطول الدليل.`, `The summary covered ${result.coverage.pagesIncluded} of ${result.coverage.pageCount} pages because the handbook is long.`))}</p>` : '';
     $('hbSummaryPanel').innerHTML = summaryCards(result) + meta + `<p class="hb-disclaimer">${esc(T('الملخص مساعد ومبني على نص الدليل، ولا يغني عن الرجوع إلى الدليل في الصفحات المذكورة.', 'The summary is based on the handbook text and does not replace reading the cited pages of the handbook.'))}</p>
-      <p class="hb-actions"><button class="hb-btn hb-btn--ghost" data-summary="regenerate" type="button">${esc(T('إعادة إنشاء الملخص', 'Create the summary again'))}</button></p>`;
+      <p class="hb-actions"><button class="hb-btn" data-summary="regenerate" type="button">${esc(T('إعادة إنشاء الملخص', 'Create the summary again'))}</button></p>`;
   }
   async function loadSummary() {
     const panel = $('hbSummaryPanel'); UI.state(panel, 'loading');
@@ -251,7 +251,7 @@
   async function extractTasks() {
     const panel = $('hbTasksPanel'); panel.innerHTML = '';
     try {
-      const r = await Api.post(`/projects/${projectId}/handbook/task-suggestions`, { language: lang }, { timeout: Api.aiTimeout, loader: { target: panel, label: T('جارٍ استخراج المهام من الدليل…', 'Extracting tasks from the handbook…') } });
+      const r = await Api.post(`/projects/${projectId}/handbook/task-suggestions`, { language: lang }, { timeout: Math.max(Api.aiTimeout, 160000), loader: { target: panel, label: T('جارٍ استخراج المهام من الدليل…', 'Extracting tasks from the handbook…') } });
       suggestions = { projectId, aiRequestId: r.aiRequestId, list: r.suggestions || [], canApply: r.canApply, dropped: r.dropped, applied: new Set() };
       renderTasks();
     } catch (error) { renderTasks(Api.message(error)); }

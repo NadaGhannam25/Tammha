@@ -869,3 +869,26 @@ body.auth-role-supervisor .auth-access-shell{background-image:linear-gradient(90
 .tasks-pick__img{border:0!important;background-color:transparent!important;background-size:contain!important;background-repeat:no-repeat!important;box-shadow:none!important;border-radius:6px!important}
 .tasks-pick__img.is-empty{background:none!important;color:#9aa9b2}
 .tasks-pick__text{align-self:stretch;align-content:center;padding-inline-start:12px;border-inline-start:1px solid #e3e9ee}
+/* ===== QA review 7 ===== */
+/* every page: the loading animation over the whole page first, then everything appears together */
+.tm-page-booting .main-content{position:relative}
+.tm-page-booting .main-content>:not(.tm-loader){visibility:hidden}
+/* handbook summary: the page numbers at the end of each point (left), side by side with a thin grey line between them */
+.hb-card li{display:flex!important;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px!important}
+.hb-card li>span[dir]{flex:1 1 0;min-width:0}
+.hb-card li .hb-refs{flex:0 0 auto;display:flex;flex-wrap:nowrap;justify-content:flex-end;gap:0!important}
+.hb-card li .hb-page{padding:0 8px!important;white-space:nowrap}
+.hb-card li .hb-page+.hb-page{border-inline-start:1px solid #dbe3e8!important}
+.hb-card li .hb-page:last-child{padding-inline-end:0!important}
+.hb-card li .hb-unverified{flex-basis:100%}
+@media(max-width:600px){.hb-card li{flex-wrap:wrap}.hb-card li .hb-refs{margin-inline-start:auto}}
+/* meetings: the title and the table inside one white panel (like the files pages) */
+.meetings-section{padding:18px!important;background:#fff;border:1px solid #edf1f3;border-radius:14px}
+.meetings-section .meetings-section__heading{margin:0 0 14px!important}
+.meetings-section .meetings-list{border:1px solid #edf1f3!important;border-radius:12px!important;box-shadow:none!important}
+/* the "Details" button is blue */
+.meeting-action-button--notes{border:0!important;background:#008bbf!important;color:#fff!important}
+.meeting-action-button--notes:hover{background:#0077a5!important}
+/* after leaving a meeting: two fields, my notes + improvement and follow-up points */
+.meeting-ended-dialog__label{display:block;margin:10px 0 6px;color:#173d57;font-size:13px;font-weight:700}
+.meeting-ended-dialog #meetingEndedImprovements{height:84px}

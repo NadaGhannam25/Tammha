@@ -141,8 +141,10 @@
 <button aria-label="إغلاق" class="meeting-ended-dialog__close" id="meetingEndedClose" type="button">×</button>
 </div>
 <form id="meetingEndedForm">
-<label class="visually-hidden" for="meetingEndedNotes">ملاحظات الاجتماع</label>
-<textarea id="meetingEndedNotes" placeholder="اكتب ما تمت مناقشته والقرارات ونقاط المتابعة" rows="5"></textarea>
+<label class="meeting-ended-dialog__label" for="meetingEndedNotes" data-en="My notes">ملاحظاتي</label>
+<textarea id="meetingEndedNotes" placeholder="اكتب ما تمت مناقشته والقرارات" data-en-placeholder="What was discussed and decided" rows="4"></textarea>
+<label class="meeting-ended-dialog__label" for="meetingEndedImprovements" data-en="Improvement and follow-up points">نقاط التحسين والمتابعة</label>
+<textarea id="meetingEndedImprovements" placeholder="ما يحتاج تحسينًا أو متابعة بعد الاجتماع" data-en-placeholder="What needs improving or following up" rows="3"></textarea>
 <p class="meeting-notes-privacy" data-en="Your notes are private: neither the team nor the supervisor can see them.">ملاحظاتك خاصة بك، لا يراها أعضاء الفريق ولا المشرف.</p>
 <div class="meeting-ended-dialog__actions"><small aria-live="polite" id="meetingEndedStatus"></small><button class="meeting-ended-dialog__cancel" id="meetingEndedLater" type="button">إغلاق</button><button class="meeting-ended-dialog__save" type="submit">حفظ</button></div>
 </form>

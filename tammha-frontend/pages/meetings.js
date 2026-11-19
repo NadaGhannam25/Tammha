@@ -5,7 +5,7 @@
 //   GET/PUT /meetings/:id/notes               my own notes (private to me) + the supervisor's notes (read-only, `shared`); the follow-up points are kept
 //                                             after a marker line inside the same text
 // "انضمام" opens meeting-prejoin.html?id=… when the join window is open (the server decides).
-// meetings.html?ended=<id> (after leaving the room) opens the short notes dialog.
+// meetings.html?ended=<id> (after leaving the room) opens the notes dialog: my notes + improvement and follow-up points.
 (function () {
   'use strict';
   const Api = window.TammhaApi; const UI = window.TammhaUI; const S = window.TammhaSession;
@@ -180,15 +180,15 @@
     const m = meetings.find((x) => x.id === id); const dialog = $('meetingEndedPanel'); if (!m || !dialog) return;
     window.history.replaceState(null, '', window.location.pathname);
     $('meetingEndedName').textContent = m.title; dialog.hidden = false;
-    Api.get(`/meetings/${m.id}/notes`).then((n) => { $('meetingEndedNotes').value = split(n.content).notes; }).catch(() => {});
+    Api.get(`/meetings/${m.id}/notes`, { loader: false }).then((n) => { const parts = split(n.content); $('meetingEndedNotes').value = parts.notes; $('meetingEndedImprovements').value = parts.improvements; }).catch(() => {});
     const close = () => { dialog.hidden = true; };
     $('meetingEndedClose').onclick = close; $('meetingEndedLater').onclick = close;
     $('meetingEndedForm').onsubmit = (e) => {
       e.preventDefault();
-      const notes = $('meetingEndedNotes').value.trim(); if (!notes) { close(); return; }
+      const notes = $('meetingEndedNotes').value.trim(); const improvements = $('meetingEndedImprovements').value.trim();
+      if (!notes && !improvements) { close(); return; }
       UI.busy(e.target.querySelector('[type="submit"]'), async () => {
-        const prev = await Api.get(`/meetings/${m.id}/notes`).catch(() => null);
-        await Api.put(`/meetings/${m.id}/notes`, { content: join(notes, split(prev?.content).improvements) });
+        await Api.put(`/meetings/${m.id}/notes`, { content: join(notes, improvements) });
         $('meetingEndedStatus').textContent = T('حُفظت الملاحظات.', 'Notes saved.'); m.hasNotes = true; render(); setTimeout(close, 700);
       });
     };

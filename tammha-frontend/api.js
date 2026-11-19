@@ -127,10 +127,31 @@
         throw e;
       }
     };
+    // requests made in the background (loader: false) are not counted as page loading
+    const counted = opts.loader !== false;
+    const tracked = () => {
+      if (!counted) return run();
+      inflight += 1; lastActivity = Date.now();
+      return run().finally(() => { inflight -= 1; lastActivity = Date.now(); });
+    };
     if (opts.loader && window.TammhaLoader) {
-      return window.TammhaLoader.track(run, { timeout: (opts.timeout || CFG.requestTimeoutMs) + 2000, signal: opts.signal, ...opts.loader });
+      return window.TammhaLoader.track(tracked, { timeout: (opts.timeout || CFG.requestTimeoutMs) + 2000, signal: opts.signal, ...opts.loader });
     }
-    return run();
+    return tracked();
+  }
+
+  // ---------- page loading: resolves once no request has been running for `quietMs` ----------
+  let inflight = 0; let lastActivity = 0;
+  function idle(quietMs = 250, maxMs = 12000) {
+    const started = Date.now();
+    return new Promise((resolve) => {
+      const check = () => {
+        const now = Date.now();
+        if ((inflight === 0 && now - lastActivity >= quietMs) || now - started >= maxMs) resolve();
+        else setTimeout(check, 60);
+      };
+      setTimeout(check, 60);
+    });
   }
 
   // ---------- messages ----------
@@ -244,6 +265,7 @@
   const upload = (method, p, form, o = {}) => request(method, p, { timeout: CFG.uploadTimeoutMs || 180000, ...o, form });
 
   window.TammhaApi = Object.freeze({
+    idle,
     ApiError, request, get, post, patch, put, del, upload, message,
     saveTokens, saveUser, session, clearSession, refresh,
     baseUrl: CFG.apiBaseUrl,

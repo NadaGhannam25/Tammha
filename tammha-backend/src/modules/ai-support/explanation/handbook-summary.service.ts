@@ -32,6 +32,7 @@ import {
   HANDBOOK_TASKS_RESPONSE_SCHEMA,
   HANDBOOK_TASKS_SYSTEM_INSTRUCTION,
   handbookPagesForPrompt,
+  taskPagesForPrompt,
   parseHandbookTasks,
   parseSummary,
   SUMMARY_PROMPT_VERSION,
@@ -50,6 +51,10 @@ export const SUMMARY_DISCLAIMER =
   'is shown for reference only; Tammha does not grade students.';
 
 const err = (code: string, message: string) => ({ code, message });
+
+/** Task extraction: at most this much handbook text per request, and a longer time limit. */
+const TASKS_MAX_CHARS = 60_000;
+const TASKS_TIMEOUT_MS = 140_000;
 
 const SUMMARY_FEATURE = {
   // stored under the existing enum value (no migration): the record is the summary request
@@ -218,9 +223,13 @@ export class HandbookSummaryService {
       null,
     );
     const started = Date.now();
-    const { pages, pageCount, truncated } = handbookPagesForPrompt(
+    const { pages, pageCount, truncated } = taskPagesForPrompt(
       text,
-      this.aiSupport.settings.handbookExplainMaxChars,
+      await this.summaryPages(target),
+      Math.min(
+        this.aiSupport.settings.handbookExplainMaxChars,
+        TASKS_MAX_CHARS,
+      ),
     );
     try {
       const output = await this.ai.generateText({
@@ -237,7 +246,7 @@ export class HandbookSummaryService {
           string,
           unknown
         >,
-        timeoutMs: Math.max(this.aiSupport.timeoutMs, 90_000),
+        timeoutMs: Math.max(this.aiSupport.timeoutMs, TASKS_TIMEOUT_MS),
         lightThinking: true,
       });
       const { suggestions, dropped } = parseHandbookTasks(
@@ -384,6 +393,35 @@ export class HandbookSummaryService {
     return target.source === 'LIBRARY'
       ? { universityHandbookId: target.id, language }
       : { projectHandbookId: target.id, language };
+  }
+
+  /** Pages cited by a stored summary of this handbook (either language); [] when none. */
+  private async summaryPages(target: Target): Promise<number[]> {
+    const rows = await this.prisma.handbookExplanation.findMany({
+      where:
+        target.source === 'LIBRARY'
+          ? { universityHandbookId: target.id }
+          : { projectHandbookId: target.id },
+      select: { result: true, promptVersion: true },
+      take: 2,
+    });
+    const pages = new Set<number>();
+    for (const row of rows) {
+      if (row.promptVersion !== SUMMARY_PROMPT_VERSION) continue;
+      const topics =
+        (
+          row.result as {
+            topics?: { pages?: number[]; points?: { pages?: number[] }[] }[];
+          } | null
+        )?.topics ?? [];
+      for (const t of topics) {
+        (t.pages ?? []).forEach((p) => pages.add(p));
+        (t.points ?? []).forEach((pt) =>
+          (pt.pages ?? []).forEach((p) => pages.add(p)),
+        );
+      }
+    }
+    return [...pages].sort((a, b) => a - b);
   }
 
   private async view(
