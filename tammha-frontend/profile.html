@@ -6,7 +6,7 @@
 <script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="الإعدادات والملف الشخصي - تممها" name="description"/>
-<title>تممها | الإعدادات</title>
+<title data-en="Settings">الإعدادات</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
 <link href="style.css" rel="stylesheet"/>
 <link href="ltr.css" rel="stylesheet"/>
 <link href="loader.css" rel="stylesheet"/>
@@ -135,8 +135,8 @@
     </section>
 
     <section class="settings-tab-panel" data-settings-panel="security" hidden>
-      <div class="settings-v43-panel-head"><div><h2>الخصوصية والأمان</h2><p>تغيير كلمة المرور وإنهاء جلسة الحساب.</p></div></div>
-      <div class="settings-v43-session-card"><div><strong>تغيير كلمة المرور</strong><span>يُرسل رابط آمن إلى بريدك الجامعي لتعيين كلمة مرور جديدة.</span></div><button data-password-link id="sendPasswordLink" type="button">إرسال الرابط</button></div> <div class="settings-v43-session-card"><div><strong>تسجيل الخروج من هذا الجهاز</strong><span>إنهاء الجلسة الحالية على هذا المتصفح.</span></div><button data-logout type="button">تسجيل الخروج</button></div> <div class="settings-v43-session-card settings-danger-card"><div><strong data-en="Delete account">حذف الحساب</strong><span data-en="Permanent, confirmed with a code sent to your email.">حذف نهائي يتم بعد تأكيد رمز يصل إلى بريدك.</span></div><button data-delete-account type="button" data-en="Delete account">حذف الحساب</button></div>
+      <div class="settings-v43-panel-head"><div><h2>الخصوصية والأمان</h2><p>تغيير كلمة المرور أو حذف الحساب.</p></div></div>
+      <div class="settings-v43-session-card"><div><strong>تغيير كلمة المرور</strong><span>يُرسل رابط آمن إلى بريدك الجامعي لتعيين كلمة مرور جديدة.</span></div><button data-password-link id="sendPasswordLink" type="button">إرسال الرابط</button></div>  <div class="settings-v43-session-card settings-danger-card"><div><strong data-en="Delete account">حذف الحساب</strong><span data-en="Permanent, confirmed with a code sent to your email.">حذف نهائي يتم بعد تأكيد رمز يصل إلى بريدك.</span></div><button data-delete-account type="button" data-en="Delete account">حذف الحساب</button></div>
     </section>
 
     <section class="settings-tab-panel" data-settings-panel="language" hidden>

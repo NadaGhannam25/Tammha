@@ -571,7 +571,7 @@ window.TAMMHA_EN = {
  "الاسم الأول": "First name",
  "اسم العائلة": "Last name",
  "تُعرض الأحرف الأولى من الاسم في الحساب.": "Your initials are shown on your account.",
- "تغيير كلمة المرور وإنهاء جلسة الحساب.": "Change your password and end the session.",
+ "تغيير كلمة المرور أو حذف الحساب.": "Change your password or delete your account.",
  "تغيير كلمة المرور": "Change password",
  "يُرسل رابط آمن إلى بريدك الجامعي لتعيين كلمة مرور جديدة.": "A secure link to set a new password is sent to your account email.",
  "إرسال الرابط": "Send link",

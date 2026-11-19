@@ -199,7 +199,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--brand-bright);outli
 .field__error{color:#c53030;font-size:13.5px;}
 .contact__actions{display:flex;flex-wrap:wrap;align-items:center;gap:16px 24px;margin-top:4px;}
 .contact__sent{color:#18794e;font-size:15.5px;font-weight:700;}
-.contact__info h2{padding-bottom:18px;border-bottom:2px solid var(--ink);}
+.contact__info h2{padding-bottom:6px;}
 .cinfo{display:grid;grid-template-columns:24px minmax(0,1fr);gap:16px;padding:24px 0;border-bottom:1px solid var(--line);}
 .cinfo__icon svg{width:24px;height:24px;fill:none;stroke:var(--brand);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
 .cinfo h3{font-size:17.5px;font-weight:800;}
@@ -269,3 +269,6 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--brand-bright);outli
   html{scroll-behavior:auto;}
   *,*::before,*::after{transition-duration:.01ms!important;animation:none!important;}
 }
+
+/* story title: "graduation project" in the brand blue */
+.story__accent{color:var(--brand);}

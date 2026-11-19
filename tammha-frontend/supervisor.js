@@ -89,7 +89,7 @@
     const next = { projects: [], files: [], feedback: [], meetings: [], requests: [], notifications: [], unread: 0 };
     parts.forEach((x) => { next.projects.push(x.p); next.files.push(...x.files); next.feedback.push(...x.feedback); next.meetings.push(...x.meetings); });
     next.feedback.sort((a, b) => String(b.at).localeCompare(String(a.at)));
-    next.requests = items(inc).filter((r) => r.status === 'PENDING').map((r) => ({ id: r.id, projectId: r.project && r.project.id, name: r.project ? r.project.name : '', leader: remember(r.requestedBy), date: dayOf(r.createdAt), desc: r.message || '' }));
+    next.requests = items(inc).filter((r) => r.status === 'PENDING').map((r) => ({ id: r.id, projectId: r.project && r.project.id, name: r.project ? r.project.name : '', about: (r.project && r.project.description) || '', leader: remember(r.requestedBy), leaderEmail: (r.requestedBy && r.requestedBy.email) || '', date: dayOf(r.createdAt), desc: r.message || '' }));
     next.notifications = items(notes).map((n) => { const v = S.notificationText(n); const d = n.data || {}; return { id: n.id, type: NOTIF_GROUP(n.type), rawType: n.type, title: v.title, text: v.text, project: d.projectId || null, data: d, date: dayOf(n.createdAt), time: timeOf(n.createdAt), at: n.createdAt, read: !!(n.isRead || n.readAt) }; });
     next.unread = Number(notes && notes.unreadCount != null ? notes.unreadCount : next.notifications.filter((n) => !n.read).length);
     db = next;
@@ -143,7 +143,27 @@
   const reviewPill = (f) => { const r = REVIEW[f.status] || REVIEW.SUBMITTED; return `<span class="sv-review sv-review--${r.cls}">${esc(L(r.label))}</span>`; };
   const bar = (v, done) => `<div class="project-progress__track sv-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${v}"><span${done ? ' class="is-completed"' : ''} style="width:${v}%"></span></div>`;
   const avatar = (k) => `<span class="sv-avatar" title="${esc(person(k))}">${esc(UI.initial(person(k)))}</span>`;
-  const empty = (title, text) => `<div class="sv-empty"><span aria-hidden="true" class="sv-empty__icon">${ICONS.task}</span><strong>${esc(title)}</strong>${text ? `<p>${esc(text)}</p>` : ''}</div>`;
+  // empty states: an icon that matches what is missing (projects, files, dates, tasks, notes, ...)
+  const EMPTY_ICONS = {
+    folder: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2.5h6.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5Z"></path></svg>',
+    calendar: '<svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M8 3v4M16 3v4M3 10h18"></path></svg>',
+    bell: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15Z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg>',
+    stages: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h7"></path><circle cx="18" cy="6" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg>',
+  };
+  const emptyIcon = (title) => {
+    const t = String(title);
+    if (/مشاريع|مشروع|project/i.test(t)) return EMPTY_ICONS.folder;
+    if (/ملف|مراجع|file|review/i.test(t)) return ICONS.file;
+    if (/مواعيد|dates/i.test(t)) return EMPTY_ICONS.calendar;
+    if (/اجتماع|meeting/i.test(t)) return ICONS.meet;
+    if (/مراحل|stage/i.test(t)) return EMPTY_ICONS.stages;
+    if (/مهام|task/i.test(t)) return ICONS.clock;
+    if (/ملاحظات|feedback/i.test(t)) return ICONS.note;
+    if (/إشعار|notification/i.test(t)) return EMPTY_ICONS.bell;
+    if (/طلب|request/i.test(t)) return ICONS.request;
+    return ICONS.task;
+  };
+  const empty = (title, text) => `<div class="sv-empty"><span aria-hidden="true" class="sv-empty__icon">${emptyIcon(title)}</span><strong>${esc(title)}</strong>${text ? `<p>${esc(text)}</p>` : ''}</div>`;
 
   // ---------- Toast ----------
   function toast(text, kind) {
@@ -415,17 +435,11 @@
           <div class="project-identity"><span class="project-identity__logo"><img alt="" src="assets/tammha-mark.png"/></span><div class="project-identity__text"><h2>${esc(r.name)}</h2><p>${T('مقدّم الطلب', 'Requested by')}: ${esc(person(r.leader))}</p></div><span class="sv-request__date">${T('أُرسل', 'Sent')} ${fmtDate(r.date)}</span></div>
           ${r.desc ? `<p class="sv-request__desc">${esc(r.desc)}</p>` : ''}
           <p class="sv-muted">${T('تظهر تفاصيل المشروع وفريقه بعد قبول الإشراف.', 'The project details and team appear after you accept supervision.')}</p>
-          <div class="sv-request__actions"><button class="sv-btn sv-btn--ghost" data-reject="${esc(r.id)}" type="button">${T('رفض', 'Reject')}</button><button class="sv-btn" data-accept="${esc(r.id)}" type="button">${T('قبول الإشراف', 'Accept supervision')}</button></div>
+          <div class="sv-request__actions"><button class="sv-btn sv-btn--ghost" data-request-details="${esc(r.id)}" type="button">${T('التفاصيل', 'Details')}</button><button class="sv-btn sv-btn--ghost" data-reject="${esc(r.id)}" type="button">${T('رفض', 'Reject')}</button><button class="sv-btn" data-accept="${esc(r.id)}" type="button">${T('قبول الإشراف', 'Accept supervision')}</button></div>
         </article>`).join('') : empty(T('لا توجد طلبات إشراف', 'No supervision requests'), T('ستظهر هنا طلبات قادة الفرق.', 'Requests from team leaders appear here.'));
         qsa('[data-accept]').forEach((b) => b.addEventListener('click', () => accept(b)));
-        qsa('[data-reject]').forEach((b) => b.addEventListener('click', () => {
-          const r = db.requests.find((x) => x.id === b.dataset.reject);
-          confirmBox(T(`رفض طلب "${r.name}"؟`, `Reject "${r.name}"?`), T('سيُبلَّغ قائد الفريق بالرفض ليختار مشرفًا آخر.', 'The Team Leader will be told so they can choose another supervisor.'), T('رفض الطلب', 'Reject request'), (reason) => {
-            act(null, () => Api.post(`/supervision-requests/${encodeURIComponent(r.id)}/reject`, reason ? { note: reason } : {}), () => {
-              recount(); draw(); toast(T('رُفض الطلب وأُبلغ قائد الفريق.', 'Request rejected and the Team Leader was notified.'));
-            });
-          }, true);
-        }));
+        qsa('[data-request-details]').forEach((b) => b.addEventListener('click', () => openRequest(b.dataset.requestDetails)));
+        qsa('[data-reject]').forEach((b) => b.addEventListener('click', () => reject(b.dataset.reject)));
       } else {
         const list = db.projects.filter((p) => view === 'all' || p.status === VIEW_STATUS[view]);
         grid.innerHTML = list.length ? list.map(projectCard).join('') : empty(T('لا توجد مشاريع هنا', 'No projects here'));
@@ -437,13 +451,39 @@
     }
     function accept(b) {
       const r = db.requests.find((x) => x.id === b.dataset.accept);
+      if (!r) return;
       act(b, () => Api.post(`/supervision-requests/${encodeURIComponent(r.id)}/accept`, {}), () => {
-        view = 'all'; recount(); draw();
+        closeDrawer(); view = 'all'; recount(); draw();
         toast(T(`قبلت الإشراف على "${r.name}"، وأصبح ضمن مشاريعك.`, `You now supervise "${r.name}".`));
       });
     }
+    function reject(id) {
+      const r = db.requests.find((x) => x.id === id); if (!r) return;
+      confirmBox(T(`رفض طلب "${r.name}"؟`, `Reject "${r.name}"?`), T('سيُبلَّغ قائد الفريق بالرفض ليختار مشرفًا آخر.', 'The Team Leader will be told so they can choose another supervisor.'), T('رفض الطلب', 'Reject request'), (reason) => {
+        act(null, () => Api.post(`/supervision-requests/${encodeURIComponent(r.id)}/reject`, reason ? { note: reason } : {}), () => {
+          closeDrawer(); recount(); draw(); toast(T('رُفض الطلب وأُبلغ قائد الفريق.', 'Request rejected and the Team Leader was notified.'));
+        });
+      }, true);
+    }
+    // a supervision request opens in a side panel with its details (also from the bell: ?request=<id>)
+    function openRequest(id) {
+      const r = db.requests.find((x) => x.id === id); if (!r) return;
+      const row = (label, value) => (value ? `<div class="sv-req-detail"><dt>${esc(label)}</dt><dd>${value}</dd></div>` : '');
+      openDrawer(T('طلب إشراف', 'Supervision request'), r.name, `<dl class="sv-req-details">
+          ${row(T('المشروع', 'Project'), esc(r.name))}
+          ${row(T('مقدّم الطلب', 'Requested by'), `${esc(person(r.leader))}${r.leaderEmail ? `<small dir="ltr">${esc(r.leaderEmail)}</small>` : ''}`)}
+          ${row(T('تاريخ الطلب', 'Sent on'), esc(fmtDate(r.date)))}
+          ${row(T('وصف المشروع', 'About the project'), esc(r.about))}
+          ${row(T('رسالة الفريق', 'Message from the team'), esc(r.desc))}
+        </dl>
+        <div class="sv-request__actions sv-req-actions"><button class="sv-btn sv-btn--ghost" data-reject-one type="button">${T('رفض', 'Reject')}</button><button class="sv-btn" data-accept="${esc(r.id)}" data-accept-one type="button">${T('قبول الإشراف', 'Accept supervision')}</button></div>`);
+      const body = qs('#svDrawerBody');
+      body.querySelector('[data-accept-one]').addEventListener('click', (e) => accept(e.currentTarget));
+      body.querySelector('[data-reject-one]').addEventListener('click', () => reject(r.id));
+    }
     tabs.forEach((t) => t.addEventListener('click', () => { view = t.dataset.view; draw(); }));
     draw();
+    if (params.get('request')) openRequest(params.get('request'));
   }
 
   // ----- Project page -----
@@ -463,7 +503,7 @@
     qs('#svAddFeedback').addEventListener('click', () => openFeedback(p.id, () => show('feedback')));
     qs('#svScheduleMeeting').href = `supervisor-meetings.html?new=${encodeURIComponent(p.id)}`;
     openTask.onChange = () => { p = project(p.id) || p; };
-    document.title = `${L(p.name)} — ${T('تممها', 'Tammha')}`;
+    document.title = L(p.name);
     const tabs = qsa('[data-tab]');
     const body = qs('#svTabPanel');
     const panels = {
@@ -861,8 +901,8 @@
     ME.id = u.id; ME.name = UI.personName(u); remember(u);
     renderShell();
     if (page === 'settings') { renderSettings(); }
-    const run = () => (window.TammhaLoader ? window.TammhaLoader.track(load, { label: T('جارٍ تحميل بيانات المشاريع…', 'Loading project data…'), delay: 400, timeout: 60000 }) : load());
-    try { await run(); } catch (e) {
+    // the page-wide loading screen (session.js) covers this first load: no second loader
+    try { await load(); } catch (e) {
       const host = qs('main') || document.body;
       const box = document.createElement('div'); box.className = 'app-banner app-banner--error'; box.setAttribute('role', 'alert');
       box.innerHTML = `${esc(Api.message(e))} <button class="app-state__action" type="button">${T('إعادة المحاولة', 'Try again')}</button>`;

@@ -16,7 +16,7 @@
   function render() {
     const p = w.project; const isLeader = !!w.viewer?.isLeader;
     $('overviewProjectName').textContent = p.name;
-    document.title = `${T('تممها', 'Tammha')} | ${p.name}`;
+    document.title = p.name;
     S.projectHeroProgress(w); // the completion, once, in the title bar
     $('ovOverview').textContent = p.overview || p.description || T('لم تُكتب نبذة المشروع بعد.', 'No overview yet.');
     const goals = (p.objectives || []).filter(Boolean);

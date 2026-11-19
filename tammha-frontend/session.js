@@ -177,6 +177,16 @@
   }
   function notificationLink(n) {
     const d = n.data || {};
+    if ((user && user.role === 'SUPERVISOR') || /\/supervisor[^/]*\.html$/.test(location.pathname)) {
+      // supervisor pages: a supervision request opens its details on the Projects page
+      const pq = d.projectId ? `p=${encodeURIComponent(d.projectId)}` : '';
+      if (n.type === 'SUPERVISION_REQUESTED') return `supervisor-projects.html?view=requests${d.requestId ? `&request=${encodeURIComponent(d.requestId)}` : ''}`;
+      if (d.documentId) return `supervisor-reviews.html?file=${encodeURIComponent(d.documentId)}`;
+      if (d.meetingId) return 'supervisor-meetings.html';
+      if (d.taskId && pq) return `supervisor-project.html?${pq}&tab=tasks`;
+      if (pq) return `supervisor-project.html?${pq}`;
+      return '';
+    }
     if (n.type === 'TEAM_INVITATION') return 'projects.html#invitations';
     if (d.taskId) return `tasks.html?${d.projectId ? `project=${encodeURIComponent(d.projectId)}&` : ''}task=${encodeURIComponent(d.taskId)}`;
     if (d.meetingId) return 'meetings.html';
@@ -395,7 +405,7 @@
     }
     if (s.user) fillShell(s.user); // last known name while the real one loads
     // the bell is placed at once (from the last known role), so the header does not shift when the account loads
-    if (s.user?.role === 'STUDENT' && (!role || role === 'STUDENT')) mountStudentBell();
+    if (['STUDENT', 'SUPERVISOR'].includes(s.user?.role) && (!role || role === s.user.role)) mountStudentBell();
     try {
       user = await Api.get('/auth/me');
       Api.saveUser(user);
@@ -415,7 +425,7 @@
     if (role === 'SUPERVISOR' && user.role !== 'SUPERVISOR') { location.replace('dashboard.html'); return; }
     if (user.emailVerified === false) { location.replace('verify-email.html?pending=1'); return; }
     fillShell(user);
-    if (user.role === 'STUDENT') mountStudentBell();
+    if (user.role === 'STUDENT' || user.role === 'SUPERVISOR') mountStudentBell();
     refreshBadge();
     readyResolve(user);
     onboarding(user);
@@ -441,8 +451,8 @@
     const meId = user && user.id;
     return [...byId.values()].map((m) => {
       const isMe = m.userId === meId;
-      const tags = [m.isLeader ? T('قائد الفريق', 'Team Leader') : '', isMe ? T('أنت', 'you') : ''].filter(Boolean);
-      return { ...m, isMe, label: `${personName(m.user)}${tags.length ? ` (${tags.join(T('، ', ', '))})` : ''}` };
+      // only the name (no "Team Leader" / "you")
+      return { ...m, isMe, label: personName(m.user) };
     }).sort((a, b) => (b.isLeader - a.isLeader) || a.label.localeCompare(b.label));
   }
 

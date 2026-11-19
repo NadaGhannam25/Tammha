@@ -6,7 +6,7 @@
 <script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="مهام المشروع في منصة تممها" name="description"/>
-<title>تممها | المهام</title>
+<title data-en="Tasks">المهام</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
 <link href="style.css" rel="stylesheet"/>
 <link href="ltr.css" rel="stylesheet"/>
 <link href="loader.css" rel="stylesheet"/>
@@ -151,7 +151,7 @@
 <form class="task-status-form" id="taskStatusForm"><label class="visually-hidden" for="taskStatusSelect">الحالة الجديدة</label><select id="taskStatusSelect"></select><button class="task-status-form__save" type="submit">حفظ</button></form>
 <p class="task-drawer__hint" id="taskStatusHint"></p>
 </section>
-<section class="task-drawer__block" hidden id="taskLeaderTools"><h3>إدارة المهمة (قائد الفريق)</h3><form class="task-status-form task-leader-form" id="taskLeaderForm"><label><span class="visually-hidden">المسؤول</span><select id="taskEditAssignee" aria-label="المسؤول"></select></label><label><span class="visually-hidden">المرحلة</span><select id="taskEditStage" aria-label="المرحلة"></select></label><label><span class="visually-hidden">تاريخ التسليم</span><input id="taskEditDue" type="date" aria-label="تاريخ التسليم"/></label><button class="task-status-form__save" type="submit">حفظ</button><button class="app-btn app-btn--ghost" id="taskDelete" type="button">حذف المهمة</button></form></section> <section class="task-drawer__block task-feedback" id="taskFeedbackBlock"><h3>ملاحظات المشرف</h3><ul class="task-feedback__list" id="taskFeedbackList"></ul><p class="task-drawer__hint">يكتبها المشرف على المهمة للاطلاع والمتابعة، ولا يُعدّل المشرف المهام نفسها.</p></section>
+<section class="task-drawer__block" hidden id="taskLeaderTools"><h3>إدارة المهمة (قائد الفريق)</h3><form class="task-status-form task-leader-form" id="taskLeaderForm"><label><span class="visually-hidden">المسؤول</span><select id="taskEditAssignee" aria-label="المسؤول"></select></label><label><span class="visually-hidden">المرحلة</span><select id="taskEditStage" aria-label="المرحلة"></select></label><label><span class="visually-hidden">تاريخ التسليم</span><input id="taskEditDue" type="date" aria-label="تاريخ التسليم"/></label><button class="task-status-form__save" type="submit">حفظ</button><button class="app-btn app-btn--ghost" id="taskDelete" type="button">حذف المهمة</button></form></section> <section class="task-drawer__block task-feedback" id="taskFeedbackBlock"><h3>ملاحظات المشرف</h3><ul class="task-feedback__list" id="taskFeedbackList"></ul></section>
 <section class="task-drawer__block"><h3>التعليقات <span class="task-drawer__count" id="taskCommentCount"></span></h3><ul class="task-drawer__comments" id="taskDrawerComments"></ul>
 <form class="task-comment-form" id="taskCommentForm" novalidate><label class="visually-hidden" for="taskCommentText">تعليق جديد</label><textarea id="taskCommentText" maxlength="2000" placeholder="اكتب تعليقًا لأعضاء الفريق…" rows="2"></textarea><small class="field-error" hidden id="taskCommentError">اكتب التعليق أولًا</small><button class="task-comment-form__send" type="submit">إضافة تعليق</button></form>
 </section>

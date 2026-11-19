@@ -69,9 +69,9 @@ export function renderTammhaMail(input: {
   const renderedBody = escapeEmailHtml(body).replace(/\n/g, '<br>');
   const code = (input.code ?? '').replace(/[^0-9A-Za-z]/g, '').slice(0, 12);
   const codeBlock = code
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:22px 0 14px;border-collapse:collapse"><tr><td align="center" style="padding:20px 12px;background:#f1f6ff;border:1px solid #e4edfb;border-radius:8px"><span dir="ltr" style="display:inline-block;font-family:Tahoma,Arial,sans-serif;font-size:34px;line-height:42px;font-weight:700;letter-spacing:10px;color:#132c55">${escapeEmailHtml(code)}</span></td></tr></table>` +
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:22px 0 14px;border-collapse:collapse"><tr><td align="center" style="padding:24px 12px;background:#f1f6ff;border:1px solid #e4edfb;border-radius:8px;text-align:center"><span dir="ltr" style="display:inline-block;font-family:Tahoma,Arial,sans-serif;font-size:40px;line-height:48px;font-weight:700;letter-spacing:12px;color:#132c55">${escapeEmailHtml(code)}</span></td></tr></table>` +
       (input.codeNote
-        ? `<p style="margin:0;color:#5d6571;font-size:12px;line-height:1.9">${escapeEmailHtml(input.codeNote).replace(/\n/g, '<br>')}</p>`
+        ? `<p style="margin:0;color:#5d6571;font-size:12px;line-height:1.9;text-align:center">${escapeEmailHtml(input.codeNote).replace(/\n/g, '<br>')}</p>`
         : '')
     : '';
   const html =

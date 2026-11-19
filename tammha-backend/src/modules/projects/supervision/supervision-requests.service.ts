@@ -38,7 +38,9 @@ const { PENDING, ACCEPTED, REJECTED, CANCELLED } = SupervisionRequestStatus;
 export const SUPERVISOR_PROJECT_ROLE = ProjectRole.PROJECT_MANAGER;
 
 const REQUEST_INCLUDE = {
-  project: { select: { id: true, name: true, teamId: true } },
+  project: {
+    select: { id: true, name: true, teamId: true, description: true },
+  },
   supervisor: { select: PUBLIC_USER_SELECT },
   requestedBy: { select: PUBLIC_USER_SELECT },
 } as const;
@@ -496,7 +498,12 @@ export class SupervisionRequestsService {
     responseNote: string | null;
     respondedAt: Date | null;
     createdAt: Date;
-    project: { id: string; name: string; teamId: string };
+    project: {
+      id: string;
+      name: string;
+      teamId: string;
+      description?: string | null;
+    };
     supervisor: PublicUserDto;
     requestedBy: PublicUserDto;
   }): SupervisionRequestViewDto {
@@ -507,7 +514,12 @@ export class SupervisionRequestsService {
       responseNote: row.responseNote,
       respondedAt: row.respondedAt,
       createdAt: row.createdAt,
-      project: row.project,
+      project: {
+        id: row.project.id,
+        name: row.project.name,
+        teamId: row.project.teamId,
+        description: row.project.description ?? null,
+      },
       supervisor: row.supervisor,
       requestedBy: row.requestedBy,
     };

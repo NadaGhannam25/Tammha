@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title data-en="Settings — Tammha">الإعدادات — تممها</title>
+<title data-en="Settings">الإعدادات</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
 <link href="style.css" rel="stylesheet"/>
 <link href="supervisor.css" rel="stylesheet"/>
 <link href="ltr.css" rel="stylesheet"/>
@@ -34,7 +34,6 @@
 <small data-me-title></small>
 </span>
 </a>
-<a aria-label="الإشعارات" class="sv-bell" data-en-aria-label="Notifications" href="supervisor-notifications.html"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5l1.5-2Z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg><span class="sv-bell__count" data-unread hidden></span></a>
 </div>
 </header>
 
@@ -56,16 +55,15 @@
         <form class="settings-v43-form" id="sProfileForm" novalidate>
           <label><span data-en="First name">الاسم الأول</span><input autocomplete="given-name" id="sFirst" maxlength="50" required type="text"></label>
           <label><span data-en="Last name">اسم العائلة</span><input autocomplete="family-name" id="sLast" maxlength="50" type="text"></label>
-          <label><span data-en="Account email (cannot be changed here)">البريد الإلكتروني للحساب (لا يُعدَّل من هنا)</span><input dir="ltr" id="sEmail" readonly type="email"></label>
+          <label><span data-en="Account email">البريد الإلكتروني للحساب</span><input dir="ltr" id="sEmail" readonly type="email"></label>
           <p aria-live="polite" class="app-field-error" id="sProfileError" role="alert"></p>
           <button class="settings-v43-primary" type="submit" data-en="Save changes">حفظ التغييرات</button>
         </form>
       </div>
     </section>
     <section class="settings-tab-panel" data-settings-panel="security" hidden>
-      <div class="settings-v43-panel-head"><div><h2 data-en="Privacy & security">الخصوصية والأمان</h2><p data-en="Change your password and end the session.">تغيير كلمة المرور وإنهاء الجلسة.</p></div></div>
+      <div class="settings-v43-panel-head"><div><h2 data-en="Privacy & security">الخصوصية والأمان</h2><p data-en="Change your password or delete your account.">تغيير كلمة المرور أو حذف الحساب.</p></div></div>
       <div class="settings-v43-session-card"><div><strong data-en="Change password">تغيير كلمة المرور</strong><span data-en="A secure link to set a new password is sent to your account email.">يُرسَل رابط آمن لتعيين كلمة مرور جديدة إلى البريد الإلكتروني للحساب.</span></div><button data-password-link id="sSendPasswordLink" type="button" data-en="Send link">إرسال الرابط</button></div>
-      <div class="settings-v43-session-card"><div><strong data-en="Sign out">تسجيل الخروج</strong><span data-en="Ends the session on this device.">ينهي الجلسة على هذا الجهاز.</span></div><button data-logout type="button" data-en="Sign out">تسجيل الخروج</button></div>
       <div class="settings-v43-session-card settings-danger-card"><div><strong data-en="Delete account">حذف الحساب</strong><span data-en="Permanent, confirmed with a code sent to your email.">حذف نهائي يتم بعد تأكيد رمز يصل إلى بريدك.</span></div><button data-delete-account type="button" data-en="Delete account">حذف الحساب</button></div>
     </section>
     <section class="settings-tab-panel" data-settings-panel="language" hidden>
@@ -110,12 +108,6 @@
 <img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
 </span>
 <span class="nav-item__label" data-en="Meetings">الاجتماعات</span>
-</a>
-<a class="nav-item" data-page="notifications" href="supervisor-notifications.html">
-<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
-<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5l1.5-2Z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg>
-</span>
-<span class="nav-item__label" data-en="Notifications">الإشعارات</span><span class="sv-nav-badge" data-unread hidden></span>
 </a>
 <a class="nav-item" data-page="assistant" href="supervisor-assistant.html">
 <span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">

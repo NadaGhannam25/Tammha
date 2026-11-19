@@ -273,15 +273,19 @@ export class AccountEmailService implements OnApplicationShutdown {
     const copy =
       language === 'ar'
         ? {
-            subject: 'تممها | رمز تأكيد حذف الحساب',
-            body: `تلقينا طلبًا لحذف حسابك في تممها نهائيًا. رمز التأكيد هو:\n\n${code}\n\nالرمز صالح لمدة 15 دقيقة. بعد إدخاله سيُحذف الحساب ولا يمكن استرجاعه. إذا لم تطلب ذلك، تجاهل هذه الرسالة وغيّر كلمة المرور.`,
+            subject: 'تمّمها | رمز تأكيد حذف الحساب',
+            body: 'تلقينا طلبًا لحذف حسابك في منصة تمّمها نهائيًا. لإتمام الطلب، استخدم رمز التأكيد التالي:',
+            codeNote:
+              'الرمز صالح لمدة 15 دقيقة ويُستخدم مرة واحدة. بعد إدخاله يُحذف الحساب نهائيًا ولا يمكن استرجاعه.\nإذا لم تطلب ذلك، تجاهل هذه الرسالة وغيّر كلمة المرور.',
           }
         : {
             subject: 'Tammha | Account deletion code',
-            body: `We received a request to permanently delete your Tammha account. Your confirmation code is:\n\n${code}\n\nThe code is valid for 15 minutes. Once entered, the account is deleted and cannot be restored. If you did not request this, ignore this email and change your password.`,
+            body: 'We received a request to permanently delete your Tammha account. To complete it, use this confirmation code:',
+            codeNote:
+              'The code is valid for 15 minutes and can be used once. Once entered, the account is deleted permanently and cannot be restored.\nIf you did not request this, ignore this email and change your password.',
           };
     await this.deliver(to, 'account deletion code', {
-      ...renderTammhaMail({ language, recipientName: name, ...copy }),
+      ...renderTammhaMail({ language, recipientName: name, code, ...copy }),
       link: `code ${code}`,
     });
   }
@@ -296,12 +300,18 @@ export class AccountEmailService implements OnApplicationShutdown {
     const copy =
       language === 'ar'
         ? {
-            subject: 'تمّمها | تم حذف حسابك',
-            body: 'شكرًا لأنك كنت جزءًا من تمّمها.\nحذفنا حسابك وبياناتك الشخصية كما طلبت.\nنتمنى لك كل التوفيق في مشروعك ومسيرتك، وبابنا مفتوح لك متى ما رجعت.',
+            subject: 'تمّمها | تأكيد حذف الحساب',
+            body:
+              'نؤكد لك أنه تم حذف حسابك في منصة تمّمها، وحذف جميع بياناتك الشخصية، بناءً على طلبك.\n\n' +
+              'نشكرك على ثقتك بتمّمها ومشاركتك معنا خلال رحلة مشروع التخرج، ونتمنى لك دوام التوفيق والنجاح في مسيرتك الأكاديمية والمهنية.\n\n' +
+              'يسعدنا انضمامك إلى تمّمها مجددًا في أي وقت.',
           }
         : {
-            subject: 'Tammha | Account deleted',
-            body: 'Thank you for being part of Tammha.\nYour account and personal data have been deleted as you asked.\nWe wish you every success with your project and your studies. You are always welcome back.',
+            subject: 'Tammha | Account deletion confirmed',
+            body:
+              'This is to confirm that your Tammha account and all of your personal data have been deleted, as you requested.\n\n' +
+              'Thank you for trusting Tammha during your graduation project journey. We wish you continued success in your academic and professional path.\n\n' +
+              'You are welcome to join Tammha again at any time.',
           };
     await this.deliver(to, 'account deleted', {
       ...renderTammhaMail({ language, recipientName: name, ...copy }),

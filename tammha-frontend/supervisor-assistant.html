@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title data-en="AI assistant — Tammha">المساعد الذكي — تممها</title>
+<title data-en="AI assistant">المساعد الذكي</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
 <link href="style.css" rel="stylesheet"/>
 <link href="supervisor.css" rel="stylesheet"/>
 <link href="ltr.css" rel="stylesheet"/>
@@ -34,7 +34,6 @@
 <small data-me-title></small>
 </span>
 </a>
-<a aria-label="الإشعارات" class="sv-bell" data-en-aria-label="Notifications" href="supervisor-notifications.html"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5l1.5-2Z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg><span class="sv-bell__count" data-unread hidden></span></a>
 </div>
 </header>
 <section class="projects-hero page-banner--compact sv-banner"><div class="projects-hero__content"><h1 data-en="AI assistant">المساعد الذكي</h1><p data-en="Provides answers and summaries based on the records of the projects assigned to the supervisor, helping to follow progress and identify points to discuss with the teams.">يقدّم المساعد إجابات وملخصات مستندة إلى بيانات المشاريع المسندة إلى المشرف، بما يساعد على متابعة سير العمل وتحديد النقاط التي تحتاج إلى نقاش مع الفرق.</p></div></section>
@@ -43,7 +42,6 @@
 <label class="sv-field"><span data-en="Project">المشروع</span><select id="svAiProject"></select></label>
 <section class="sv-ai__context"><h2 data-en="What the assistant uses">ما يعتمد عليه المساعد</h2>
 <ul><li data-en="Project information and objectives">معلومات المشروع وأهدافه</li><li data-en="Project handbook">دليل المشروع</li><li data-en="Stages, tasks and dates">المراحل والمهام والمواعيد</li><li data-en="File details">بيانات الملفات</li><li data-en="Previous feedback">الملاحظات السابقة</li></ul></section>
-<p class="sv-readonly"><svg aria-hidden="true" viewBox="0 0 24 24"><rect height="10" rx="2" width="14" x="5" y="10"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg><span data-en="Applying AI tasks and assigning them stays with the Team Leader.">تطبيق المهام المقترحة وإسنادها يبقى لقائد الفريق.</span></p>
 </aside>
 <section aria-label="المحادثة" class="sv-ai__chat" data-en-aria-label="Conversation">
 <div aria-live="polite" class="sv-ai__thread" id="svAiThread"></div>
@@ -84,12 +82,6 @@
 <img alt="" class="nav-item__icon icon-filled" src="assets/meeting-filled.png"/>
 </span>
 <span class="nav-item__label" data-en="Meetings">الاجتماعات</span>
-</a>
-<a class="nav-item" data-page="notifications" href="supervisor-notifications.html">
-<span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">
-<svg class="nav-item__svg nav-item__svg--files" viewbox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5l1.5-2Z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg>
-</span>
-<span class="nav-item__label" data-en="Notifications">الإشعارات</span><span class="sv-nav-badge" data-unread hidden></span>
 </a>
 <a aria-current="page" class="nav-item is-active" data-page="assistant" href="supervisor-assistant.html">
 <span aria-hidden="true" class="nav-item__icon-wrap nav-item__icon-wrap--svg">

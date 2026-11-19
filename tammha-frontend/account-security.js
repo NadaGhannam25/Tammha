@@ -92,7 +92,7 @@
         }
         Api.clearSession();
         openDialog({
-          locked: true, image: 'assets/account-deleted.png', title: T('تم حذف حسابك', 'Your account has been deleted'),
+          locked: true, image: 'assets/account-goodbye.png', title: T('تم حذف حسابك', 'Your account has been deleted'),
           body: `<p>${esc(T('شكرًا لأنك كنت جزءًا من تمّمها. حذفنا حسابك وبياناتك الشخصية كما طلبت، وأرسلنا لك رسالة تأكيد على بريدك.', 'Thank you for being part of Tammha. Your account and personal data have been deleted as you asked, and a confirmation was sent to your email.'))}</p><p>${esc(T('نتمنى لك كل التوفيق في مشروعك ومسيرتك، وبابنا مفتوح لك متى ما رجعت.', 'We wish you every success with your project and your studies. You are always welcome back.'))}</p>`,
           actions: `<a class="tm-dialog__btn tm-dialog__btn--primary" href="index.html">${esc(T('العودة إلى الصفحة الرئيسية', 'Back to the home page'))}</a>`,
         });
@@ -102,7 +102,7 @@
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-delete-account]'); if (!btn) return;
     const d = openDialog({
-      icon: ICONS.warning, tone: 'danger', title: T('حذف الحساب نهائيًا؟', 'Delete your account permanently?'),
+      image: 'assets/account-delete.png', tone: 'danger', title: T('حذف الحساب نهائيًا؟', 'Delete your account permanently?'),
       body: `<p>${esc(T('سيُحذف حسابك وبياناتك الشخصية نهائيًا ولا يمكن استرجاعها، وتخرج من جميع الأجهزة. تبقى مساهماتك في مشاريع الفريق باسم "حساب محذوف".', 'Your account and personal data are deleted permanently and cannot be restored, and you are signed out everywhere. Your contributions to team projects remain as "Deleted account".'))}</p><p class="tm-dialog__muted">${esc(T('للتأكيد نرسل رمزًا إلى بريدك الإلكتروني.', 'To confirm, we will email you a code.'))}</p>`,
       actions: `<button class="tm-dialog__btn" type="button" data-close>${esc(T('إلغاء', 'Cancel'))}</button><button class="tm-dialog__btn tm-dialog__btn--danger" type="button" id="tmDeleteSend">${esc(T('إرسال رمز التأكيد', 'Send confirmation code'))}</button>`,
     });

@@ -278,7 +278,7 @@
     if (!id) { fail(T('لم يُحدد الاجتماع. افتحه من صفحة الاجتماعات.', 'No meeting was selected. Open it from the meetings page.')); $('roomRetry').hidden = true; return; }
     try {
       meeting = await Api.get(`/meetings/${encodeURIComponent(id)}`);
-      $('roomTitle').textContent = meeting.title; document.title = `${T('تممها', 'Tammha')} | ${meeting.title}`;
+      $('roomTitle').textContent = meeting.title; document.title = meeting.title;
       $('endMeeting').hidden = !meeting.canManage; $('leaveMore').hidden = !meeting.canManage; $('leaveSplit').classList.toggle('has-menu', !!meeting.canManage);
     } catch (e) { fail(Api.message(e)); $('roomRetry').hidden = true; return; }
     connect();

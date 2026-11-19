@@ -6,6 +6,12 @@ export class SupervisionProjectRefDto {
   @ApiProperty() id!: string;
   @ApiProperty() name!: string;
   @ApiProperty() teamId!: string;
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    description: 'shown to the supervisor with the request',
+  })
+  description!: string | null;
 }
 
 export class SupervisionRequestViewDto {

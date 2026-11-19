@@ -21,7 +21,7 @@
     aboutTitle: 'A graduation project<br/>is not one task.',
     aboutNote: 'Requirements, a team, stages, tasks, meetings, files and deadlines.',
     aboutThen: 'Tammha puts your project in one clear place.', boardSection: 'From scattered pieces to one project',
-    storyLabel: 'About Tammha', storyTitle: 'A graduation project<br/>is not one task.',
+    storyLabel: 'About Tammha', storyTitle: '<span class="story__accent">A graduation project</span><br/>is not one task.',
     s1: 'It is university requirements to read closely, responsibilities shared across the team, meetings with the supervisor, files that pile up, deadlines that come closer week after week, and follow-up that does not stop until the final defense.',
     s2: 'Tammha brings all of it into one organized workspace, so every member knows what to do, when, and why.',
     bProject: 'Tammha project', bStage: 'Current stage: Development', boardLabel: 'What a graduation project involves',
@@ -38,17 +38,17 @@
     o2t: 'Stages and tasks', o2p: 'Clear stages, and every task has an owner and a due date.',
     o3t: 'Meetings and teamwork', o3p: 'Meetings scheduled, held and documented in one place.',
     o4t: 'University handbook', o4p: 'College requirements become tasks.',
-    cPageTitle: 'Contact us — Tammha', cMetaDesc: 'Contact the Tammha team for support or general inquiries.',
+    cPageTitle: 'Contact us', cMetaDesc: 'Contact the Tammha team for support or general inquiries.',
     cTitle: 'Contact us', cIntro: 'This section lets you contact the Tammha team with questions and feedback about using the platform.', cFormT: 'Send a message',  cHelpT: 'How can we help?',
     cName: 'Full name', cEmail: 'Email', cSubject: 'Subject', cMessage: 'Message', cSend: 'Send message',
     cNameErr: 'Enter your name', cEmailErr: 'Enter a valid email, like name@stu.edu.sa', cSubjectErr: 'Enter a subject', cMessageErr: 'Write your message',
     cSent: 'Your e-mail app has opened with the message addressed to info@tammha.site. If it did not open, write to that address directly.', cOther: 'Other ways to reach us',
-    cSupportT: 'Technical support', cSupportP: 'Account, sign-in, files and meetings issues.',
-    cInfoT: 'General inquiries', cInfoP: 'Questions about Tammha and working with colleges and supervisors.', cNote: 'We read every message and try to reply within two working days.',
+    cSupportT: 'Technical support', cSupportP: 'For technical help with your account and sign-in, file uploads and meetings.',
+    cInfoT: 'General inquiries', cInfoP: 'For general inquiries about the Tammha platform and its services, and collaboration with colleges and academic supervisors.', cNote: 'We read every message and try to reply within two working days.',
     fTammha: 'Tammha', fHow: 'How it works', fHandbook: 'University handbook',
-    fSupport: 'Support', fInfo: 'General inquiries', fForm: 'Contact form',
+    fSupport: 'Support', fInfo: 'General inquiries', fForm: 'Contact us',
     fAccount: 'Account',
-    fCopy: '© 2026 Tammha. A graduation project, AlMaarefa University.', fTop: 'Back to top ↑'
+    fCopy: 'All rights reserved to Tammha ©2026', fTop: 'Back to top ↑'
   };
   const textEls = [...document.querySelectorAll('[data-i18n]')];
   const attrEls = [...document.querySelectorAll('[data-i18n-attr]')];
