@@ -62,13 +62,21 @@
   });
 
   // ----- delete account -----
+  // why the account cannot be deleted yet: one formal, clear paragraph (no list)
   function blockedText(err) {
     const list = (err.details && err.details.blockers) || [];
-    const items = list.map((b) => `<li>${esc(b.code === 'SUPERVISOR'
-      ? T(`تشرف على مشروع "${b.name}"`, `You supervise the project "${b.name}"`)
-      : T(`أنت قائد فريق "${b.name}" وفيه أعضاء آخرون`, `You lead the team "${b.name}", which has other members`))}</li>`).join('');
-    return `<p>${esc(T('لا يمكن حذف الحساب الآن:', 'The account cannot be deleted yet:'))}</p><ul class="tm-dialog__list">${items}</ul><p class="tm-dialog__muted">${esc(T('انقل قيادة الفريق إلى عضو آخر من صفحة المشروع (أو أنهِ الإشراف) ثم أعد المحاولة.', 'Hand the team leadership to another member from the project page (or end the supervision), then try again.'))}</p>`;
+    const names = (code) => list.filter((b) => b.code === code).map((b) => `"${b.name}"`).join(T('، ', ', '));
+    const leads = names('TEAM_LEADER') || list.filter((b) => b.code !== 'SUPERVISOR').map((b) => `"${b.name}"`).join(T('، ', ', '));
+    const supervises = names('SUPERVISOR');
+    const parts = [];
+    if (leads) parts.push(T(`لا يمكن حذف حسابك في الوقت الحالي، لأنك قائد الفريق ${leads} الذي يضم أعضاء آخرين. يُرجى نقل قيادة الفريق إلى أحد الأعضاء من صفحة المشروع، ثم إعادة محاولة حذف الحساب.`,
+      `Your account cannot be deleted at this time because you lead the team ${leads}, which has other members. Please hand the team leadership to another member from the project page, then try deleting the account again.`));
+    if (supervises) parts.push(T(`${leads ? 'كما أنك' : 'لا يمكن حذف حسابك في الوقت الحالي، لأنك'} تشرف على مشروع ${supervises}. يُرجى إنهاء الإشراف على المشروع أولًا، ثم إعادة محاولة حذف الحساب.`,
+      `${leads ? 'You also supervise' : 'Your account cannot be deleted at this time because you supervise'} the project ${supervises}. Please end the supervision first, then try deleting the account again.`));
+    if (!parts.length) parts.push(T('لا يمكن حذف حسابك في الوقت الحالي. يُرجى إنهاء ارتباطك بالمشاريع الحالية ثم إعادة المحاولة.', 'Your account cannot be deleted at this time. Please end your current project roles, then try again.'));
+    return parts.map((t) => `<p>${esc(t)}</p>`).join('');
   }
+  const blockedDialog = (err) => openDialog({ image: 'assets/account-warning.png', tone: 'danger', title: T('تعذّر حذف الحساب', 'The account cannot be deleted'), body: blockedText(err), actions: `<button class="tm-dialog__btn tm-dialog__btn--primary" type="button" data-close>${esc(T('حسنًا', 'OK'))}</button>` });
   function askCode(info) {
     const d = openDialog({
       tone: 'danger', title: T('أدخل رمز التأكيد', 'Enter the confirmation code'),
@@ -87,7 +95,7 @@
         try { await Api.post('/auth/me/delete/confirm', { code }); }
         catch (err) {
           errEl.textContent = err.code === 'DELETION_CODE_INVALID' ? T('الرمز غير صحيح أو انتهت صلاحيته.', 'The code is incorrect or has expired.') : Api.message(err);
-          if (err.code === 'ACCOUNT_DELETION_BLOCKED') openDialog({ icon: ICONS.warning, tone: 'danger', title: T('تعذّر حذف الحساب', 'The account cannot be deleted'), body: blockedText(err), actions: `<button class="tm-dialog__btn tm-dialog__btn--primary" type="button" data-close>${esc(T('حسنًا', 'OK'))}</button>` });
+          if (err.code === 'ACCOUNT_DELETION_BLOCKED') blockedDialog(err);
           return;
         }
         Api.clearSession();
@@ -103,13 +111,15 @@
     const btn = e.target.closest('[data-delete-account]'); if (!btn) return;
     const d = openDialog({
       image: 'assets/account-delete.png', tone: 'danger', title: T('حذف الحساب نهائيًا؟', 'Delete your account permanently?'),
-      body: `<p>${esc(T('سيُحذف حسابك وبياناتك الشخصية نهائيًا ولا يمكن استرجاعها، وتخرج من جميع الأجهزة. تبقى مساهماتك في مشاريع الفريق باسم "حساب محذوف".', 'Your account and personal data are deleted permanently and cannot be restored, and you are signed out everywhere. Your contributions to team projects remain as "Deleted account".'))}</p><p class="tm-dialog__muted">${esc(T('للتأكيد نرسل رمزًا إلى بريدك الإلكتروني.', 'To confirm, we will email you a code.'))}</p>`,
+      body: (S.user && S.user.role === 'SUPERVISOR')
+        ? `<p>${esc(T('سيُحذف حسابك وبياناتك الشخصية نهائيًا ولا يمكن استرجاعها، وتخرج من جميع الأجهزة.', 'Your account and personal data are deleted permanently and cannot be restored, and you are signed out everywhere.'))}</p><p>${esc(T('سينتهي إشرافك على جميع المشاريع، وتُلغى طلبات الإشراف المرسلة إليك. تبقى المشاريع وملفاتها لدى فرقها لتتمكن من طلب مشرف آخر، وتبقى ملاحظاتك ومراجعاتك السابقة فيها باسم "حساب محذوف".', 'Your supervision of every project ends and the supervision requests sent to you are cancelled. The projects and their files stay with their teams, who can ask another supervisor, and your earlier feedback and reviews stay there under "Deleted account".'))}</p>`
+        : `<p>${esc(T('سيُحذف حسابك وبياناتك الشخصية نهائيًا ولا يمكن استرجاعها، وتخرج من جميع الأجهزة. تبقى مساهماتك في مشاريع الفريق باسم "حساب محذوف".', 'Your account and personal data are deleted permanently and cannot be restored, and you are signed out everywhere. Your contributions to team projects remain as "Deleted account".'))}</p><p class="tm-dialog__muted">${esc(T('للتأكيد نرسل رمزًا إلى بريدك الإلكتروني.', 'To confirm, we will email you a code.'))}</p>`,
       actions: `<button class="tm-dialog__btn" type="button" data-close>${esc(T('إلغاء', 'Cancel'))}</button><button class="tm-dialog__btn tm-dialog__btn--danger" type="button" id="tmDeleteSend">${esc(T('إرسال رمز التأكيد', 'Send confirmation code'))}</button>`,
     });
     d.querySelector('#tmDeleteSend').addEventListener('click', (ev) => UI.busy(ev.currentTarget, async () => {
       try { askCode(await Api.post('/auth/me/delete/request', {})); }
       catch (err) {
-        if (err.code === 'ACCOUNT_DELETION_BLOCKED') { openDialog({ icon: ICONS.warning, tone: 'danger', title: T('تعذّر حذف الحساب', 'The account cannot be deleted'), body: blockedText(err), actions: `<button class="tm-dialog__btn tm-dialog__btn--primary" type="button" data-close>${esc(T('حسنًا', 'OK'))}</button>` }); return; }
+        if (err.code === 'ACCOUNT_DELETION_BLOCKED') { blockedDialog(err); return; }
         if (err.code === 'DELETION_CODE_RECENTLY_SENT') { askCode({ email: (S.user && S.user.email) || '' }); return; }
         UI.toast(Api.message(err), 'error');
       }

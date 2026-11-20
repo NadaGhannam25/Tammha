@@ -6,7 +6,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AuthTokenType, ProjectRole, TeamRole } from '@prisma/client';
+import {
+  AuthTokenType,
+  ProjectRole,
+  SupervisionRequestStatus,
+  TeamRole,
+} from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -102,18 +107,8 @@ export class AccountLifecycleService {
         blockers.push({ code: 'TEAM_LEADER', name: team?.name ?? '' });
       }
     }
-    const supervising = await this.prisma.projectMember.findMany({
-      where: { userId, role: ProjectRole.PROJECT_MANAGER },
-      select: { projectId: true },
-    });
-    if (supervising.length) {
-      const projects = await this.prisma.project.findMany({
-        where: { id: { in: supervising.map((s) => s.projectId) } },
-        select: { name: true },
-      });
-      for (const p of projects)
-        blockers.push({ code: 'SUPERVISOR', name: p.name });
-    }
+    // a supervisor is not blocked: on deletion the supervision of each project simply ends
+    // (the projects stay with their teams, who can then ask another supervisor)
     return blockers;
   }
 
@@ -189,6 +184,22 @@ export class AccountLifecycleService {
       await tx.teamMember.deleteMany({
         where: { userId: account.id, role: TeamRole.MEMBER },
       });
+      // a supervisor: the supervision of every project ends, and open requests are closed
+      await tx.projectMember.deleteMany({
+        where: { userId: account.id, role: ProjectRole.PROJECT_MANAGER },
+      });
+      await tx.supervisionRequest.updateMany({
+        where: {
+          supervisorId: account.id,
+          status: {
+            in: [
+              SupervisionRequestStatus.PENDING,
+              SupervisionRequestStatus.ACCEPTED,
+            ],
+          },
+        },
+        data: { status: SupervisionRequestStatus.CANCELLED },
+      });
       await tx.user.update({
         where: { id: account.id },
         data: {
@@ -221,11 +232,9 @@ export class AccountLifecycleService {
     const blockers = await this.deletionBlockers(userId);
     if (blockers.length) {
       throw new ConflictException(
-        err(
-          'ACCOUNT_DELETION_BLOCKED',
-          'Hand over the team leadership or the supervised projects first',
-          { blockers },
-        ),
+        err('ACCOUNT_DELETION_BLOCKED', 'Hand over the team leadership first', {
+          blockers,
+        }),
       );
     }
   }

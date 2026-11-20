@@ -129,7 +129,7 @@ export class AuthController {
   @ApiResponse({
     status: 409,
     description:
-      'Email already registered, STUDENT_NUMBER_TAKEN or UNIVERSITY_EMAIL_TAKEN',
+      'EMAIL_ALREADY_REGISTERED, STUDENT_NUMBER_TAKEN or UNIVERSITY_EMAIL_TAKEN',
   })
   async register(
     @Body() registerDto: RegisterDto,

@@ -170,6 +170,7 @@
     PAYLOAD_TOO_LARGE: ['حجم الملف أكبر من المسموح.', 'The file is larger than allowed.'],
     EMAIL_NOT_VERIFIED: ['يجب تأكيد البريد الإلكتروني أولًا.', 'Please verify your email address first.'],
     UNIVERSITY_EMAIL_NOT_VERIFIED: ['يجب تأكيد البريد الجامعي أولًا.', 'Please verify your university email first.'],
+    LOGIN_ROLE_MISMATCH: ['نوع الدخول غير صحيح. يرجى إعادة المحاولة.', 'Incorrect account type. Please try again.'],
     EMAIL_ALREADY_REGISTERED: ['هذا البريد مسجّل مسبقًا.', 'This email is already registered.'],
     EMAIL_ALREADY_VERIFIED: ['البريد مؤكَّد مسبقًا.', 'This email is already verified.'],
     VERIFICATION_TOKEN_INVALID: ['رابط التأكيد غير صالح أو منتهي الصلاحية.', 'The verification link is invalid or has expired.'],
@@ -253,6 +254,8 @@
     if (err.status === 404) return T(...MESSAGES.NOT_FOUND);
     if (err.status === 400 || err.status === 422) return T(MESSAGES.VALIDATION_ERROR[0], err.message || MESSAGES.VALIDATION_ERROR[1]);
     if (err.status === 429) return T(...MESSAGES.RATE_LIMITED);
+    // an account that already exists (older servers answered without a code)
+    if (err.status === 409 && /already registered/i.test(err.message || '')) return T(...MESSAGES.EMAIL_ALREADY_REGISTERED);
     if (err.status >= 500) return T(...MESSAGES.SERVER_ERROR);
     return T('حدث خطأ غير متوقع. أعد المحاولة.', err.message || 'An unexpected error occurred. Please try again.');
   }

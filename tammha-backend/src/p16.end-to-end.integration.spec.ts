@@ -230,8 +230,45 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
         .expect(201);
       expect(sup.body.user.role).toBe('SUPERVISOR');
       expect(sup.body.user.studentNumber ?? null).toBeNull();
+      // an e-mail that already has an account: a clear code for the sign-up page
+      const again = await http()
+        .post(`${API}/auth/register`)
+        .send({
+          email: 'nosn@uni.test',
+          password: PASSWORD,
+          role: 'SUPERVISOR',
+          universityId: uni1,
+        })
+        .expect(409);
+      expect(again.body.code).toBe('EMAIL_ALREADY_REGISTERED');
       await register('supA', 'SUPERVISOR');
       await register('supB', 'SUPERVISOR');
+      // the sign-in page's account type must match the account
+      const wrong = await http()
+        .post(`${API}/auth/login`)
+        .send({ email: 'nosn@uni.test', password: PASSWORD, role: 'STUDENT' })
+        .expect(403);
+      expect(wrong.body.code).toBe('LOGIN_ROLE_MISMATCH');
+      expect(wrong.body.tokens).toBeUndefined();
+      // the reply does not tell which type the account is
+      expect(JSON.stringify(wrong.body)).not.toMatch(/supervisor|SUPERVISOR/);
+      await http()
+        .post(`${API}/auth/login`)
+        .send({
+          email: 'nosn@uni.test',
+          password: PASSWORD,
+          role: 'SUPERVISOR',
+        })
+        .expect(200);
+      // a wrong password is still just "invalid" (the account type is not revealed)
+      await http()
+        .post(`${API}/auth/login`)
+        .send({
+          email: 'nosn@uni.test',
+          password: 'Wrong-pass1',
+          role: 'STUDENT',
+        })
+        .expect(401);
     });
 
     it('verify-email/code: the right code verifies once; reused or malformed code is rejected', async () => {

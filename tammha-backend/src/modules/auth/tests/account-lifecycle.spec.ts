@@ -172,7 +172,7 @@ describe('AccountLifecycleService', () => {
     await expect(service.requestDeletion(asUser(solo))).resolves.toBeDefined();
   });
 
-  it('a supervisor of a project cannot delete', async () => {
+  it('a supervisor can delete: the supervision ends and the project stays with its team', async () => {
     const sup = await user('sup@test.local', 'SUPERVISOR');
     const lead = await user('lead@test.local');
     const t = await team(lead!.id);
@@ -180,12 +180,15 @@ describe('AccountLifecycleService', () => {
     await db.projectMember.create({
       data: { projectId: p!.id, userId: sup!.id, role: 'PROJECT_MANAGER' },
     });
-    await expect(service.requestDeletion(asUser(sup))).rejects.toMatchObject({
-      response: {
-        code: 'ACCOUNT_DELETION_BLOCKED',
-        details: { blockers: [{ code: 'SUPERVISOR', name: 'Proj' }] },
-      },
-    });
+    await service.requestDeletion(asUser(sup));
+    await service.confirmDeletion(asUser(sup), lastCode());
+    expect(
+      db.projectMember.rows.filter((r: any) => r.userId === sup!.id),
+    ).toHaveLength(0);
+    expect(db.project.rows.find((r: any) => r.id === p!.id)).toBeDefined();
+    expect(db.user.rows.find((r: any) => r.id === sup!.id)!.isActive).toBe(
+      false,
+    );
   });
 
   it('a new code cannot be requested within a minute', async () => {

@@ -178,7 +178,17 @@
         const signing = window.TammhaLoader ? window.TammhaLoader.show({ solid: true, showSlow: false, label: isEnglish() ? 'Signing in…' : 'جارٍ تسجيل الدخول…' }) : null;
         let res;
         try {
-          res = await Api.post('/auth/login', { email, password }, { auth: false });
+          // the server may be waking up or restarting after an update: the first tries can fail
+          // to connect, so the sign-in is tried again a few times before showing an error
+          for (let attempt = 0; ; attempt++) {
+            const chosen = (radios.find ? radios.find((r) => r.checked) : Array.from(radios).find((r) => r.checked));
+            const role = chosen && chosen.value === 'supervisor' ? 'SUPERVISOR' : 'STUDENT';
+            try { res = await Api.post('/auth/login', { email, password, role }, { auth: false }); break; }
+            catch (err) {
+              if (err.code !== 'NETWORK_ERROR' || attempt >= 4) throw err;
+              await new Promise((r) => setTimeout(r, 2500 + attempt * 2500));
+            }
+          }
         } catch (err) {
           if (signing) signing.fail();
           throw err;
@@ -211,6 +221,8 @@
       const Api2 = window.TammhaApi;
       if (form.dataset.authForm === 'login' && e.status === 401) showFormError(isEnglish() ? 'The email or password is incorrect.' : 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
       else if (e.status === 400 && /password/i.test(e.message || '')) showFormError(isEnglish() ? 'The password needs 8–128 characters with at least one letter and one digit.' : 'كلمة المرور من 8 إلى 128 حرفًا، وتحتوي على حرف ورقم على الأقل.');
+      else if (e.code === 'LOGIN_ROLE_MISMATCH') showFormError(isEnglish() ? 'Incorrect account type. Please try again.' : 'نوع الدخول غير صحيح. يرجى إعادة المحاولة.');
+      else if (e.code === 'NETWORK_ERROR') showFormError(isEnglish() ? 'The server is not answering right now (it may be starting or updating). Wait a minute and try again.' : 'الخادم لا يستجيب حاليًا، وقد يكون قيد التشغيل أو التحديث. انتظر دقيقة ثم أعد المحاولة.');
       else showFormError(Api2.message(e));
     } finally {
       submit.disabled = false;

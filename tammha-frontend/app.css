@@ -935,3 +935,95 @@ body.auth-role-supervisor .auth-access-shell{background-image:linear-gradient(90
 .sv-page .settings-lang .language-option.is-selected{border:0!important;border-bottom:1px solid #eef2f4!important;background:#fff!important;box-shadow:none!important}
 .sv-page .settings-lang .language-option:last-child{border-bottom:0!important}
 .sv-page .settings-lang .language-option.is-selected span:first-child{color:#0a7fae!important}
+/* ===== QA review 9 ===== */
+/* sign-in / sign-up: errors are plain red text (no background) */
+.auth-access-error{padding:0!important;background:none!important;border:0!important;box-shadow:none!important;color:#c0392b!important;font-weight:600}
+.auth-access-page .auth-access-field-error,.auth-access-page .field-error,.auth-access-page [data-field-error]{background:none!important;box-shadow:none!important;color:#c0392b!important}
+/* ===== QA review 10: supervisor ===== */
+/* dashboard: projects (like the student's cards) beside the calendar; three equal boxes below */
+.sv-dash.sv-dash--v2{display:grid!important;grid-template-columns:minmax(0,1fr) 340px!important;gap:24px!important;align-items:start}
+.sv-cards.sv-cards--v2{display:grid!important;grid-template-columns:1fr!important;gap:14px!important}
+.sv-dash__calendar .calendar-card{margin:0}
+.sv-dash-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:26px 0 30px}
+.sv-dash-row .sv-box{min-height:250px;height:calc(100% - 52px)}
+.sv-dash-row section{display:flex;flex-direction:column}
+@media(max-width:1180px){.sv-dash.sv-dash--v2{grid-template-columns:1fr!important}.sv-dash-row{grid-template-columns:1fr}}
+/* supervisor project card: the student's card + leader and current stage */
+.sv-project-card2 .sv-pfacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:2px 0 12px}
+.sv-project-card2 .sv-pfacts div{padding:8px 10px;border:1px solid #edf1f3;border-radius:9px;background:#fafcfd;min-width:0}
+.sv-project-card2 .sv-pfacts dt{color:#8a9ca6;font-size:11.5px}
+.sv-project-card2 .sv-pfacts dd{margin:2px 0 0;color:#173d57;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sv-pcard-late{display:flex;align-items:center;gap:6px;margin:8px 0 0;color:#c0392b;font-size:12px;font-weight:600}
+.sv-pcard-late svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
+.sv-page .project-card .round-arrow{background:none!important;box-shadow:none!important;border:0!important;width:auto!important;height:auto!important;padding:4px!important;color:#0a7fae}
+.sv-page .project-card .round-arrow svg{width:20px;height:20px}
+/* projects page: the same cards, two per row */
+#svProjectsGrid.sv-cards{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important}
+@media(max-width:1100px){#svProjectsGrid.sv-cards{grid-template-columns:1fr!important}}
+/* supervisor empty states: only the icon (no tinted tile), larger and clear */
+.sv-page .sv-empty__icon{width:auto!important;height:auto!important;background:none!important;box-shadow:none!important;border:0!important;border-radius:0!important;color:#2f7f9c!important;margin-bottom:6px}
+.sv-page .sv-empty__icon svg{width:40px!important;height:40px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.5!important;stroke-linecap:round;stroke-linejoin:round}
+/* the bell keeps its round shape and size beside the name */
+.app-bell,.app-bell__button{flex-shrink:0!important}
+.app-bell__button{width:36px!important;height:36px!important;min-width:36px;aspect-ratio:1}
+.app-bell__button svg{width:20px!important;height:20px!important;flex-shrink:0}
+#svProjectsGrid .project-card{grid-template-columns:190px minmax(0,1fr)!important}
+#svProjectsGrid .project-card__visual.project-image{height:150px}
+.sv-page .sv-pcard-late{color:#c0392b!important}
+.sv-dash--v2 .project-card__visual.project-image{height:130px}
+/* ===== QA review 11: supervisor ===== */
+/* the supervision request notice: the supervisor sky colour, flat */
+.sv-page .sv-notice{background:var(--sv-blue)!important;border:0!important;box-shadow:none!important;color:#fff!important}
+.sv-page .sv-notice svg{stroke:#fff!important}
+.sv-page .sv-notice a{color:#fff!important}
+/* project page team: one line per person, the leader tag beside the name */
+.sv-page .sv-team-list li{grid-template-columns:auto 1fr}
+.sv-page .sv-team-list .sv-avatar{grid-row:auto}
+.sv-leader-tag{display:inline-block;margin-inline-start:6px;padding:2px 8px;border-radius:999px;background:#eaf5f9;color:#2f7f9c;font-size:11px;font-weight:700;vertical-align:middle}
+/* project page: completion under the name, as on the student's pages */
+.sv-page .sv-project-hero .project-hero-progress{color:#fff}
+.sv-page .sv-project-hero .project-hero-progress__track{background:rgba(255,255,255,.45)}
+.sv-page .sv-project-hero .project-hero-progress__track>span{background:#fff}
+/* ===== QA review 12: supervisor ===== */
+/* projects page: the student's project card, in the supervisor's larger size (two per row) */
+#svProjectsGrid .sv-list-card{padding:22px;gap:18px;border-radius:17px;border-color:#edf1f3;box-shadow:var(--shadow)}
+#svProjectsGrid .sv-list-card .project-identity{align-items:flex-start;gap:16px}
+#svProjectsGrid .sv-list-card .project-identity__image{flex:0 0 150px;width:150px;height:100px}
+#svProjectsGrid .sv-list-card .project-identity__text{flex:1 1 auto;min-width:0}
+#svProjectsGrid .sv-list-card .project-identity__text h2{font-size:17px;margin:2px 0 4px}
+#svProjectsGrid .sv-list-card .project-identity__text p{white-space:normal;margin:0 0 3px}
+#svProjectsGrid .sv-list-card .sv-list-card__meta{color:#5b6b75;font-size:12.5px;line-height:1.7}
+@media(max-width:700px){#svProjectsGrid .sv-list-card .project-identity{flex-wrap:wrap}#svProjectsGrid .sv-list-card .project-identity__image{flex-basis:100%;width:100%;height:120px}}
+/* projects page tabs: names only, no numbers */
+.sv-page [data-view] [data-count]{display:none!important}
+/* assistant: the supervisor's own messages in white text on the sky bubble */
+.sv-page .sv-msg--me,.sv-page .sv-msg--me *{color:#fff!important}
+.sv-ai-facts ul{margin:4px 0 8px}
+/* project page */
+.sv-leader-tag{background:none!important;padding:0!important;color:#2f7f9c!important;font-weight:700}
+.sv-page .sv-project-hero .project-hero-progress,.sv-page .sv-project-hero .project-hero-progress *{color:#fff!important}
+.sv-page .sv-project-actions .sv-btn--ghost{background:#fff!important;border-color:transparent!important;box-shadow:none!important}
+.sv-page .sv-project-hero .sv-back{display:none!important}
+/* assistant: suggested questions without a frame (as the project page buttons); a "send message" icon */
+.sv-page .sv-chip{border-color:transparent!important;box-shadow:none!important;background:#f0f6f9!important}
+.sv-page .sv-chip:hover{background:#e3eff4!important}
+.sv-page .sv-ai__send svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+html[dir="rtl"] .sv-page .sv-ai__send svg{transform:scaleX(-1)}
+/* supervisor meeting tables: room for join + edit + cancel in the last column */
+@media (min-width: 821px){
+  .sv-page .sv-meetings-list .meeting-table-header,.sv-page .sv-meetings-list .meeting-list-card--table{grid-template-columns:56px minmax(150px,1.5fr) minmax(110px,1fr) 118px 132px 190px!important;column-gap:12px!important}
+}
+/* files: the review status as coloured text only; no version column */
+.sv-page .sv-review{background:none!important;box-shadow:none!important;border:0!important;padding:0!important}
+.sv-page .sv-row--files{grid-template-columns:minmax(0,2fr) minmax(0,1fr) 120px 130px 90px!important}
+.sv-page .sv-row--files-p{grid-template-columns:minmax(0,2fr) minmax(0,.9fr) minmax(0,1fr) 120px 130px 90px!important}
+/* stages: a plain number (as a numbered list) */
+.sv-page .sv-step--plain{width:auto!important;height:auto!important;border:0!important;background:none!important;border-radius:0!important;color:var(--sv-ink,#253238)!important;font-size:14px;font-weight:800}
+/* assistant suggested questions: the supervisor sky colour */
+.sv-page .sv-chip{background:var(--sv-blue)!important;color:#fff!important}
+.sv-page .sv-chip:hover{background:var(--sv-blue-dark)!important;color:#fff!important}
+/* reviews page tabs: names only, no numbers */
+.sv-page [data-review-filter] [data-count]{display:none!important}
+/* file review panel: view, download and "request changes" in white, no blue frame */
+.sv-page .sv-file-actions .sv-btn--ghost,.sv-page .sv-review-actions .sv-btn--ghost{background:#fff!important;border:1px solid #e6eaed!important;box-shadow:0 1px 4px rgba(30,50,60,.08)!important;color:#393939!important}
+.sv-page .sv-file-actions .sv-btn--ghost:hover,.sv-page .sv-review-actions .sv-btn--ghost:hover{background:#f7f9fa!important}

@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   BadRequestException,
   ConflictException,
   HttpException,
@@ -144,7 +145,10 @@ export class AuthService {
     }
 
     if (await this.usersService.findByEmail(email)) {
-      throw new ConflictException('Email already registered');
+      throw new ConflictException({
+        code: 'EMAIL_ALREADY_REGISTERED',
+        message: 'Email already registered',
+      });
     }
 
     // STUDENT: a student number OR a university e-mail (verified afterwards)
@@ -184,7 +188,10 @@ export class AuthService {
               'This student number is already registered at this university',
           });
         }
-        throw new ConflictException('Email already registered');
+        throw new ConflictException({
+          code: 'EMAIL_ALREADY_REGISTERED',
+          message: 'Email already registered',
+        });
       }
       throw error;
     }
@@ -627,6 +634,18 @@ export class AuthService {
     }
     if (!user.isActive) {
       throw new UnauthorizedException('User account is inactive');
+    }
+    // the account type chosen on the sign-in page must be the account's own type
+    // (administrators may sign in from either)
+    if (
+      loginDto.role &&
+      user.role !== UserRole.ADMIN &&
+      user.role !== loginDto.role
+    ) {
+      throw new ForbiddenException({
+        code: 'LOGIN_ROLE_MISMATCH',
+        message: 'Incorrect account type. Please try again.',
+      });
     }
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);

@@ -52,11 +52,14 @@
   const NOTIF_GROUP = (t) => (t === 'SUPERVISION_REQUESTED' ? 'request' : /^(DOCUMENT_|SUBMISSION_)/.test(t) ? 'file' : /^MEETING_/.test(t) ? 'meeting' : t === 'FEEDBACK_RECEIVED' ? 'feedback' : /^(TASK_|COMMENT_)/.test(t) ? 'task' : 'project');
   const items = (r) => (Array.isArray(r) ? r : (r && r.items) || []);
 
+  // a refresh in the background (the page already shows the saved copy) does not hold the loading screen
+  let background = false;
+  const get = (path) => Api.get(path, background ? { loader: false } : {});
   async function loadProject(pid) {
     const q = `projectId=${encodeURIComponent(pid)}`;
     const [ws, tasks, ms, docs, fb, meets] = await Promise.all([
-      Api.get(`/projects/${encodeURIComponent(pid)}`), Api.get(`/tasks?${q}&limit=100`), Api.get(`/milestones?${q}&limit=100`),
-      Api.get(`/documents?${q}`), Api.get(`/feedback?${q}&limit=100`), Api.get(`/meetings?${q}&limit=100&includeCancelled=true`)
+      get(`/projects/${encodeURIComponent(pid)}`), get(`/tasks?${q}&limit=100`), get(`/milestones?${q}&limit=100`),
+      get(`/documents?${q}`), get(`/feedback?${q}&limit=100`), get(`/meetings?${q}&limit=100&includeCancelled=true`)
     ]);
     const pr = ws.project || ws;
     const members = (ws.team && ws.team.members) || [];
@@ -64,7 +67,7 @@
     const leader = remember(ws.leader) || (members.find((m) => m.teamRole === 'LEADER') || {}).userId || null;
     const stages = items(ms).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((m) => ({ id: m.id, name: m.title, milestone: m.title, desc: m.description || '', to: dayOf(m.dueDate), status: m.status, progress: (m.progress && m.progress.percent) || 0 }));
     const p = {
-      id: pr.id, name: pr.name, status: pr.status, category: pr.category, origin: pr.origin,
+      id: pr.id, name: pr.name, status: pr.status, category: pr.category, origin: pr.origin, raw: pr,
       progress: Math.round((ws.progress && ws.progress.percent) || 0),
       start: dayOf(pr.startDate), end: dayOf(pr.expectedCompletionDate || pr.endDate),
       desc: pr.overview || pr.description || '', goals: pr.objectives || [], teamName: ws.team ? ws.team.name : '',
@@ -82,7 +85,7 @@
 
   async function load() {
     const [sup, inc, notes] = await Promise.all([
-      Api.get('/projects/supervised'), Api.get('/supervision-requests/incoming'), Api.get('/notifications?limit=100')
+      get('/projects/supervised'), get('/supervision-requests/incoming'), get('/notifications?limit=100')
     ]);
     const ids = items(sup).map((x) => (x.project ? x.project.id : x.id));
     const parts = await Promise.all(ids.map(loadProject));
@@ -93,6 +96,19 @@
     next.notifications = items(notes).map((n) => { const v = S.notificationText(n); const d = n.data || {}; return { id: n.id, type: NOTIF_GROUP(n.type), rawType: n.type, title: v.title, text: v.text, project: d.projectId || null, data: d, date: dayOf(n.createdAt), time: timeOf(n.createdAt), at: n.createdAt, read: !!(n.isRead || n.readAt) }; });
     next.unread = Number(notes && notes.unreadCount != null ? notes.unreadCount : next.notifications.filter((n) => !n.read).length);
     db = next;
+    saveCopy();
+  }
+  // a copy of the data for this browser tab, so moving between supervisor pages shows at once
+  const COPY_KEY = 'tammha-sv-copy';
+  function saveCopy() {
+    try { sessionStorage.setItem(COPY_KEY, JSON.stringify({ uid: ME.id, at: Date.now(), db, people: PEOPLE })); } catch (e) { /* storage full or off */ }
+  }
+  function readCopy() {
+    try {
+      const c = JSON.parse(sessionStorage.getItem(COPY_KEY) || 'null');
+      if (!c || c.uid !== ME.id || Date.now() - c.at > 15 * 60000) return false;
+      db = c.db; Object.assign(PEOPLE, c.people || {}); return true;
+    } catch (e) { return false; }
   }
   // a server action, then a fresh copy of the data and a redraw
   async function act(button, run, done) {
@@ -119,7 +135,7 @@
     flag: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 21V4m0 0h11l-2 4 2 4H5"></path></svg>',
     clock: '<svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>',
     file: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"></path><path d="M14 3.5v4h4"></path></svg>',
-    note: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"></path></svg>',
+    note: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"></path><path d="M8 13h4M8 17h7"></path><path d="M18.4 2.6a2 2 0 0 1 2.9 2.9L14.5 12.3l-3.6.8.8-3.6Z"></path></svg>',
     task: '<svg aria-hidden="true" viewBox="0 0 24 24"><rect height="16" rx="3" width="16" x="4" y="4"></rect><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>',
     request: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 17.5V19"></path><circle cx="10" cy="7.5" r="3.5"></circle><path d="M19 8v6M16 11h6"></path></svg>',
     lock: '<svg aria-hidden="true" viewBox="0 0 24 24"><rect height="10" rx="2" width="14" x="5" y="10"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>',
@@ -148,7 +164,8 @@
     folder: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2.5h6.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5Z"></path></svg>',
     calendar: '<svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M8 3v4M16 3v4M3 10h18"></path></svg>',
     bell: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15Z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg>',
-    stages: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h7"></path><circle cx="18" cy="6" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg>',
+    stages: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 21V4"></path><path d="M5 4h11l-2 4 2 4H5"></path></svg>',
+    inbox: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path><path d="M3 13h5l1.5 2.5h5L16 13h5"></path></svg>',
   };
   const emptyIcon = (title) => {
     const t = String(title);
@@ -161,7 +178,7 @@
     if (/ملاحظات|feedback/i.test(t)) return ICONS.note;
     if (/إشعار|notification/i.test(t)) return EMPTY_ICONS.bell;
     if (/طلب|request/i.test(t)) return ICONS.request;
-    return ICONS.task;
+    return EMPTY_ICONS.inbox;
   };
   const empty = (title, text) => `<div class="sv-empty"><span aria-hidden="true" class="sv-empty__icon">${emptyIcon(title)}</span><strong>${esc(title)}</strong>${text ? `<p>${esc(text)}</p>` : ''}</div>`;
 
@@ -259,7 +276,7 @@
       <div class="sv-file-head">${fileIcon(f)}<div><strong>${esc(L(f.name))}</strong><small>${T('النسخة', 'Version')} ${f.version} · <span dir="ltr">${esc(f.size)}</span></small></div>${reviewPill(f)}</div>
       <div class="sv-file-actions"><button class="sv-btn sv-btn--ghost" data-act="view" type="button">${ICONS.eye}${T('عرض الملف', 'View file')}</button><button class="sv-btn sv-btn--ghost" data-act="download" type="button">${ICONS.download}${T('تنزيل', 'Download')}</button></div>
       <dl class="task-drawer__facts">
-        <div><dt>${T('رفعه', 'Uploaded by')}</dt><dd>${esc(person(f.by))}</dd></div>
+        <div><dt>${T('المسؤول', 'Responsible')}</dt><dd>${esc(person(f.by))}</dd></div>
         <div><dt>${T('تاريخ الرفع', 'Uploaded')}</dt><dd>${fmtDate(f.date)}</dd></div>
         <div><dt>${T('المهمة المرتبطة', 'Related task')}</dt><dd>${esc(taskName)}</dd></div>
         <div><dt>${T('النوع', 'Type')}</dt><dd>${esc(window.TammhaDocs ? window.TammhaDocs.type(f.fileName) : '')}</dd></div>
@@ -365,19 +382,42 @@
   });
 
   // ---------- Project card ----------
-  function projectCard(p) {
-    const od = overdueTasks(p).length;
-    const nextStage = p.stages.find((s) => s.milestone && s.status !== 'COMPLETED');
+  // a project card like the student's: picture, name, team and leader, where the team has reached, progress
+  function projectCard(p, onDashboard) {
+    const current = p.stages.find((s) => s.status === 'IN_PROGRESS') || p.stages.find((s) => s.status !== 'COMPLETED' && s.status !== 'CANCELLED');
     const done = p.status === 'COMPLETED';
-    return `<article class="projects-list-card sv-project-card">
-      <div class="project-identity"><span class="project-identity__logo"><img alt="" src="assets/tammha-mark.png"/></span><div class="project-identity__text"><h2>${esc(L(p.name))}</h2><p>${T('القائد', 'Leader')}: ${esc(person(p.leader))} · ${T('عدد الأعضاء', 'Members')}: ${p.members.length + (p.leader ? 1 : 0)}</p></div>${pill((STATUS[p.status] || STATUS.PLANNING).cls, L((STATUS[p.status] || STATUS.PLANNING).label))}</div>
-      <div class="project-progress"><div class="project-progress__label"><span>${T('نسبة الإنجاز', 'Progress')}</span><strong>${p.progress}%</strong></div>${bar(p.progress, done)}</div>
-      <ul class="sv-card-facts">
-        ${nextStage ? `<li>${ICONS.flag}<span>${esc(L(nextStage.milestone))}</span><b>${fmtShort(nextStage.to)}</b></li>` : `<li>${ICONS.flag}<span>${p.stages.length ? T('اكتملت كل المراحل', 'All stages completed') : T('لم تُضف مراحل بعد', 'No stages yet')}</span></li>`}
-        ${od ? `<li class="sv-late">${ICONS.clock}<span>${lang === 'en' ? `${od} overdue task${od > 1 ? 's' : ''}` : od === 1 ? 'مهمة متأخرة' : od === 2 ? 'مهمتان متأخرتان' : `${od} مهام متأخرة`}</span></li>` : ''}
-      </ul>
-      <div class="project-card-foot"><span class="sv-team">${avatar(p.leader)}${p.members.map(avatar).join('')}</span><a class="project-card-action" href="supervisor-project.html?p=${encodeURIComponent(p.id)}">${T('فتح المشروع', 'Open project')}${ICONS.arrow}</a></div>
-    </article>`;
+    const stageText = current ? L(current.milestone) : (p.stages.length ? T('اكتملت كل المراحل', 'All stages completed') : T('لم تُضف مراحل بعد', 'No stages yet'));
+    const href = `supervisor-project.html?p=${encodeURIComponent(p.id)}`;
+    return `<article class="project-card sv-project-card2">${UI.projectImageSlot(p.raw || { id: p.id, name: p.name }, false, 'project-card__visual')}<div class="project-card__body">
+      <div class="project-card__topline"><div><h3>${esc(L(p.name))}</h3><p>${esc(p.teamName || '')}</p></div>
+      <a aria-label="${esc(T('فتح المشروع', 'Open project'))}" class="round-arrow" href="${href}">${ICONS.arrow}</a></div>
+      ${onDashboard ? '' : `<dl class="sv-pfacts">
+        <div><dt>${T('قائد الفريق', 'Team leader')}</dt><dd>${esc(person(p.leader))}</dd></div>
+        <div><dt>${T('المرحلة الحالية', 'Current stage')}</dt><dd>${esc(stageText)}</dd></div>
+      </dl>`}
+      <div class="progress-row"><div aria-label="${esc(T(`نسبة إنجاز المشروع ${p.progress} بالمئة`, `Project completion ${p.progress} percent`))}" class="progress-track${done ? ' is-done' : ''}"><span style="width: ${p.progress}%"></span></div><strong>${p.progress}%</strong></div>
+      ${onDashboard ? `<p class="project-card__date">${esc(T('قائد الفريق:', 'Team leader:'))} ${esc(person(p.leader))} · ${esc(stageText)}</p>` : ''}
+    </div></article>`;
+  }
+
+  // projects page: the student's project-list card (same order: identity, completion, footer),
+  // with the team leader and the current stage in the line under the name
+  const STATUS_CLS = { PLANNING: 'progress', IN_PROGRESS: 'progress', REVIEW: 'progress', COMPLETED: 'completed', ARCHIVED: 'archived' };
+  function projectListCard(p) {
+    const current = p.stages.find((s) => s.status === 'IN_PROGRESS') || p.stages.find((s) => s.status !== 'COMPLETED' && s.status !== 'CANCELLED');
+    const stageText = current ? L(current.milestone) : (p.stages.length ? T('اكتملت كل المراحل', 'All stages completed') : T('لم تُضف مراحل بعد', 'No stages yet'));
+    const meta = [`${T('قائد الفريق', 'Team leader')}: ${person(p.leader)}`, `${T('المرحلة الحالية', 'Current stage')}: ${stageText}`].join(' · ');
+    const pct = p.progress;
+    const href = `supervisor-project.html?p=${encodeURIComponent(p.id)}`;
+    const updated = p.raw && p.raw.updatedAt;
+    return `<article class="projects-list-card sv-list-card" data-status="${esc(p.status)}">
+      <div class="project-identity">${UI.projectImageSlot(p.raw || { id: p.id, name: p.name }, false, 'project-identity__image')}
+        <div class="project-identity__text"><h2>${esc(L(p.name))}</h2><p>${esc(p.teamName || '')}</p><p class="sv-list-card__meta">${esc(meta)}</p></div>
+        <span class="project-status project-status--${STATUS_CLS[p.status] || 'progress'}">${esc(L((STATUS[p.status] || STATUS.PLANNING).label))}</span></div>
+      <div class="project-progress"><div class="project-progress__label"><span>${esc(T('نسبة الإنجاز', 'Completion'))}</span><strong>${pct}%</strong></div>
+        <div aria-label="${esc(T('نسبة إنجاز المشروع', 'Project completion'))}" aria-valuemax="100" aria-valuemin="0" aria-valuenow="${pct}" class="project-progress__track" role="progressbar"><span${pct >= 100 ? ' class="is-completed"' : ''} style="width:${pct}%"></span></div></div>
+      <div class="project-card-foot"><span class="project-updated">${updated ? `${esc(T('آخر تحديث', 'Last updated'))} ${esc(UI.fmtDate(updated))}` : ''}</span>
+        <a class="project-card-action" href="${href}">${esc(T('فتح المشروع', 'Open project'))}</a></div></article>`;
   }
 
   // ======================================================================
@@ -393,7 +433,7 @@
     if (reqs) notice.innerHTML = `${ICONS.request}<span>${lang === 'en' ? `You have ${reqs} new supervision request${reqs > 1 ? 's' : ''}.` : reqs === 1 ? 'لديك طلب إشراف جديد.' : reqs === 2 ? 'لديك طلبا إشراف جديدان.' : `لديك ${reqs} طلبات إشراف جديدة.`}</span><a href="supervisor-projects.html?view=requests">${T('مراجعة الطلبات', 'Review requests')}</a>`;
 
     const active = db.projects.filter((p) => p.status !== 'COMPLETED');
-    qs('#svDashProjects').innerHTML = active.length ? active.map(projectCard).join('') : empty(T('لا توجد مشاريع نشطة', 'No active projects'), T('عند قبول طلب إشراف سيظهر المشروع هنا.', 'Accepted supervision requests appear here.'));
+    qs('#svDashProjects').innerHTML = active.length ? active.slice(0, 2).map((p) => projectCard(p, true)).join('') : empty(T('لا توجد مشاريع نشطة', 'No active projects'), T('عند قبول طلب إشراف سيظهر المشروع هنا.', 'Accepted supervision requests appear here.'));
 
     const files = pendingFiles();
     qs('#svDashReviews').innerHTML = files.length ? `<ul class="sv-list">${files.map((f) => `<li><button class="sv-list__row" data-file="${esc(f.id)}" type="button">${fileIcon(f)}<span class="sv-list__main"><strong>${esc(L(f.name))}</strong><small>${esc(L(project(f.project).name))} · ${esc(person(f.by))} · ${relDay(f.date)}</small></span><span class="sv-list__go">${T('مراجعة', 'Review')}${ICONS.arrow}</span></button></li>`).join('')}</ul>` : empty(T('لا توجد ملفات بانتظارك', 'Nothing waiting for review'));
@@ -407,7 +447,8 @@
       agenda.push({ date: s.to, kind: 'flag', title: L(s.milestone), sub: L(p.name), href: `supervisor-project.html?p=${encodeURIComponent(p.id)}&tab=stages` });
     }));
     agenda.sort((a, b) => a.date.localeCompare(b.date));
-    qs('#svAgenda').innerHTML = agenda.length ? `<ul class="sv-agenda">${agenda.slice(0, 5).map((i) => `<li><a href="${i.href}"><span class="sv-agenda__date"><b>${parse(i.date).getDate()}</b><small>${L(MONTHS[parse(i.date).getMonth()])}</small></span><span class="sv-agenda__icon">${ICONS[i.kind]}</span><span class="sv-list__main"><strong>${esc(i.title)}</strong><small>${esc(i.sub)}</small></span></a></li>`).join('')}</ul>` : empty(T('لا مواعيد قادمة', 'No upcoming dates'));
+    paintCalendar();
+    if (qs('#svAgenda')) qs('#svAgenda').innerHTML = agenda.length ? `<ul class="sv-agenda">${agenda.slice(0, 5).map((i) => `<li><a href="${i.href}"><span class="sv-agenda__date"><b>${parse(i.date).getDate()}</b><small>${L(MONTHS[parse(i.date).getMonth()])}</small></span><span class="sv-agenda__icon">${ICONS[i.kind]}</span><span class="sv-list__main"><strong>${esc(i.title)}</strong><small>${esc(i.sub)}</small></span></a></li>`).join('')}</ul>` : empty(T('لا مواعيد قادمة', 'No upcoming dates'));
 
     const od = [];
     db.projects.forEach((p) => p.tasks.forEach((t, i) => { if (isOverdue(t)) od.push({ p, t, i }); }));
@@ -417,6 +458,19 @@
 
     const fb = db.feedback.filter((f) => project(f.project)).slice(0, 3);
     qs('#svActivity').innerHTML = fb.length ? `<ul class="sv-feed">${fb.map((f) => `<li><div class="sv-feed__meta"><strong>${esc(L(project(f.project).name))}</strong><span>${fmtShort(f.date)}</span></div><p>${esc(f.text || (f.status && REVIEW[f.status] ? L(REVIEW[f.status].label) : ''))}</p></li>`).join('')}</ul>` : empty(T('لا توجد ملاحظات بعد', 'No feedback yet'));
+  }
+
+  // the calendar (same as the student's): meetings, stage deadlines and task due dates of the projects
+  function paintCalendar() {
+    if (!window.TammhaCalendar) return;
+    const key = (iso) => { const d = parse(iso); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+    const map = {}; const add = (iso, item) => { if (!iso) return; (map[key(iso)] = map[key(iso)] || []).push(item); };
+    db.meetings.filter((m) => project(m.project) && m.status !== 'CANCELLED').forEach((m) => add(m.date, { type: 'meeting', title: L(m.title), status: T('اجتماع', 'Meeting'), statusCls: 'meeting', meta: `${L(project(m.project).name)} · ${fmtTime(m.time)}`, href: 'supervisor-meetings.html' }));
+    db.projects.forEach((p) => {
+      p.stages.forEach((st) => { if (st.to && st.status !== 'CANCELLED') add(st.to, { type: 'task', title: L(st.milestone), status: T('نهاية مرحلة', 'Stage due'), statusCls: st.status === 'COMPLETED' ? 'done' : 'progress', meta: L(p.name), href: `supervisor-project.html?p=${encodeURIComponent(p.id)}&tab=stages` }); });
+      p.tasks.forEach((t) => { if (t.due && t.status !== 'CANCELLED') { const s = TASK_STATUS(t); add(t.due, { type: 'task', title: L(t.title), status: s.label, statusCls: s.cls, meta: `${L(p.name)}${t.who ? ` · ${person(t.who)}` : ''}`, href: `supervisor-project.html?p=${encodeURIComponent(p.id)}&tab=tasks` }); } });
+    });
+    window.TammhaCalendar.setItems(map);
   }
 
   // ----- Projects + requests -----
@@ -442,7 +496,7 @@
         qsa('[data-reject]').forEach((b) => b.addEventListener('click', () => reject(b.dataset.reject)));
       } else {
         const list = db.projects.filter((p) => view === 'all' || p.status === VIEW_STATUS[view]);
-        grid.innerHTML = list.length ? list.map(projectCard).join('') : empty(T('لا توجد مشاريع هنا', 'No projects here'));
+        grid.innerHTML = list.length ? list.map(projectListCard).join('') : empty(T('لا توجد مشاريع هنا', 'No projects here'));
       }
     };
     function recount() {
@@ -498,7 +552,14 @@
     }
     qs('#svProjName').textContent = L(p.name);
     qs('#svProjMeta').textContent = `${CATEGORY[p.category] ? L(CATEGORY[p.category]) : ''}${p.category ? ' · ' : ''}${T('القائد', 'Leader')}: ${person(p.leader)}`;
-    qs('#svProjProgress').innerHTML = `<span>${p.progress}%</span>${bar(p.progress, p.status === 'COMPLETED')}`;
+    // the completion as on the student's project pages: label, bar and percentage under the name
+    qs('#svProjProgress').hidden = true;
+    const heroText = qs('.project-detail-hero__content');
+    let heroBar = heroText.querySelector('.project-hero-progress');
+    if (!heroBar) { heroBar = document.createElement('div'); heroBar.className = 'project-hero-progress'; heroText.append(heroBar); }
+    heroBar.innerHTML = `<span class="project-hero-progress__label">${esc(T('نسبة الإنجاز', 'Completion'))}</span>
+      <span class="project-hero-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p.progress}" aria-label="${esc(T(`نسبة إنجاز المشروع ${p.progress} بالمئة`, `Project completion ${p.progress} percent`))}"><span style="width:${p.progress}%"></span></span>
+      <strong dir="ltr">${p.progress}%</strong>`;
     qs('#svAskAi').href = `supervisor-assistant.html?p=${encodeURIComponent(p.id)}`;
     qs('#svAddFeedback').addEventListener('click', () => openFeedback(p.id, () => show('feedback')));
     qs('#svScheduleMeeting').href = `supervisor-meetings.html?new=${encodeURIComponent(p.id)}`;
@@ -508,12 +569,10 @@
     const body = qs('#svTabPanel');
     const panels = {
       overview() {
-        const od = overdueTasks(p);
-        const next = p.stages.find((s) => s.status !== 'COMPLETED');
         return `<div class="sv-overview">
           <div class="sv-overview__main">
             <article class="overview-panel"><h2>${T('نبذة عن المشروع', 'About the project')}</h2><p>${esc(p.desc || T('لم يُضف وصف بعد.', 'No description yet.'))}</p></article>
-            ${p.goals.length ? `<article class="overview-panel"><h2>${T('الأهداف', 'Objectives')}</h2><ul class="overview-goals">${p.goals.map((g) => `<li>${esc(L(g))}</li>`).join('')}</ul></article>` : ''}
+            <article class="overview-panel"><h2>${T('أهداف المشروع', 'Project objectives')}</h2>${p.goals.length ? `<ul class="overview-goals">${p.goals.map((g) => `<li>${esc(L(g))}</li>`).join('')}</ul>` : `<p class="sv-muted">${T('لم يحدّد الفريق أهداف المشروع بعد.', 'The team has not set the project objectives yet.')}</p>`}</article>
             <section class="overview-stats sv-facts" aria-label="${T('بيانات المشروع', 'Project details')}">
               <div class="overview-stat"><span>${T('التصنيف', 'Category')}</span><strong>${esc(CATEGORY[p.category] ? L(CATEGORY[p.category]) : '—')}</strong></div>
               <div class="overview-stat"><span>${T('نوع المشروع', 'Project origin')}</span><strong>${esc(ORIGIN[p.origin] ? L(ORIGIN[p.origin]) : '—')}</strong></div>
@@ -523,13 +582,7 @@
             </section>
           </div>
           <aside class="sv-overview__side">
-            <section class="overview-panel"><h2>${T('الفريق', 'Team')}${p.teamName ? ` · ${esc(p.teamName)}` : ''}</h2><ul class="sv-team-list">${[p.leader, ...p.members].filter(Boolean).map((k, i) => `<li>${avatar(k)}<strong>${esc(person(k))}</strong><small>${i === 0 ? T('قائد الفريق', 'Team Leader') : T('عضو', 'Member')}</small></li>`).join('')}</ul></section>
-            <section class="overview-panel"><h2>${T('يحتاج انتباهك', 'Needs attention')}</h2><ul class="sv-attn">
-              ${next ? `<li>${ICONS.flag}<span>${esc(L(next.milestone || next.name))}</span><b>${fmtShort(next.to)}</b></li>` : ''}
-              ${!next && !od.length && !db.files.some((f) => f.project === p.id && D.WAITING_REVIEW.includes(f.status)) ? `<li>${ICONS.task}<span>${T('لا يوجد ما يحتاج انتباهك الآن.', 'Nothing needs your attention now.')}</span></li>` : ''}
-              ${od.map((t) => `<li class="sv-late">${ICONS.clock}<span>${esc(L(t.title))}</span><b>${fmtShort(t.due)}</b></li>`).join('')}
-              ${db.files.filter((f) => f.project === p.id && D.WAITING_REVIEW.includes(f.status)).map((f) => `<li>${ICONS.file}<span>${esc(L(f.name))}</span><b>${T('مراجعة', 'Review')}</b></li>`).join('')}
-            </ul></section>
+            <section class="overview-panel"><h2>${T('الفريق', 'Team')}</h2><ul class="sv-team-list">${[p.leader, ...p.members].filter(Boolean).map((k, i) => `<li>${avatar(k)}<strong>${esc(person(k))}${i === 0 ? ` <span class="sv-leader-tag">${T('قائد الفريق', 'Team Leader')}</span>` : ''}</strong></li>`).join('')}</ul></section>
           </aside>
         </div>`;
       },
@@ -537,7 +590,7 @@
         if (!p.stages.length) return empty(T('لم يضف قائد الفريق مراحل بعد', 'The Team Leader has not added stages yet'));
         return `<div class="sv-table" role="table" aria-label="${T('مراحل المشروع', 'Project stages')}">
           <div class="sv-row sv-row--head sv-row--stages" role="row"><span role="columnheader">${T('المرحلة', 'Stage')}</span><span role="columnheader">${T('تاريخ الاستحقاق', 'Due date')}</span><span role="columnheader">${T('الوصف', 'Description')}</span><span role="columnheader">${T('الحالة', 'Status')}</span><span role="columnheader">${T('الإنجاز', 'Progress')}</span></div>
-          ${p.stages.map((s, i) => `<div class="sv-row sv-row--stages" role="row"><span role="cell"><b class="sv-step${s.status === 'COMPLETED' ? ' is-done' : s.status === 'IN_PROGRESS' ? ' is-now' : ''}">${s.status === 'COMPLETED' ? '✓' : i + 1}</b><strong>${esc(L(s.name))}</strong></span><span role="cell">${fmtDate(s.to)}</span><span role="cell">${s.desc ? esc(s.desc) : '—'}</span><span role="cell">${pill(stageStatus(s).cls, L(stageStatus(s).label))}</span><span role="cell" class="sv-row__bar">${bar(s.progress, s.status === 'COMPLETED')}<b>${s.progress}%</b></span></div>`).join('')}
+          ${p.stages.map((s, i) => `<div class="sv-row sv-row--stages" role="row"><span role="cell"><b class="sv-step sv-step--plain">${i + 1}.</b><strong>${esc(L(s.name))}</strong></span><span role="cell">${fmtDate(s.to)}</span><span role="cell">${s.desc ? esc(s.desc) : '—'}</span><span role="cell">${pill(stageStatus(s).cls, L(stageStatus(s).label))}</span><span role="cell" class="sv-row__bar">${bar(s.status === 'COMPLETED' ? 100 : s.progress, s.status === 'COMPLETED')}<b>${s.status === 'COMPLETED' ? 100 : s.progress}%</b></span></div>`).join('')}
         </div>`;
       },
       tasks() {
@@ -586,8 +639,8 @@
 
   function fileTable(files, withProject) {
     return `<div class="sv-table" role="table" aria-label="${T('الملفات', 'Files')}">
-      <div class="sv-row sv-row--head sv-row--files${withProject ? ' sv-row--files-p' : ''}" role="row"><span role="columnheader">${T('الملف', 'File')}</span>${withProject ? `<span role="columnheader">${T('المشروع', 'Project')}</span>` : ''}<span role="columnheader">${T('رفعه', 'Uploaded by')}</span><span role="columnheader">${T('النسخة', 'Version')}</span><span role="columnheader">${T('التاريخ', 'Date')}</span><span role="columnheader">${T('حالة المراجعة', 'Review status')}</span><span role="columnheader"><span class="visually-hidden">${T('مراجعة', 'Review')}</span></span></div>
-      ${files.map((f) => `<div class="sv-row sv-row--files${withProject ? ' sv-row--files-p' : ''}" role="row"><span role="cell" class="sv-row__file">${fileIcon(f)}<strong>${esc(L(f.name))}</strong></span>${withProject ? `<span role="cell">${esc(L(project(f.project).name))}</span>` : ''}<span role="cell">${esc(person(f.by))}</span><span role="cell">v${esc(f.version)}</span><span role="cell">${fmtDate(f.date)}</span><span role="cell">${reviewPill(f)}</span><span role="cell"><button class="tasks-row__open" data-file="${esc(f.id)}" type="button">${D.WAITING_REVIEW.includes(f.status) ? T('مراجعة', 'Review') : T('عرض', 'View')}${ICONS.arrow}</button></span></div>`).join('')}
+      <div class="sv-row sv-row--head sv-row--files${withProject ? ' sv-row--files-p' : ''}" role="row"><span role="columnheader">${T('الملف', 'File')}</span>${withProject ? `<span role="columnheader">${T('المشروع', 'Project')}</span>` : ''}<span role="columnheader">${T('المسؤول', 'Responsible')}</span><span role="columnheader">${T('التاريخ', 'Date')}</span><span role="columnheader">${T('حالة المراجعة', 'Review status')}</span><span role="columnheader"><span class="visually-hidden">${T('مراجعة', 'Review')}</span></span></div>
+      ${files.map((f) => `<div class="sv-row sv-row--files${withProject ? ' sv-row--files-p' : ''}" role="row"><span role="cell" class="sv-row__file">${fileIcon(f)}<strong>${esc(L(f.name))}</strong></span>${withProject ? `<span role="cell">${esc(L(project(f.project).name))}</span>` : ''}<span role="cell">${esc(person(f.by))}</span><span role="cell">${fmtDate(f.date)}</span><span role="cell">${reviewPill(f)}</span><span role="cell"><button class="tasks-row__open" data-file="${esc(f.id)}" type="button">${D.WAITING_REVIEW.includes(f.status) ? T('مراجعة', 'Review') : T('عرض', 'View')}${ICONS.arrow}</button></span></div>`).join('')}
     </div>`;
   }
 
@@ -810,12 +863,33 @@
       qsa('#svAiForm input, #svAiForm textarea, #svAiForm button, #svAiProject').forEach((el) => { el.disabled = true; });
       return;
     }
+    // The assistant's role for the supervisor: a clear summary of the project. The AI summarises
+    // the idea and where the team is; the facts (completion, team members, completed, remaining
+    // and overdue tasks) are added from the project records themselves, so they are always exact
+    // (team names are never sent to the AI).
     const PROMPTS = [
-      ['summary', ['لخّص وضع المشروع', 'Summarize the project status']],
-      ['overdue', ['ما المهام المتأخرة وما أثرها؟', 'Which tasks are overdue and why does it matter?']],
-      ['agenda', ['اقترح نقاطًا للاجتماع القادم', 'Suggest points for the next meeting']],
+      ['summary', ['لخّص المشروع', 'Summarize the project'], ['لخّص فكرة المشروع باختصار، ثم وضّح أين وصل الفريق والمرحلة الحالية.', 'Briefly summarise the project idea, then say where the team is and the current stage.']],
+      ['progress', ['أين وصل الفريق؟', 'Where is the team now?'], ['أين وصل الفريق في المشروع، وما المرحلة الحالية وما المتبقي فيها؟', 'Where is the team in the project, what is the current stage and what is left in it?']],
+      ['tasks', ['المهام المكتملة والمتبقية والمتأخرة', 'Completed, remaining and overdue tasks'], ['لخّص حالة المهام: المكتملة والمتبقية والمتأخرة، وما أهم ما يحتاج متابعة.', 'Summarise the tasks: completed, remaining and overdue, and what most needs follow-up.']],
       ['handbook', ['هل يغطي المشروع متطلبات الدليل؟', 'Does the project cover the handbook requirements?']]
     ];
+    const factsBlock = (pid) => {
+      const p = project(pid); if (!p) return '';
+      const live = p.tasks.filter((t) => t.status !== 'CANCELLED');
+      const done = live.filter((t) => t.status === 'COMPLETED');
+      const late = overdueTasks(p);
+      const left = live.filter((t) => t.status !== 'COMPLETED' && !late.includes(t));
+      const current = p.stages.find((x) => x.status === 'IN_PROGRESS') || p.stages.find((x) => x.status !== 'COMPLETED' && x.status !== 'CANCELLED');
+      const names = (arr) => arr.slice(0, 6).map((t) => `<li>${esc(L(t.title))}${t.due ? ` <small>(${fmtShort(t.due)})</small>` : ''}</li>`).join('') + (arr.length > 6 ? `<li>${T(`و${arr.length - 6} غيرها`, `and ${arr.length - 6} more`)}</li>` : '');
+      const team = [p.leader, ...p.members].filter(Boolean).map((k, i) => `${esc(person(k))}${i === 0 ? ` (${T('قائد الفريق', 'Team Leader')})` : ''}`).join('، ');
+      return `<div class="sv-ai-facts"><p><b>${T('بيانات المشروع', 'Project facts')}</b></p><ul>
+        <li><b>${T('نسبة الإنجاز', 'Completion')}:</b> ${p.progress}%</li>
+        <li><b>${T('المرحلة الحالية', 'Current stage')}:</b> ${esc(current ? L(current.milestone) : T('لا توجد مرحلة جارية', 'No stage in progress'))}</li>
+        <li><b>${T('أعضاء الفريق', 'Team members')}:</b> ${team || '—'}</li></ul>
+        <p><b>${T('المهام المكتملة', 'Completed tasks')} (${done.length})</b></p>${done.length ? `<ul>${names(done)}</ul>` : `<p class="sv-muted">${T('لا توجد.', 'None.')}</p>`}
+        <p><b>${T('المهام المتبقية', 'Remaining tasks')} (${left.length})</b></p>${left.length ? `<ul>${names(left)}</ul>` : `<p class="sv-muted">${T('لا توجد.', 'None.')}</p>`}
+        <p><b>${T('المهام المتأخرة', 'Overdue tasks')} (${late.length})</b></p>${late.length ? `<ul>${names(late)}</ul>` : `<p class="sv-muted">${T('لا توجد.', 'None.')}</p>`}</div>`;
+    };
     // No task-suggestion prompt: supervisors follow the project; creating and assigning tasks
     // belongs to the team (the backend also refuses TASK_BREAKDOWN for supervisors).
     qs('#svAiPrompts').innerHTML = PROMPTS.map(([k, t]) => `<button class="sv-chip" data-ai="${k}" type="button">${esc(L(t))}</button>`).join('');
@@ -832,32 +906,33 @@
       const g = r.guidance || {};
       const list = (arr, fn) => (arr && arr.length ? `<ul>${arr.map((x) => `<li>${fn(x)}</li>`).join('')}</ul>` : '');
       let html = '';
+      // a summary only: the answer (and its short summary); no recommendations or meeting points
       if (g.answer) html += `<p>${esc(g.answer)}</p>`;
       if (g.summary && g.summary !== g.answer) html += `<p>${esc(g.summary)}</p>`;
-      if ((g.recommendations || []).length) html += `<p><b>${T('توصيات', 'Recommendations')}</b></p>` + list(g.recommendations, (x) => `<b>${esc(x.title)}</b>${x.detail ? ` — ${esc(x.detail)}` : ''}`);
-      if ((g.nextSteps || []).length) html += `<p><b>${T('خطوات مقترحة للنقاش مع الفريق', 'Points to discuss with the team')}</b></p>` + list(g.nextSteps, (x) => esc(x));
-      if ((g.risks || []).length) html += `<p><b>${T('مخاطر محتملة', 'Possible risks')}</b></p>` + list(g.risks, (x) => esc(x));
       if ((g.handbookReferences || []).length) html += `<p><b>${T('من دليل المشروع', 'From the project handbook')}</b></p>` + list(g.handbookReferences, (x) => `${x.page ? `${T('صفحة', 'Page')} ${esc(x.page)}: ` : ''}<span class="hb-quote">${esc(x.quote)}</span>`);
       if (!html) html = `<p>${T('لم يُرجع المساعد إجابة يمكن عرضها. أعد صياغة السؤال.', 'The assistant returned no answer that can be shown. Rephrase the question.')}</p>`;
       return html + `<p class="sv-muted"><small>${T('إجابة إرشادية من الذكاء الاصطناعي، لا تغيّر أي بيانات ولا تُعد تقييمًا. تحقّق من القرارات المهمة مع الدليل.', 'AI guidance only: it changes no data and is not an evaluation. Check important decisions against the handbook.')}</small></p>`;
     };
     let busy = false;
-    const ask = async (text) => {
+    const ask = async (text, question, withFacts) => {
       if (busy) return; busy = true;
       say('me', `<p>${esc(text)}</p>`);
       const typing = document.createElement('div'); typing.className = 'sv-msg sv-msg--ai sv-msg--typing'; typing.innerHTML = '<span></span><span></span><span></span>'; thread.append(typing); thread.scrollTop = thread.scrollHeight;
       const send = qs('#svAiForm [type="submit"]'); if (send) send.disabled = true;
       try {
-        const r = await Api.post('/ai-support/requests', { projectId: sel.value, kind: 'PROJECT_QUESTION', question: text, language: lang }, { timeout: Api.aiTimeout || 100000 });
+        const r = await Api.post('/ai-support/requests', { projectId: sel.value, kind: 'PROJECT_QUESTION', question: question || text, language: lang }, { timeout: Api.aiTimeout || 100000 });
         typing.remove();
         if (r.status && r.status !== 'COMPLETED') say('ai', `<p class="sv-late">${esc(Api.message({ code: r.errorCode || 'AI_PROVIDER_UNAVAILABLE' }))}</p>`);
-        else say('ai', render(r));
+        else say('ai', render(r).replace('<p class="sv-muted"><small>', `${withFacts ? factsBlock(sel.value) : ''}<p class="sv-muted"><small>`));
       } catch (e) {
         typing.remove(); say('ai', `<p class="sv-late">${esc(Api.message(e))}</p>`);
       } finally { busy = false; if (send) send.disabled = false; }
     };
-    const greet = () => { thread.innerHTML = ''; say('ai', `<p>${T(`يقدّم المساعد إجابات مستندة إلى بيانات مشروع "${esc(L(project(sel.value).name))}"، ومنها الأهداف والمراحل والمهام والمواعيد وبيانات الملفات والملاحظات السابقة ودليل المشروع. اختر أحد الأسئلة المقترحة أو اكتب سؤالك.`, `The assistant answers from the records of "${esc(L(project(sel.value).name))}", including its objectives, stages, tasks, dates, file details, previous feedback and the project handbook. Choose a suggested question or type your own.`)}</p>`); };
-    qsa('[data-ai]').forEach((b) => b.addEventListener('click', () => ask(b.textContent)));
+    const greet = () => { thread.innerHTML = ''; say('ai', `<p>${T(`يلخّص لك المساعد مشروع "${esc(L(project(sel.value).name))}": فكرته، وأين وصل الفريق، والمهام المكتملة والمتبقية والمتأخرة، ونسبة الإنجاز، وأعضاء الفريق. اختر أحد الأسئلة المقترحة أو اكتب سؤالك.`, `The assistant summarises "${esc(L(project(sel.value).name))}" for you: its idea, where the team is, the completed, remaining and overdue tasks, the completion and the team members. Choose a suggested question or type your own.`)}</p>`); };
+    qsa('[data-ai]').forEach((b) => b.addEventListener('click', () => {
+      const pr = PROMPTS.find(([k]) => k === b.dataset.ai);
+      ask(b.textContent, pr && pr[2] ? L(pr[2]) : '', b.dataset.ai !== 'handbook');
+    }));
     sel.addEventListener('change', greet);
     qs('#svAiForm').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -901,6 +976,21 @@
     ME.id = u.id; ME.name = UI.personName(u); remember(u);
     renderShell();
     if (page === 'settings') { renderSettings(); }
+    // a saved copy (from another supervisor page in this tab) shows at once; the data is then
+    // refreshed in the background and the page redrawn when nothing is open on it
+    if (page !== 'settings' && readCopy()) {
+      renderShell(); (PAGES[page] || (() => {}))();
+      const before = JSON.stringify(db);
+      background = true;
+      try { await load(); } catch (e) { background = false; return; }
+      background = false;
+      if (JSON.stringify(db) === before) return;
+      renderShell();
+      // the dashboard is redrawn with the fresh data; other pages use it from the next visit or action
+      const busy = [...document.querySelectorAll('#svDrawer, .meeting-modal')].some((n) => !n.hidden);
+      if (page === 'dashboard' && !busy) renderDashboard();
+      return;
+    }
     // the page-wide loading screen (session.js) covers this first load: no second loader
     try { await load(); } catch (e) {
       const host = qs('main') || document.body;

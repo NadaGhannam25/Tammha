@@ -2,7 +2,7 @@
    Built on the student design system in style.css (same sidebar, topbar, banners, tabs, cards,
    tables, drawer and modals). This file only adds what the supervisor role needs, plus the
    left-to-right mirror for the English interface. */
-.sv-page { --sv-blue: #98cbdc; --sv-blue-dark: #82bfd3; --sv-on: #393939; --sv-icon: #ffffff; --sv-accent: #393939; --sv-blue-text: #393939; --sv-tint: #eaf5f9; --sv-tint-soft: #f4fafc; --sv-tint-line: #cfe6ee; --sv-tint-strong: #98cbdc; --sv-ink: #393939; --sv-text: #393939; --sv-muted: #8a9ba5; --sv-line: #e6edf0; --sv-soft: #f7fafb; --sv-late: #c0392b; }
+.sv-page { --sv-blue: #7fb6ca; --sv-blue-dark: #6aa8be; --sv-on: #393939; --sv-icon: #ffffff; --sv-accent: #393939; --sv-blue-text: #393939; --sv-tint: #eaf5f9; --sv-tint-soft: #f4fafc; --sv-tint-line: #cfe6ee; --sv-tint-strong: #7fb6ca; --sv-ink: #393939; --sv-text: #393939; --sv-muted: #8a9ba5; --sv-line: #e6edf0; --sv-soft: #f7fafb; --sv-late: #c0392b; }
 .sv-main { padding-bottom: 0; }
 .sv-main > section, .sv-main > div, .sv-main > p { max-width: 1520px; margin-inline: auto; }
 
@@ -343,22 +343,22 @@
 [dir="ltr"] .datepicker { direction: ltr; }
 [dir="ltr"] .sv-page .date-field__input { padding: 0 12px 0 36px !important; text-align: left; }
 
-/* ===== Supervisor identity color (#98CBDC) =====
-   Same components as the student pages. The supervisor side uses #98CBDC for the sidebar, banners,
+/* ===== Supervisor identity color (#7fb6ca) =====
+   Same components as the student pages. The supervisor side uses #7fb6ca for the sidebar, banners,
    active states, selected controls and primary actions. Because it is a light color, text and icons
    placed on it are dark navy (--sv-on), and colored text on white uses a deeper shade (--sv-accent). */
 .sv-page .sidebar { background: var(--sv-blue); color: var(--sv-on); box-shadow: -8px 0 30px rgba(57,57,57,.08); }
 [dir="ltr"] .sv-page .sidebar { box-shadow: 8px 0 30px rgba(57,57,57,.08); }
 .sv-page .nav-item { color: var(--sv-on); }
 .sv-page .nav-item__icon-wrap--svg { color: var(--sv-icon); }
-.sv-page .nav-item.is-active { background: linear-gradient(to left, #fff 0 5px, #82bfd3 5px 100%) !important; color: var(--sv-on); font-weight: 800; }
-[dir="ltr"] .sv-page .nav-item.is-active { background: linear-gradient(to right, #fff 0 5px, #82bfd3 5px 100%) !important; }
+.sv-page .nav-item.is-active { background: linear-gradient(to left, #fff 0 5px, #6aa8be 5px 100%) !important; color: var(--sv-on); font-weight: 800; }
+[dir="ltr"] .sv-page .nav-item.is-active { background: linear-gradient(to right, #fff 0 5px, #6aa8be 5px 100%) !important; }
 .sv-page .nav-item:hover:not(.is-active) { background: rgba(255,255,255,.18); }
 .sv-page .sv-nav-badge { background: #fff; color: var(--sv-on); }
-.sv-page .projects-hero { background: linear-gradient(0deg, #98cbdc 0%, #b4d9e6 55%, #d6ebf2 100%); }
+.sv-page .projects-hero { background: linear-gradient(0deg, #7fb6ca 0%, #a3cddc 55%, #d6ebf2 100%); }
 .sv-page .projects-hero__content, .sv-page .projects-hero__content h1 { color: var(--sv-on); }
 .sv-page .projects-hero__content p { color: var(--sv-on); }
-.sv-page .project-detail-hero { background: linear-gradient(180deg, #d6ebf2 0%, #b4d9e6 50%, #98cbdc 100%); }
+.sv-page .project-detail-hero { background: linear-gradient(180deg, #d6ebf2 0%, #a3cddc 50%, #7fb6ca 100%); }
 .sv-page .project-detail-hero__content, .sv-page .project-detail-hero__content h1 { color: var(--sv-on); }
 .sv-page .project-detail-hero__content p { color: var(--sv-on); }
 .sv-page .sv-back { color: var(--sv-on); }
@@ -366,7 +366,7 @@
 .sv-page .sv-project-hero__progress { color: var(--sv-on); }
 .sv-page .sv-project-hero__progress .project-progress__track { background: rgba(255,255,255,.6); }
 .sv-page .sv-project-hero__progress .project-progress__track > span { background: var(--sv-on); }
-.sv-page .project-identity__logo { background: linear-gradient(125deg, #5fa9c2 0%, #98cbdc 60%, #d6ebf2 100%); }
+.sv-page .project-identity__logo { background: linear-gradient(125deg, #5fa9c2 0%, #7fb6ca 60%, #d6ebf2 100%); }
 .sv-page .project-progress__track > span:not(.is-completed) { background: var(--sv-blue); }
 .sv-page .link-button, .sv-page .project-card-action { color: var(--sv-accent); }
 .sv-page .link-button:hover { color: var(--sv-on); }
@@ -405,7 +405,7 @@
 .sv-page .sv-project-hero__progress .project-progress__track > span:not(.is-completed) { background: var(--sv-on); }
 
 /* ===== Supervisor text and icon colors =====
-   Main text (headings, labels, body text, navigation) is #393939; icons on #98CBDC surfaces are white. */
+   Main text (headings, labels, body text, navigation) is #393939; icons on #7fb6ca surfaces are white. */
 .sv-page { color: var(--sv-on); }
 .sv-page :is(main, .task-drawer, .meeting-modal, .sv-confirm) :is(h1, h2, h3, h4, label, legend, dt, dd, th, p, li, strong, b, em) { color: var(--sv-on); }
 .sv-page .profile__text strong, .sv-page .section-heading h2, .sv-page .project-identity__text h2,
@@ -434,7 +434,7 @@
 .sv-page .sv-project-hero__progress .project-progress__track { background: rgba(57,57,57,.12); }
 .sv-page .sv-project-hero__progress .project-progress__track > span:not(.is-completed) { background: #fff; }
 
-/* ===== Supervisor sidebar: white icons and white Arabic labels on #98CBDC ===== */
+/* ===== Supervisor sidebar: white icons and white Arabic labels on #7fb6ca ===== */
 .sv-page .sidebar, .sv-page .sidebar .nav-item, .sv-page .sidebar .nav-item__label { color: #fff; }
 .sv-page .sidebar .nav-item__icon-wrap--svg { color: #fff; }
 .sv-page .sidebar .nav-item__icon { filter: none; }
@@ -444,7 +444,7 @@
 .sv-page .sidebar .sv-nav-badge { background: #fff; color: #3f8aa5; }
 
 /* ===== Supervisor Meetings page: the student meetings structure in supervisor colors ===== */
-.sv-page .sv-meetings-hero { background: linear-gradient(0deg, #98cbdc 0%, #b4d9e6 50%, #d6ebf2 100%); }
+.sv-page .sv-meetings-hero { background: linear-gradient(0deg, #7fb6ca 0%, #a3cddc 50%, #d6ebf2 100%); }
 .sv-page .sv-meetings-hero .meetings-hero__content h1, .sv-page .sv-meetings-hero .meetings-hero__content p { color: var(--sv-on); }
 .sv-page .sv-meetings-hero .meetings-hero__mark { opacity: .55; }
 .sv-page .meeting-filter { color: #6f7a80; }
@@ -493,39 +493,39 @@
 [dir="ltr"] .sv-page .meetings-hero__mark { left: auto; right: 7%; }
 
 /* ===== Supervisor in the meeting flow (prejoin + room, opened with ?from=supervisor) =====
-   Same controls and behavior as the student meeting; active controls use #98CBDC with white icons,
+   Same controls and behavior as the student meeting; active controls use #7fb6ca with white icons,
    inactive or off controls are neutral gray. */
-.sv-meeting .prejoin-v43-toggle.is-on .prejoin-v43-switch { background: #98cbdc; }
-.sv-meeting .prejoin-v43-toggle.is-on .prejoin-v43-toggle-icon { background: #98cbdc; color: #fff; }
+.sv-meeting .prejoin-v43-toggle.is-on .prejoin-v43-switch { background: #7fb6ca; }
+.sv-meeting .prejoin-v43-toggle.is-on .prejoin-v43-toggle-icon { background: #7fb6ca; color: #fff; }
 .sv-meeting .prejoin-v43-toggle:not(.is-on) .prejoin-v43-toggle-icon { background: #f1f3f4; color: #8a9399; }
-.sv-meeting .prejoin-v43-join { background: #98cbdc; color: #393939; }
-.sv-meeting .prejoin-v43-join:hover { background: #82bfd3; }
-.sv-meeting .prejoin-v43-avatar, .sv-meeting .meeting-tile-avatar:not(.meeting-tile-avatar--soft) { background: #98cbdc; color: #fff; }
+.sv-meeting .prejoin-v43-join { background: #7fb6ca; color: #393939; }
+.sv-meeting .prejoin-v43-join:hover { background: #6aa8be; }
+.sv-meeting .prejoin-v43-avatar, .sv-meeting .meeting-tile-avatar:not(.meeting-tile-avatar--soft) { background: #7fb6ca; color: #fff; }
 .sv-meeting .meeting-tile-avatar--soft { background: #eaf5f9; color: #393939; }
 .sv-meeting .prejoin-v43-back svg { stroke: #5fa9c2; }
 .sv-meeting .prejoin-v43-title h1, .sv-meeting .prejoin-v43-panel h2, .sv-meeting .prejoin-v43-meeting strong, .sv-meeting .prejoin-v43-toggle-copy b,
 .sv-meeting .meeting-room-v42-title h1, .sv-meeting .meeting-tile span, .sv-meeting .room-side__head h2, .sv-meeting .room-people b, .sv-meeting .room-chat__message b { color: #393939; }
 .sv-meeting .meeting-room-v42-title span { display: inline-flex; align-items: center; gap: 5px; color: #5f6a70; }
-.sv-meeting .meeting-room-v42-title span::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #98cbdc; }
+.sv-meeting .meeting-room-v42-title span::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #7fb6ca; }
 .sv-meeting .meeting-tool { background: #f1f3f4; color: #5f6a70; }
 .sv-meeting .meeting-tool:hover { background: #e8ebed; }
 .sv-meeting .meeting-tool[data-device]:not(.is-on) { background: #f1f3f4; color: #9aa2a7; }
-.sv-meeting .meeting-tool.is-on, .sv-meeting .meeting-tool.is-on:not([data-device]) { background: #98cbdc; color: #393939; }
+.sv-meeting .meeting-tool.is-on, .sv-meeting .meeting-tool.is-on:not([data-device]) { background: #7fb6ca; color: #393939; }
 .sv-meeting .meeting-tool.is-on svg { stroke: #fff; }
-.sv-meeting .meeting-tool.is-on:hover { background: #82bfd3; }
+.sv-meeting .meeting-tool.is-on:hover { background: #6aa8be; }
 .sv-meeting .meeting-tool.is-on small { color: #393939; }
 .sv-meeting .meeting-tool--exit, .sv-meeting .meeting-tool--exit:hover { background: #dc4b52; color: #fff; }
 .sv-meeting .meeting-tool--exit:hover { background: #c63c43; }
-.sv-meeting .room-chat__input button { background: #98cbdc; color: #393939; }
-.sv-meeting .room-chat__input button:hover { background: #82bfd3; }
+.sv-meeting .room-chat__input button { background: #7fb6ca; color: #393939; }
+.sv-meeting .room-chat__input button:hover { background: #6aa8be; }
 .sv-meeting .room-chat__message--mine p { background: #eaf5f9; }
 .sv-meeting .room-people__avatar { background: #eaf5f9; color: #393939; }
-.sv-meeting .room-people [data-person="me"] .room-people__avatar { background: #98cbdc; color: #fff; }
+.sv-meeting .room-people [data-person="me"] .room-people__avatar { background: #7fb6ca; color: #fff; }
 .sv-meeting .room-people__state[data-state="speaking"] { color: #3f8aa5; }
-.sv-meeting .room-people__state[data-state="speaking"] svg { stroke: #98cbdc; }
+.sv-meeting .room-people__state[data-state="speaking"] svg { stroke: #7fb6ca; }
 .sv-meeting .room-people__state[data-state="muted"] { color: #9aa2a7; }
 
-/* ===== Small text on #98CBDC: soft off-white #F8F5EE (icons stay pure white) ===== */
+/* ===== Small text on #7fb6ca: soft off-white #F8F5EE (icons stay pure white) ===== */
 .sv-page, .sv-meeting { --sv-label: #f8f5ee; }
 .sv-page .sidebar, .sv-page .sidebar .nav-item, .sv-page .sidebar .nav-item__label, .sv-page .sidebar .nav-item.is-active { color: var(--sv-label); }
 .sv-page .sv-btn:not(.sv-btn--ghost):not(.sv-btn--text):not(.sv-btn--approve), .sv-page .sv-btn:not(.sv-btn--ghost):not(.sv-btn--text):not(.sv-btn--approve):hover,
@@ -540,10 +540,10 @@
 .sv-page .add-meeting-button span, .sv-page .sv-btn:not(.sv-btn--ghost):not(.sv-btn--text) svg, .sv-meeting .meeting-tool.is-on svg { color: #fff; stroke: #fff; }
 
 /* ===== Supervisor top banners: one shared style =====
-   Soft gradient from #98CBDC to a lighter tint, rounded like the student banners, white title and subtitle,
+   Soft gradient from #7fb6ca to a lighter tint, rounded like the student banners, white title and subtitle,
    decorative mark kept pale. Used by the compact page banners, the project header, the meetings hero
    and the settings header. */
-.sv-page { --sv-banner: linear-gradient(0deg, #98cbdc 0%, #acd5e3 52%, #c9e4ee 100%); --sv-banner-text-shadow: 0 1px 2px rgba(40, 90, 110, .14); }
+.sv-page { --sv-banner: linear-gradient(0deg, #7fb6ca 0%, #acd5e3 52%, #c9e4ee 100%); --sv-banner-text-shadow: 0 1px 2px rgba(40, 90, 110, .14); }
 .sv-page .projects-hero, .sv-page .sv-meetings-hero, .sv-page .project-detail-hero, .sv-page .settings-v43-head { background: var(--sv-banner); }
 .sv-page .projects-hero, .sv-page .sv-meetings-hero, .sv-page .settings-v43-head { border-radius: 20px; }
 .sv-page .projects-hero__content, .sv-page .projects-hero__content h1, .sv-page .projects-hero__content p,
