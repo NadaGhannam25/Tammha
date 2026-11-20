@@ -89,6 +89,8 @@
   // To use your own video, save it as assets/landing/hero.mp4 — it is tried first.
   const HERO_SOURCES = [
     'assets/landing/hero.mp4',
+    'https://videos.pexels.com/video-files/7149052/7149052-uhd_2560_1440_25fps.mp4', // Team discussing documents in a meeting (hands)
+    'https://videos.pexels.com/video-files/7149052/7149052-hd_1920_1080_25fps.mp4',
     'https://videos.pexels.com/video-files/30614422/13109705_1920_1080_25fps.mp4', // College students collaborative study session
     'https://videos.pexels.com/video-files/8198508/8198508-hd_1920_1080_25fps.mp4',  // College students studying together
     'https://videos.pexels.com/video-files/8639119/8639119-hd_1920_1080_25fps.mp4'   // Students studying together

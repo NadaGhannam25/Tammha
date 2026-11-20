@@ -79,7 +79,7 @@
   const blockedDialog = (err) => openDialog({ image: 'assets/account-warning.png', tone: 'danger', title: T('تعذّر حذف الحساب', 'The account cannot be deleted'), body: blockedText(err), actions: `<button class="tm-dialog__btn tm-dialog__btn--primary" type="button" data-close>${esc(T('حسنًا', 'OK'))}</button>` });
   function askCode(info) {
     const d = openDialog({
-      tone: 'danger', title: T('أدخل رمز التأكيد', 'Enter the confirmation code'),
+      image: 'assets/account-code.png', tone: 'danger', title: T('أدخل رمز التأكيد', 'Enter the confirmation code'),
       body: `<p>${esc(T('أرسلنا رمزًا من 6 أرقام إلى بريدك الإلكتروني:', 'We sent a 6-digit code to your email:'))}</p><p class="tm-dialog__email" dir="ltr">${esc(info.email)}</p>
         <label class="tm-dialog__code"><span class="visually-hidden">${esc(T('رمز التأكيد', 'Confirmation code'))}</span><input id="tmDeleteCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" dir="ltr" placeholder="••••••"></label>
         <p class="tm-dialog__error" id="tmDeleteError" role="alert"></p><p class="tm-dialog__muted">${esc(T('الرمز صالح لمدة 15 دقيقة.', 'The code is valid for 15 minutes.'))}</p>`,
@@ -101,7 +101,7 @@
         Api.clearSession();
         openDialog({
           locked: true, image: 'assets/account-goodbye.png', title: T('تم حذف حسابك', 'Your account has been deleted'),
-          body: `<p>${esc(T('شكرًا لأنك كنت جزءًا من تمّمها. حذفنا حسابك وبياناتك الشخصية كما طلبت، وأرسلنا لك رسالة تأكيد على بريدك.', 'Thank you for being part of Tammha. Your account and personal data have been deleted as you asked, and a confirmation was sent to your email.'))}</p><p>${esc(T('نتمنى لك كل التوفيق في مشروعك ومسيرتك، وبابنا مفتوح لك متى ما رجعت.', 'We wish you every success with your project and your studies. You are always welcome back.'))}</p>`,
+          body: `<p>${esc(T('شكرًا لأنك كنت جزءًا من تمّمها. تم حذف حسابك وبياناتك الشخصية.', 'Thank you for being part of Tammha. Your account and personal data have been deleted.'))}</p><p>${esc(T('فريق تممها يتمنى لك كل التوفيق في مشروعك ومسيرتك.', 'The Tammha team wishes you every success in your project and your journey.'))}</p>`,
           actions: `<a class="tm-dialog__btn tm-dialog__btn--primary" href="index.html">${esc(T('العودة إلى الصفحة الرئيسية', 'Back to the home page'))}</a>`,
         });
       });

@@ -309,7 +309,8 @@
       [projects, universities] = await Promise.all([S.projects(), Api.get('/handbooks/universities')]);
       fillUniversities();
       if (!projects.length) {
-        UI.state($('hbSelectedBody'), 'empty', { title: T('لا توجد مشاريع بعد', 'No projects yet'), text: T('يُعتمد دليل المشروع بعد إنشاء مشروع أو الانضمام إليه.', 'A handbook is set once you create or join a project.'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } });
+        // no project yet: the handbook box is not shown at all
+        $('hbSelected').hidden = true;
         $('hbProject').disabled = true; return;
       }
       $('hbProject').innerHTML = projects.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');

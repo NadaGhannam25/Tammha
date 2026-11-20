@@ -240,13 +240,13 @@ export class AccountEmailService implements OnApplicationShutdown {
     const copy =
       language === 'ar'
         ? {
-            subject: `تمّمها | رمز التحقق: ${code}`,
+            subject: 'تمّمها | رمز التحقق',
             body: 'استخدم الرمز التالي لتأكيد بريدك الإلكتروني في تمّمها:',
             codeNote:
               'الرمز صالح لمدة 10 دقائق ويُستخدم مرة واحدة.\nإذا لم تطلب هذا الرمز، تجاهل هذه الرسالة.',
           }
         : {
-            subject: `Tammha | Your verification code: ${code}`,
+            subject: 'Tammha | Verification code',
             body: 'Use this code to verify your e-mail address on Tammha:',
             codeNote:
               'The code is valid for 10 minutes and can be used once.\nIf you did not request it, ignore this e-mail.',

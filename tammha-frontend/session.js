@@ -257,79 +257,75 @@
   }
 
   // ---------- onboarding (students, first sign-in) ----------
-  // Three short pages, once per account: welcome → college and major (PATCH /users/me) →
-  // a quick tour. Finishing (or "Later") calls POST /users/me/onboarding/complete.
-  // College and major can be changed later in Settings.
+  // A short guided tour, once per account: the page is dimmed and each sidebar section is lit in
+  // turn, with a card that says what it is for. "Finish" or "End the tour" calls
+  // POST /users/me/onboarding/complete. College and major are added from Settings.
+  // college and major fields (used by Settings)
   function collegeMajorFields(prefix, u) {
     return `<label class="onb-field"><span>${esc(T('الكلية', 'College'))}</span><input id="${prefix}College" maxlength="160" autocomplete="off" placeholder="${esc(T('مثال: كلية الهندسة وعلوم الحاسب', 'e.g. College of Engineering and Computer Science'))}" value="${esc(u.college || '')}"></label>
       <label class="onb-field"><span>${esc(T('التخصص', 'Major'))}</span><input id="${prefix}Major" maxlength="160" autocomplete="off" placeholder="${esc(T('مثال: الذكاء الاصطناعي', 'e.g. Artificial Intelligence'))}" value="${esc(u.major || '')}"></label>`;
   }
   function onboarding(u) {
     if (u.role !== 'STUDENT' || u.onboardingCompleted) return;
-    if (document.getElementById('onbDialog')) return;
-    const ICON = {
-      projects: '<path d="M4 7h16v12H4zM8 7V5h8v2"></path>', tasks: '<path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"></path>',
-      meetings: '<rect x="3" y="6" width="13" height="12" rx="3"></rect><path d="m16 10 5-3v10l-5-3"></path>', handbook: '<path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Z"></path><path d="M5 17a3 3 0 0 1 3-3h10"></path>',
+    if (document.getElementById('onbTour')) return;
+    const STEPS = [
+      ['home', T('الرئيسية', 'Home'), T('لوحة التحكم: ملخص مشاريعك واجتماعاتك القادمة، وتقويم المهام والمواعيد.', 'Your dashboard: your projects, upcoming meetings and a calendar of tasks and dates.')],
+      ['projects', T('المشاريع', 'Projects'), T('من هنا تنشئ مشروعك بصفتك قائد الفريق، أو تنضم إلى مشروع زميلك برمز الدعوة. لكل مشروع مراحله ومهامه وملفاته.', 'Create your project as Team Leader, or join a classmate’s project with an invitation code. Each project has its own stages, tasks and files.')],
+      ['tasks', T('المهام', 'Tasks'), T('وزّع المهام على أعضاء الفريق، وتابع حالتها ومواعيد تسليمها.', 'Share the tasks among the team and follow their status and due dates.')],
+      ['meetings', T('الاجتماعات', 'Meetings'), T('اجتمع مع فريقك ومشرفك، واحفظ ملاحظاتك بعد كل اجتماع.', 'Meet your team and supervisor, and keep your notes after each meeting.')],
+      ['files', T('الملفات', 'Files'), T('ارفع ملفات المشروع ليراجعها المشرف ويعتمدها أو يطلب تعديلها.', 'Upload the project files for your supervisor to review, approve or ask for changes.')],
+      ['guide', T('دليل المشروع', 'Project handbook'), T('اعتمد دليل جامعتك أو ارفع دليلًا خاصًا، واستفد من المساعد الذكي في تلخيصه.', 'Use your university handbook or upload your own, and let the assistant summarise it.')],
+    ].filter(([k]) => document.querySelector(`.sidebar .nav-item[data-page="${k}"]`));
+    if (!STEPS.length) return;
+    const root = document.createElement('div');
+    root.id = 'onbTour'; root.className = 'onb-tour';
+    root.innerHTML = `<div class="onb-tour__spot" aria-hidden="true"></div>
+      <div class="onb-tour__hello"><img src="assets/tammha-blue-logo.png" alt=""><div><b>${esc(u.firstName ? T(`أهلًا ${u.firstName} في تمّمها`, `Welcome to Tammha, ${u.firstName}`) : T('أهلًا بك في تمّمها', 'Welcome to Tammha'))}</b><span>${esc(T('نعرّفك على أهم الأقسام في أقل من دقيقة.', 'A one-minute look at the main sections.'))}</span></div></div>
+      <div class="onb-tour__tip" role="dialog" aria-modal="true" aria-labelledby="onbTourTitle">
+        <div class="onb-tour__head"><span id="onbTourCount"></span><ol class="onb-tour__dots" aria-hidden="true">${STEPS.map(() => '<li></li>').join('')}</ol></div>
+        <h2 id="onbTourTitle"></h2><p id="onbTourText"></p>
+        <div class="onb-tour__actions"><button class="onb-tour__end" type="button" data-onb-done>${esc(T('إنهاء الجولة', 'End the tour'))}</button>
+          <div><button class="onb-tour__btn" type="button" data-onb-prev>${esc(T('السابق', 'Back'))}</button><button class="onb-tour__btn onb-tour__btn--primary" type="button" data-onb-next></button></div></div>
+      </div>`;
+    document.body.append(root); document.body.classList.add('has-onb-tour');
+    const spot = root.querySelector('.onb-tour__spot'); const tip = root.querySelector('.onb-tour__tip');
+    let i = 0;
+    const place = () => {
+      const target = document.querySelector(`.sidebar .nav-item[data-page="${STEPS[i][0]}"]`);
+      const r = target.getBoundingClientRect(); const pad = 4;
+      Object.assign(spot.style, { top: `${r.top - pad}px`, left: `${r.left - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` });
+      const rtl = document.documentElement.dir !== 'ltr';
+      const room = rtl ? r.left - 24 : window.innerWidth - r.right - 24;
+      const w = Math.min(360, Math.max(240, room));
+      tip.style.width = `${w}px`;
+      tip.style.left = `${rtl ? Math.max(8, r.left - 18 - w) : r.right + 18}px`;
+      const top = Math.min(Math.max(12, r.top + r.height / 2 - 60), window.innerHeight - tip.offsetHeight - 12);
+      tip.style.top = `${top}px`;
+      tip.style.setProperty('--arrow-top', `${Math.min(Math.max(18, r.top + r.height / 2 - top - 10), tip.offsetHeight - 30)}px`);
     };
-    const item = (k, t, d) => `<li><span class="onb__tour-icon"><svg aria-hidden="true" viewBox="0 0 24 24">${ICON[k]}</svg></span><div><b>${esc(t)}</b><small>${esc(d)}</small></div></li>`;
-    const TABS = [T('الكلية والتخصص', 'College & major'), T('المشروع والمهام', 'Project & tasks'), T('الاجتماعات والدليل', 'Meetings & handbook')];
-    const later = `<button class="app-btn app-btn--ghost" type="button" data-onb-done>${esc(T('لاحقًا', 'Later'))}</button>`;
-    const dlg = document.createElement('div');
-    dlg.className = 'app-modal onb'; dlg.id = 'onbDialog';
-    dlg.innerHTML = `<div class="app-modal__dialog onb__dialog" role="dialog" aria-modal="true" aria-labelledby="onbWelcomeTitle">
-      <section class="onb__welcome" data-onb-step="0">
-        <img class="onb__logo" src="assets/tammha-mark.png" alt="">
-        <h2 id="onbWelcomeTitle">${u.firstName ? esc(T(`أهلًا ${u.firstName}، مرحبًا بك في تمّمها`, `Hi ${u.firstName}, welcome to Tammha`)) : esc(T('مرحبًا بك في تمّمها', 'Welcome to Tammha'))}</h2>
-        <p>${esc(T('مساحة واحدة لمشروع تخرجك: المراحل والمهام والملفات والاجتماعات ودليل المشروع، معك ومع فريقك ومشرفك.', 'One place for your graduation project: stages, tasks, files, meetings and the handbook, with your team and supervisor.'))}</p>
-        <div class="onb__actions">${later}<button class="app-btn app-btn--primary" type="button" data-onb-go="1">${esc(T('التالي', 'Next'))}</button></div>
-      </section>
-      <div class="onb__tabs-wrap" hidden>
-        <ol class="onb__dots" aria-label="${esc(T('خطوات التعريف', 'Introduction steps'))}">${TABS.map((t, i) => `<li data-onb-tab="${i + 1}" aria-label="${esc(t)}"></li>`).join('')}</ol>
-        <section class="onb__page" data-onb-step="1" hidden>
-          <h3>${esc(T('كليتك وتخصصك', 'Your college and major'))}</h3>
-          <p>${esc(T('تظهر في ملفك الشخصي، ويمكنك تعديلها لاحقًا من الإعدادات.', 'They appear on your profile; you can change them later in Settings.'))}</p>
-          <form class="onb__form" id="onbForm" novalidate>${collegeMajorFields('onb', u)}<p class="app-field-error" id="onbError" role="alert"></p>
-          <div class="onb__actions">${later}<button class="app-btn app-btn--primary" type="submit">${esc(T('التالي', 'Next'))}</button></div></form>
-        </section>
-        <section class="onb__page" data-onb-step="2" hidden>
-          <h3>${esc(T('مشروعك وفريقك', 'Your project and team'))}</h3>
-          <ul class="onb__tour">${item('projects', T('المشاريع', 'Projects'), T('أنشئ مشروعك بصفتك قائد الفريق، أو انضم إلى مشروع زميلك برمز الدعوة.', 'Create your project as Team Leader, or join a classmate’s project with an invitation code.'))}${item('tasks', T('المهام والمراحل', 'Tasks and stages'), T('وزّع المهام على أعضاء الفريق وتابع تقدّم كل مرحلة.', 'Share the tasks among the team and follow each stage.'))}</ul>
-          <div class="onb__actions">${later}<button class="app-btn app-btn--primary" type="button" data-onb-go="3">${esc(T('التالي', 'Next'))}</button></div>
-        </section>
-        <section class="onb__page" data-onb-step="3" hidden>
-          <h3>${esc(T('الاجتماعات والدليل', 'Meetings and the handbook'))}</h3>
-          <ul class="onb__tour">${item('meetings', T('الاجتماعات والملاحظات', 'Meetings and notes'), T('اجتمع مع الفريق والمشرف، واحفظ ملاحظاتك الخاصة بعد كل اجتماع.', 'Meet the team and the supervisor, and keep your own notes after each meeting.'))}${item('handbook', T('دليل المشروع', 'Project handbook'), T('اعتمد دليل جامعتك واستفد من المساعد الذكي في تلخيصه واستخراج المهام.', 'Use your university handbook and let the assistant summarise it and suggest tasks.'))}</ul>
-          <div class="onb__start"><a class="onb__start-btn onb__start-btn--primary" href="projects.html?new=1" data-onb-done>${esc(T('إنشاء مشروع', 'Create a project'))}</a><a class="onb__start-btn" href="join.html" data-onb-done>${esc(T('الانضمام برمز دعوة', 'Join with a code'))}</a></div>
-          <div class="onb__actions">${later}<button class="app-btn app-btn--primary" type="button" data-onb-done>${esc(T('إنهاء', 'Finish'))}</button></div>
-        </section>
-      </div></div>`;
-    document.body.append(dlg);
-    const go = (n) => {
-      dlg.querySelector('[data-onb-step="0"]').hidden = n !== 0;
-      dlg.querySelector('.onb__tabs-wrap').hidden = n === 0;
-      dlg.querySelectorAll('.onb__page').forEach((p) => { p.hidden = p.dataset.onbStep !== String(n); });
-      dlg.querySelectorAll('[data-onb-tab]').forEach((t) => { const k = +t.dataset.onbTab; t.classList.toggle('is-active', k === n); t.classList.toggle('is-done', k < n); if (k === n) t.setAttribute('aria-current', 'step'); else t.removeAttribute('aria-current'); });
-      const f = dlg.querySelector(`[data-onb-step="${n}"] input, [data-onb-step="${n}"] .app-btn--primary`); if (f) f.focus();
+    const show = (n) => {
+      i = n; const [, title, text] = STEPS[i];
+      root.querySelector('#onbTourCount').textContent = T(`جولة سريعة · ${i + 1} من ${STEPS.length}`, `Quick tour · ${i + 1} of ${STEPS.length}`);
+      root.querySelector('#onbTourTitle').textContent = title; root.querySelector('#onbTourText').textContent = text;
+      root.querySelectorAll('.onb-tour__dots li').forEach((d, k) => d.classList.toggle('is-on', k === i));
+      root.querySelector('[data-onb-prev]').hidden = i === 0;
+      root.querySelector('[data-onb-next]').textContent = i === STEPS.length - 1 ? T('إنهاء', 'Finish') : T('التالي', 'Next');
+      place(); root.querySelector('[data-onb-next]').focus({ preventScroll: true });
     };
-    dlg.querySelector('#onbForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const college = dlg.querySelector('#onbCollege').value.trim(); const major = dlg.querySelector('#onbMajor').value.trim();
-      const err = dlg.querySelector('#onbError'); err.textContent = '';
-      if (!college || !major) { err.textContent = T('اكتب الكلية والتخصص.', 'Enter your college and major.'); return; }
-      await busy(e.submitter || dlg.querySelector('#onbForm [type="submit"]'), async () => {
-        try { const nu = await Api.patch('/users/me', { college, major }); Object.assign(u, { college: nu.college, major: nu.major }); Api.saveUser(u); go(2); }
-        catch (er) { err.textContent = Api.message(er); }
-      });
-    });
-    dlg.addEventListener('click', async (e) => {
-      const next = e.target.closest('[data-onb-go]'); if (next) { go(+next.dataset.onbGo); return; }
-      const done = e.target.closest('[data-onb-done]'); if (!done) return;
-      e.preventDefault();
-      // once only: "Later" and "Finish" both close the onboarding for good
+    const finish = async () => {
+      window.removeEventListener('resize', place); document.removeEventListener('keydown', onKey);
+      root.remove(); document.body.classList.remove('has-onb-tour');
+      // once only: finishing or ending the tour closes it for good
       try { await Api.post('/users/me/onboarding/complete', {}); u.onboardingCompleted = true; Api.saveUser(u); } catch (err) { /* shown again next time */ }
-      dlg.remove();
-      if (done.tagName === 'A' && !location.href.endsWith(done.getAttribute('href'))) location.href = done.getAttribute('href');
+    };
+    const onKey = (e) => { if (e.key === 'Escape') finish(); };
+    root.addEventListener('click', (e) => {
+      if (e.target.closest('[data-onb-done]')) finish();
+      else if (e.target.closest('[data-onb-prev]')) show(Math.max(0, i - 1));
+      else if (e.target.closest('[data-onb-next]')) { if (i === STEPS.length - 1) finish(); else show(i + 1); }
     });
+    window.addEventListener('resize', place); document.addEventListener('keydown', onKey);
+    show(0);
   }
 
   // ---------- projects of the user ----------

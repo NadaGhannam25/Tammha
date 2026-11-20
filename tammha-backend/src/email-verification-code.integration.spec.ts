@@ -109,7 +109,9 @@ describe('E-mail verification by code (P17, AppModule integration)', () => {
     const msg = lastMailTo(email)!;
     const code = lastCode(email)!;
     expect(code).toMatch(/^\d{6}$/);
-    expect(msg.subject).toBe(`تمّمها | رمز التحقق: ${code}`);
+    // the code is only in the message body, never in the subject
+    expect(msg.subject).toBe('تمّمها | رمز التحقق');
+    expect(msg.subject).not.toContain(code);
     expect(msg.text).toContain(code);
     expect(msg.html).toContain(code);
     expect(msg.text).not.toMatch(/https?:/);

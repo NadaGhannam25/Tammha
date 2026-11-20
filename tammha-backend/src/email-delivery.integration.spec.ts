@@ -193,7 +193,7 @@ describe('E-mail delivery over SMTP (integration)', () => {
         // P17: codes come from noreply@ (same domain as EMAIL_FROM), no links at all
         from: 'Tammha <noreply@tammha.site>',
         to: email('leila'),
-        subject: `Tammha | Your verification code: ${code}`,
+        subject: 'Tammha | Verification code',
       });
       expect(mail.text).not.toContain('http');
       expect(mail.html).not.toMatch(/https?:/);

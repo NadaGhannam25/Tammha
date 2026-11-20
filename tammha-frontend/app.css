@@ -1027,3 +1027,30 @@ html[dir="rtl"] .sv-page .sv-ai__send svg{transform:scaleX(-1)}
 /* file review panel: view, download and "request changes" in white, no blue frame */
 .sv-page .sv-file-actions .sv-btn--ghost,.sv-page .sv-review-actions .sv-btn--ghost{background:#fff!important;border:1px solid #e6eaed!important;box-shadow:0 1px 4px rgba(30,50,60,.08)!important;color:#393939!important}
 .sv-page .sv-file-actions .sv-btn--ghost:hover,.sv-page .sv-review-actions .sv-btn--ghost:hover{background:#f7f9fa!important}
+/* ===== QA review 18 ===== */
+/* create a project: required fields carry a red asterisk */
+#projectWizard label:has(> input[required], > select[required], > textarea[required]) > span::after,
+#projectWizard .wz-field:has(input[required]) > label > strong::after,#projectWizard label[for="wizardTeamName"] > strong::after{content:" *";color:#c0392b;font-weight:700}
+/* ----- First sign-in: a guided tour of the sidebar (QA review 19) ----- */
+.onb-tour{position:fixed;inset:0;z-index:2000}
+body.has-onb-tour{overflow:hidden}
+.onb-tour__spot{position:fixed;border-radius:14px;box-shadow:0 0 0 4000px rgba(12,35,48,.62),0 0 0 3px #fff,0 0 0 8px rgba(39,167,212,.55);transition:top .25s ease,left .25s ease,width .25s ease,height .25s ease;pointer-events:none}
+.onb-tour__hello{position:fixed;top:24px;inset-inline-end:24px;display:flex;align-items:center;gap:14px;max-width:340px;padding:16px 20px;border-radius:18px;background:rgba(255,255,255,.97);box-shadow:0 10px 30px rgba(0,0,0,.15)}
+.onb-tour__hello img{width:58px;height:auto;flex:none}
+.onb-tour__hello b{display:block;font-size:16px;color:#173d57}
+.onb-tour__hello span{display:block;margin-top:2px;color:#6b7b85;font-size:13px}
+.onb-tour__tip{position:fixed;padding:20px 22px;border-radius:20px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.3);transition:top .25s ease,left .25s ease}
+.onb-tour__tip::after{content:"";position:absolute;top:var(--arrow-top,40px);inset-inline-start:-9px;width:20px;height:20px;background:#fff;transform:rotate(45deg);border-radius:3px}
+.onb-tour__head{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#1689b7;font-size:13px;font-weight:700}
+.onb-tour__dots{display:flex;gap:5px;margin:0;padding:0;list-style:none}
+.onb-tour__dots li{width:7px;height:7px;border-radius:9px;background:#d6e4ea;transition:width .2s}
+.onb-tour__dots li.is-on{width:20px;background:#1689b7}
+.onb-tour__tip h2{margin:8px 0 6px;font-size:21px;font-weight:800;color:#173d57}
+.onb-tour__tip p{margin:0;color:#5b6b75;font-size:14.5px;line-height:1.8}
+.onb-tour__actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:16px}
+.onb-tour__actions>div{display:flex;gap:8px}
+.onb-tour__end{border:0;background:none;color:#6b7b85;font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:8px 4px}
+.onb-tour__btn{border:0;border-radius:12px;padding:10px 18px;background:#fff;color:#1d2b33;font:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 1px 4px rgba(20,40,50,.12)}
+.onb-tour__btn--primary{background:#1689b7;color:#fff;box-shadow:none}
+.onb-tour__btn:focus-visible,.onb-tour__end:focus-visible{outline:2px solid #1689b7;outline-offset:2px}
+@media (max-width:760px){.onb-tour__hello{display:none}.onb-tour__tip{padding:16px}.onb-tour__tip h2{font-size:18px}.onb-tour__btn{padding:9px 13px}}
