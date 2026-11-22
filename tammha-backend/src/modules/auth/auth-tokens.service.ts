@@ -11,6 +11,7 @@ export const AUTH_TOKEN_TTL_MS: Record<AuthTokenType, number> = {
   UNIVERSITY_EMAIL_VERIFICATION: 24 * 60 * 60 * 1000, // 24 hours
   ACCOUNT_ACTIVATION: 7 * 24 * 60 * 60 * 1000, // 7 days (supervisor accounts)
   ACCOUNT_DELETION: 15 * 60 * 1000, // 15 minutes (6-digit code)
+  PROJECT_DELETION: 15 * 60 * 1000, // 15 minutes (6-digit code)
 };
 
 const hash = (raw: string) => createHash('sha256').update(raw).digest('hex');
@@ -140,6 +141,7 @@ export class AuthTokensService {
     ttlMs: number,
     db: Db = this.prisma,
     now = new Date(),
+    ref?: string,
   ): Promise<string> {
     await db.authToken.updateMany({
       where: { userId, type, usedAt: null, attempts: { not: null } },
@@ -154,6 +156,8 @@ export class AuthTokensService {
         expiresAt: new Date(now.getTime() + ttlMs),
         createdAt: now,
         attempts: 0,
+        // what the code is for (PROJECT_DELETION: the project id)
+        ...(ref ? { email: ref } : {}),
       },
     });
     return code;
@@ -169,12 +173,15 @@ export class AuthTokensService {
     type: AuthTokenType,
     code: string,
     now = new Date(),
+    ref?: string,
   ): Promise<CodeCheck> {
     const row = await this.prisma.authToken.findFirst({
       where: { userId, type, usedAt: null, attempts: { not: null } },
       orderBy: { createdAt: 'desc' },
     });
     if (!row || row.expiresAt <= now) return 'NO_CODE';
+    // a code issued for something else (another project) does not count here
+    if (ref !== undefined && row.email !== ref) return 'NO_CODE';
     if (row.tokenHash !== codeHash(type, userId, row.createdAt, code.trim())) {
       const attempts = (row.attempts ?? 0) + 1;
       await this.prisma.authToken.update({

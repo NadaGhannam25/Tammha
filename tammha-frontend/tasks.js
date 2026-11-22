@@ -319,7 +319,8 @@
       }
       w = await S.currentWorkspace();
       if (!w) { UI.state(body, 'empty', { title: T('لا توجد مشاريع بعد', 'No projects yet'), text: T('تظهر المهام بعد إنشاء مشروع أو الانضمام إليه.', 'Tasks appear once you create or join a project.'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } }); $('openTaskModal').hidden = true; return; }
-      isLeader = !!w.viewer?.isLeader;
+      // every student of the team manages the tasks alike (the owner has no extra rights here)
+      isLeader = !!(w.viewer?.canManage ?? w.viewer?.isLeader);
       $('openTaskModal').hidden = !isLeader;
       S.projectSwitcher(document.querySelector('.tasks-section .projects-hero__content'), await S.projects(), w.id, (id) => { location.href = `tasks.html?project=${encodeURIComponent(id)}`; });
       // independent requests run together (not one after another)

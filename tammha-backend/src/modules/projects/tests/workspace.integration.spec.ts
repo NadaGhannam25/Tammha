@@ -327,17 +327,17 @@ describe('Project workspace & teams (integration)', () => {
         .expect(200);
     });
 
-    it('regenerating the code invalidates the old one (leader only)', async () => {
+    it('regenerating the code invalidates the old one (any student of the team)', async () => {
       const denied = await http()
         .post(`${BASE}/teams/${teamId}/invitation/regenerate`)
-        .set(as('bob')) // P16: a MEMBER cannot manage the invitation
+        .set(as('erin')) // not a student of this team
         .expect(403);
-      expect(denied.body.code).toBe('NOT_TEAM_LEADER');
-      const memberRead = await http()
+      expect(denied.body.code).toBe('TEAM_ACCESS_DENIED');
+      // every student of the team reads the invitation link
+      await http()
         .get(`${BASE}/teams/${teamId}/invitation`)
         .set(as('bob'))
-        .expect(403);
-      expect(memberRead.body.code).toBe('NOT_TEAM_LEADER');
+        .expect(200);
 
       const res = await http()
         .post(`${BASE}/teams/${teamId}/invitation/regenerate`)
@@ -370,13 +370,13 @@ describe('Project workspace & teams (integration)', () => {
 
   // ----------------------------------------------------------------
   describe('Team members', () => {
-    it('adds a student by email (MEMBER label); members cannot', async () => {
+    it('adds a student by email (MEMBER label); another team cannot', async () => {
       const denied = await http()
         .post(`${BASE}/teams/${teamId}/members`)
-        .set(as('carol'))
+        .set(as('erin'))
         .send({ email: 'dave@test.local' })
         .expect(403);
-      expect(denied.body.code).toBe('NOT_TEAM_LEADER');
+      expect(denied.body.code).toBe('TEAM_ACCESS_DENIED');
       const res = await http()
         .post(`${BASE}/teams/${teamId}/members`)
         .set(as('alice'))
@@ -452,9 +452,9 @@ describe('Project workspace & teams (integration)', () => {
       expect(leaders[0].userId).toBe(users.bob.id);
     });
 
-    it('the former leader loses management rights; a leaving LEADER passes the role to the earliest member', async () => {
+    it('a member cannot remove the owner; a leaving owner passes the role to the earliest member', async () => {
       const denied = await http()
-        .delete(`${BASE}/teams/${teamId}/members/${users.carol.id}`)
+        .delete(`${BASE}/teams/${teamId}/members/${users.bob.id}`)
         .set(as('alice'))
         .expect(403);
       expect(denied.body.code).toBe('NOT_TEAM_LEADER');

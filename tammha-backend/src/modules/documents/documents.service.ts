@@ -495,8 +495,8 @@ export class DocumentsService {
   // ==========================================================
 
   /**
-   * P16: a file can be replaced (new version), renamed or deleted by the student who
-   * uploaded it or by the team LEADER — not by other members.
+   * A file can be replaced (new version), renamed or deleted by any student of the
+   * project's team (every student manages the project alike); never by a supervisor.
    */
   private async assertCanManage(
     user: AuthUser,
@@ -505,11 +505,11 @@ export class DocumentsService {
   ) {
     const project = await this.access.assertStudentOfProject(user, projectId);
     if (uploadedById === user.id) return;
-    if (await this.access.isLeaderOfTeam(user.id, project.teamId)) return;
+    if (await this.access.findMembershipInTeam(user.id, project.teamId)) return;
     throw new ForbiddenException(
       workspaceError(
         E.DOCUMENT_NOT_OWNER,
-        'Only the student who uploaded this file or the team leader can change or delete it',
+        'Only a student of this team can change or delete it',
       ),
     );
   }

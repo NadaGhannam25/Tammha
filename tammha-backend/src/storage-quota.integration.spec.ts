@@ -437,7 +437,8 @@ describe('Student storage quota (integration)', () => {
         .set(as('carol'))
         .expect(409);
       expect(blocked.body.code).toBe('HANDBOOK_ACTIVE_VERSION');
-      await http().delete(`${base}/${failed.id}`).set(as('bob')).expect(403);
+      // a student of another team cannot (any student of Project B can)
+      await http().delete(`${base}/${failed.id}`).set(as('alice')).expect(403);
       const before = (await usage('carol')).usedBytes;
       const res = await http()
         .delete(`${base}/${failed.id}`)

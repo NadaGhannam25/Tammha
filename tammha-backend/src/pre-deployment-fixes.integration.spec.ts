@@ -307,7 +307,7 @@ describe('Pre-deployment fixes (AppModule integration)', () => {
       expect(sv.body.items).toHaveLength(4);
     });
 
-    it('moving to the next stage follows the leader-only rule', async () => {
+    it('moving to the next stage: any student of the team, never the supervisor', async () => {
       const list = await http()
         .get(`${API}/milestones?projectId=${projectId}`)
         .set(as('leila'))
@@ -326,11 +326,12 @@ describe('Pre-deployment fixes (AppModule integration)', () => {
         .post(`${API}/team-invitations/${inv.body[0].id}/accept`)
         .set(as('noor'))
         .expect(200);
+      // a member moves the stage as well (every student manages the stages)
       await http()
         .patch(`${API}/milestones/${second}`)
         .set(as('noor'))
         .send({ status: 'IN_PROGRESS' })
-        .expect(403);
+        .expect(200);
       await http()
         .patch(`${API}/milestones/${second}`)
         .set(as('drnoha'))

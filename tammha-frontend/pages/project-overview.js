@@ -14,13 +14,20 @@
   let w = null;
 
   function render() {
-    const p = w.project; const isLeader = !!w.viewer?.isLeader;
+    document.querySelectorAll('.overview-editor').forEach((x) => x.remove());
+    $('ovOverview').hidden = false; $('ovGoals').hidden = false;
+    const p = w.project;
+    // every student of the team manages the project alike; the owner (the team LEADER)
+    // also hands the ownership over and deletes the project
+    const canManage = !!(w.viewer?.canManage ?? w.viewer?.isLeader); const isOwner = !!w.viewer?.isLeader;
     $('overviewProjectName').textContent = p.name;
     document.title = p.name;
     S.projectHeroProgress(w); // the completion, once, in the title bar
     $('ovOverview').textContent = p.overview || p.description || T('لم تُكتب نبذة المشروع بعد.', 'No overview yet.');
     const goals = (p.objectives || []).filter(Boolean);
     $('ovGoals').innerHTML = goals.length ? goals.map((g) => `<li>${esc(g)}</li>`).join('') : `<li class="app-muted">${esc(T('لم تُحدد الأهداف بعد.', 'No objectives yet.'))}</li>`;
+    // a pencil (top-left) edits the idea and the objectives, for every student of the team
+    document.querySelectorAll('[data-edit-panel]').forEach((b) => { b.hidden = !canManage; });
     const members = w.team?.members || [];
     // team: the Team Leader (who created the project, or received the leadership) first with the
     // badge; under the leader's name the leader sees two small options: add a member, invitation code
@@ -28,23 +35,23 @@
     const sorted = [...members].sort((a, b) => (b.teamRole === 'LEADER') - (a.teamRole === 'LEADER'));
     $('ovTeam').innerHTML = sorted.map((m) => {
       const name = UI.personName(m.user); const lead = m.teamRole === 'LEADER';
-      const you = m.userId === me.id ? ` <small class="app-muted">(${esc(T('أنت', 'you'))})</small>` : '';
-      const tools = isLeader && lead ? `<span class="team-member__tools">
+      const tools = canManage && lead ? `<span class="team-member__tools">
           <button class="team-link" type="button" data-team-tool="ovInviteForm" aria-controls="ovInviteForm" aria-expanded="false">${esc(T('+ إضافة عضو', '+ Add member'))}</button>
           <button class="team-link" type="button" data-team-tool="ovInviteCode" aria-controls="ovInviteCode" aria-expanded="false">${esc(T('رمز الدعوة', 'Invitation code'))}</button></span>` : '';
-      const actions = isLeader && !lead ? `<span class="team-member__tools"><button class="team-link" type="button" data-make-leader="${esc(m.userId)}">${esc(T('تعيين قائدًا', 'Make leader'))}</button><button class="team-link team-link--danger" type="button" data-remove="${esc(m.userId)}">${esc(T('إزالة', 'Remove'))}</button></span>` : '';
+      const actions = canManage && !lead && m.userId !== me.id ? `<span class="team-member__tools">${isOwner ? `<button class="team-link" type="button" data-make-leader="${esc(m.userId)}">${esc(T('تعيين قائدًا', 'Make leader'))}</button>` : ''}<button class="team-link team-link--danger" type="button" data-remove="${esc(m.userId)}">${esc(T('إزالة', 'Remove'))}</button></span>` : '';
       return `<div class="team-member${lead ? ' is-leader' : ''}">${UI.avatarHtml(m.user, 'team-member__avatar')}
-        <div class="team-member__info"><span class="team-member__line"><span class="team-member__name">${esc(name)}${you}</span>${lead ? `<span class="team-badge">${esc(T('قائد الفريق', 'Team Leader'))}</span>` : ''}</span>${tools}${actions}</div></div>`;
+        <div class="team-member__info"><span class="team-member__line"><span class="team-member__name">${esc(name)}</span>${lead ? `<span class="team-badge">${esc(T('قائد الفريق', 'Team Leader'))}</span>` : ''}</span>${tools}${actions}</div></div>`;
     }).join('');
-    $('ovTeamTools').innerHTML = isLeader ? `<form class="team-tool" id="ovInviteForm" hidden novalidate>
+    $('ovTeamTools').innerHTML = (canManage ? `<form class="team-tool" id="ovInviteForm" hidden novalidate>
           <label class="team-tool__label" for="ovInviteValue">${esc(T('الرقم الجامعي أو البريد الجامعي للزميل', "Classmate's student number or university email"))}</label>
           <div class="team-tool__row"><input id="ovInviteValue" autocomplete="off" placeholder="${esc(T('مثال: 441234567', 'e.g. 441234567'))}"/><button class="app-btn app-btn--primary" type="submit">${esc(T('إرسال دعوة', 'Send invitation'))}</button></div>
           <small class="app-field-error" id="ovInviteError" role="alert"></small>
         </form>
         <div class="team-tool" id="ovInviteCode" hidden aria-live="polite"></div>
-        <ul class="team-pending" id="ovSentInvites"></ul>`
-      : `<button class="team-link team-link--danger" type="button" data-leave>${esc(T('مغادرة الفريق', 'Leave the team'))}</button>`;
-    if (isLeader) loadSentInvitations();
+        <ul class="team-pending" id="ovSentInvites"></ul>` : '') +
+      // leave the project (not the last student) and, for the owner, delete it
+      `<div class="team-exit">${members.length > 1 ? `<button class="team-exit__btn" type="button" data-leave>${esc(T('مغادرة المشروع', 'Leave the project'))}</button>` : ''}${isOwner ? `<button class="team-exit__btn team-exit__btn--danger" type="button" data-delete-project>${esc(T('حذف المشروع', 'Delete the project'))}</button>` : ''}</div>`;
+    if (canManage) loadSentInvitations();
     renderSetup(); loadSupervision();
   }
 
@@ -87,12 +94,12 @@
       box.innerHTML = `<div class="app-panel"><h2>${esc(missing.length ? T('إعداد المشروع غير مكتمل', 'Project setup is not complete') : T('الإعداد جاهز للإكمال', 'The setup is ready to complete'))}</h2>
         ${missing.length ? `<p class="app-muted">${esc(T('المتبقي:', 'Still needed:'))}</p><ul class="overview-goals">${missing.map((m) => `<li>${esc(UI.setupRequirement(m))}</li>`).join('')}</ul>` : `<p class="app-muted">${esc(T('اكتملت المتطلبات، ويمكن لقائد الفريق إكمال الإعداد.', 'Every requirement is met; the Team Leader can complete the setup.'))}</p>`}
         ${missing.includes('HANDBOOK_REQUIRED') ? `<a class="app-btn" href="guide.html?project=${encodeURIComponent(w.id)}">${esc(T('اختيار دليل المشروع', 'Choose the project handbook'))}</a>` : ''}
-        ${w.viewer?.isLeader ? ` <button class="app-btn app-btn--primary" type="button" data-complete-setup ${missing.length ? 'disabled' : ''}>${esc(T('إكمال الإعداد', 'Complete the setup'))}</button>` : ''}</div>`;
+        ${!!(w.viewer?.canManage ?? w.viewer?.isLeader) ? ` <button class="app-btn app-btn--primary" type="button" data-complete-setup ${missing.length ? 'disabled' : ''}>${esc(T('إكمال الإعداد', 'Complete the setup'))}</button>` : ''}</div>`;
     } catch (e) { UI.state(box, 'error', { error: e }); }
   }
 
   async function loadSupervision() {
-    const body = $('ovSupBody'); const isLeader = !!w.viewer?.isLeader;
+    const body = $('ovSupBody'); const isLeader = !!(w.viewer?.canManage ?? w.viewer?.isLeader); // every student of the team
     const sup = ((w.supervisors || [])[0] || {}).user || (w.supervisors || [])[0]; // { userId, user } from the API
     // with a supervisor: two columns (title + name, e-mail label + e-mail); the section title
     // is the first column's label, so the heading itself is kept for screen readers only
@@ -146,12 +153,115 @@
     if (d.cancelInvite) UI.busy(t, async () => { await Api.post(`/team-invitations/${d.cancelInvite}/cancel`, {}); loadSentInvitations(); });
     if (d.remove && confirmAction(T('إزالة هذا العضو من الفريق؟', 'Remove this member from the team?'))) UI.busy(t, async () => { await Api.del(`/teams/${w.team.id}/members/${d.remove}`); await reload(); });
     if (d.makeLeader && confirmAction(T('نقل قيادة الفريق إلى هذا العضو؟ ستصبح عضوًا في الفريق.', 'Hand the team leadership to this member? You become a member.'))) UI.busy(t, async () => { await Api.patch(`/teams/${w.team.id}/leader`, { userId: d.makeLeader }); S.invalidateProjects(); await reload(); });
-    if ('leave' in d && confirmAction(T('مغادرة فريق هذا المشروع؟', "Leave this project's team?"))) UI.busy(t, async () => { await Api.del(`/teams/${w.team.id}/members/${S.user.id}`); S.invalidateProjects(); location.href = 'projects.html'; });
+    if (d.editPanel) editPanel(d.editPanel, t);
+    if (d.panelCancel) render();
+    if (d.panelSave) savePanel(d.panelSave, t);
+    if ('leave' in d) confirmLeave();
+    if ('deleteProject' in d) confirmDeleteProject();
     if (d.cancelRequest) UI.busy(t, async () => { await Api.post(`/supervision-requests/${d.cancelRequest}/cancel`, {}); await reload(); });
     if ('completeSetup' in d) UI.busy(t, async () => { await Api.post(`/projects/${w.id}/setup/complete`, {}); UI.toast(T('اكتمل إعداد المشروع.', 'Project setup completed.'), 'success'); await reload(); });
   });
   // a native confirm keeps the page simple and works in both languages
   function confirmAction(text) { return window.confirm(text); }
+
+  // ----- edit the project idea / objectives in place -----
+  function editPanel(kind, btn) {
+    const panel = btn.closest('.overview-panel'); btn.hidden = true;
+    const p = w.project;
+    const value = kind === 'idea' ? (p.overview || p.description || '') : (p.objectives || []).filter(Boolean).join('\n');
+    const target = kind === 'idea' ? $('ovOverview') : $('ovGoals');
+    target.hidden = true;
+    panel.querySelector('.overview-editor')?.remove();
+    panel.insertAdjacentHTML('beforeend', `<div class="overview-editor">
+      <textarea id="ovEdit_${kind}" rows="${kind === 'idea' ? 4 : 5}" maxlength="${kind === 'idea' ? 5000 : 3100}" placeholder="${esc(kind === 'idea' ? T('اكتب فكرة المشروع', 'Write the project idea') : T('هدف واحد في كل سطر', 'One objective per line'))}">${esc(value)}</textarea>
+      ${kind === 'goals' ? `<small class="app-muted">${esc(T('اكتب كل هدف في سطر مستقل (حتى 10 أهداف).', 'Write each objective on its own line (up to 10).'))}</small>` : ''}
+      <div class="overview-editor__actions"><button class="app-btn app-btn--primary" type="button" data-panel-save="${kind}">${esc(T('حفظ', 'Save'))}</button><button class="app-btn" type="button" data-panel-cancel="1">${esc(T('إلغاء', 'Cancel'))}</button></div></div>`);
+    const ta = panel.querySelector('textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+  }
+  function savePanel(kind, btn) {
+    const text = $(`ovEdit_${kind}`).value.trim();
+    let body;
+    if (kind === 'idea') {
+      if (!text) { UI.toast(T('اكتب فكرة المشروع.', 'Write the project idea.'), 'error'); return; }
+      body = { overview: text };
+    } else {
+      const list = text.split(/\n+/).map((x) => x.replace(/^[\s\-•*\d.)]+/, '').trim()).filter(Boolean);
+      if (!list.length) { UI.toast(T('اكتب هدفًا واحدًا على الأقل.', 'Write at least one objective.'), 'error'); return; }
+      if (list.length > 10) { UI.toast(T('الحد الأقصى 10 أهداف.', 'Up to 10 objectives.'), 'error'); return; }
+      if (list.some((x) => x.length > 300)) { UI.toast(T('كل هدف 300 حرف بحد أقصى.', 'Each objective is up to 300 characters.'), 'error'); return; }
+      body = { objectives: list };
+    }
+    UI.busy(btn, async () => {
+      try { await Api.patch(`/projects/${w.id}`, body); }
+      catch (err) { UI.toast(Api.message(err), 'error'); return; }
+      UI.toast(T('تم الحفظ.', 'Saved.'), 'success');
+      S.invalidateProjects(); await reload();
+    });
+  }
+
+  // ----- leave the project: a warning, then the student leaves -----
+  const Dlg = () => window.TammhaDialog;
+  const btnRow = (cancel, okId, okLabel) => `<button class="tm-dialog__btn" type="button" data-close>${esc(cancel)}</button><button class="tm-dialog__btn tm-dialog__btn--danger" type="button" id="${okId}">${esc(okLabel)}</button>`;
+  function confirmLeave() {
+    const owner = !!w.viewer?.isLeader;
+    const d = Dlg().open({
+      image: 'assets/account-warning.png', tone: 'danger',
+      title: T('مغادرة المشروع؟', 'Leave the project?'),
+      body: `<p>${esc(T(`ستغادر مشروع "${w.project.name}" ولن تتمكن من الوصول إليه بعد ذلك. تُلغى إسنادات مهامك غير المكتملة، وتبقى مساهماتك السابقة في المشروع.`, `You will leave the project "${w.project.name}" and will no longer have access to it. Your unfinished tasks are unassigned; your earlier contributions stay in the project.`))}</p>` +
+        (owner ? `<p>${esc(T('بما أنك صاحب المشروع، تنتقل ملكيته إلى أقدم عضو في الفريق.', 'As the project owner, the ownership passes to the earliest member of the team.'))}</p>` : '') +
+        `<p class="tm-dialog__muted">${esc(T('يمكنك الانضمام مجددًا برمز الدعوة إذا أرسله لك أحد أعضاء الفريق.', 'You can join again with the invitation code from a team member.'))}</p>`,
+      actions: btnRow(T('إلغاء', 'Cancel'), 'ovLeaveOk', T('مغادرة المشروع', 'Leave the project')),
+    });
+    d.querySelector('#ovLeaveOk').addEventListener('click', (ev) => UI.busy(ev.currentTarget, async () => {
+      try { await Api.del(`/teams/${w.team.id}/members/${S.user.id}`); }
+      catch (err) { Dlg().close(); UI.toast(Api.message(err), 'error'); return; }
+      S.invalidateProjects(); location.href = 'projects.html';
+    }));
+  }
+
+  // ----- delete the project (owner): a warning, a 6-digit code by e-mail, then deleted -----
+  function confirmDeleteProject() {
+    const d = Dlg().open({
+      image: 'assets/account-warning.png', tone: 'danger',
+      title: T('حذف المشروع نهائيًا؟', 'Delete the project permanently?'),
+      body: `<p>${esc(T(`سيُحذف مشروع "${w.project.name}" نهائيًا مع جميع مراحله ومهامه وملفاته واجتماعاته وملاحظات المشرف عليه، ولا يمكن استرجاعه.`, `The project "${w.project.name}" is deleted permanently with all of its stages, tasks, files, meetings and supervisor feedback, and cannot be restored.`))}</p>` +
+        `<p>${esc(T('يخرج جميع أعضاء الفريق من المشروع، وتصلهم رسالة على بريدهم الإلكتروني بحذفه. للتأكيد نرسل رمزًا إلى بريدك الإلكتروني.', 'Every team member leaves the project and receives an email about it. To confirm, we send a code to your email.'))}</p>`,
+      actions: btnRow(T('إلغاء', 'Cancel'), 'ovDeleteSend', T('إرسال رمز التأكيد', 'Send confirmation code')),
+    });
+    d.querySelector('#ovDeleteSend').addEventListener('click', (ev) => UI.busy(ev.currentTarget, async () => {
+      try { await Api.post(`/projects/${w.id}/deletion/request`, {}); }
+      catch (err) {
+        if (err.code !== 'DELETION_CODE_RECENTLY_SENT') { UI.toast(Api.message(err), 'error'); return; }
+      }
+      askProjectCode();
+    }));
+  }
+  function askProjectCode() {
+    const d = Dlg().open({
+      image: 'assets/account-code.png', tone: 'danger', title: T('أدخل رمز التأكيد', 'Enter the confirmation code'),
+      body: `<p>${esc(T('أرسلنا رمزًا من 6 أرقام إلى بريدك الإلكتروني:', 'We sent a 6-digit code to your email:'))}</p><p class="tm-dialog__email" dir="ltr">${esc((S.user && S.user.email) || '')}</p>
+        <label class="tm-dialog__code"><span class="visually-hidden">${esc(T('رمز التأكيد', 'Confirmation code'))}</span><input id="ovDeleteCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" dir="ltr" placeholder="••••••"></label>
+        <p class="tm-dialog__error" id="ovDeleteError" role="alert"></p><p class="tm-dialog__muted">${esc(T('الرمز صالح لمدة 15 دقيقة.', 'The code is valid for 15 minutes.'))}</p>`,
+      actions: btnRow(T('إلغاء', 'Cancel'), 'ovDeleteConfirm', T('حذف المشروع نهائيًا', 'Delete the project permanently')),
+    });
+    const input = d.querySelector('#ovDeleteCode'); const errEl = d.querySelector('#ovDeleteError');
+    input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 6); errEl.textContent = ''; });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') d.querySelector('#ovDeleteConfirm').click(); });
+    d.querySelector('#ovDeleteConfirm').addEventListener('click', (ev) => {
+      const code = input.value.trim();
+      if (!/^\d{6}$/.test(code)) { errEl.textContent = T('اكتب الرمز المكوّن من 6 أرقام.', 'Type the 6-digit code.'); input.focus(); return; }
+      UI.busy(ev.currentTarget, async () => {
+        try { await Api.post(`/projects/${w.id}/deletion/confirm`, { code }); }
+        catch (err) { errEl.textContent = err.code === 'DELETION_CODE_INVALID' ? T('الرمز غير صحيح أو انتهت صلاحيته.', 'The code is incorrect or has expired.') : Api.message(err); return; }
+        S.invalidateProjects();
+        Dlg().open({
+          locked: true, image: 'assets/account-goodbye.png', title: T('تم حذف المشروع', 'The project has been deleted'),
+          body: `<p>${esc(T(`تم حذف مشروع "${w.project.name}" وجميع بياناته نهائيًا، وأُبلغ أعضاء الفريق بذلك عبر البريد الإلكتروني.`, `The project "${w.project.name}" and all of its data have been deleted permanently, and the team members were told by email.`))}</p>`,
+          actions: `<a class="tm-dialog__btn tm-dialog__btn--primary" href="projects.html">${esc(T('العودة إلى المشاريع', 'Back to projects'))}</a>`,
+        });
+      });
+    });
+  }
 
   S.ready.then(async () => {
     const main = document.querySelector('.overview-layout');

@@ -155,17 +155,18 @@ describe('AccountLifecycleService', () => {
     expect(db.user.rows.find((r: any) => r.id === u!.id)!.isActive).toBe(true);
   });
 
-  it('a leader whose team has members cannot delete; a leader alone can', async () => {
+  it('a project owner can delete: the earliest member becomes the owner; an owner alone keeps the team', async () => {
     const lead = await user('lead@test.local');
     const member = await user('memb@test.local');
     await team(lead!.id, [member!.id]);
-    await expect(service.requestDeletion(asUser(lead))).rejects.toMatchObject({
-      response: {
-        code: 'ACCOUNT_DELETION_BLOCKED',
-        details: { blockers: [{ code: 'TEAM_LEADER', name: 'Team X' }] },
-      },
-    });
-    expect(mail.sendAccountDeletionCode).not.toHaveBeenCalled();
+    await service.requestDeletion(asUser(lead));
+    await service.confirmDeletion(asUser(lead), lastCode());
+    const rows = db.teamMember.rows.filter((r: any) =>
+      [lead!.id, member!.id].includes(r.userId),
+    );
+    expect(rows).toEqual([
+      expect.objectContaining({ userId: member!.id, role: 'LEADER' }),
+    ]);
 
     const solo = await user('solo@test.local');
     await team(solo!.id);

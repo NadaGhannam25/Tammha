@@ -123,13 +123,13 @@ describe('Tasks & milestones (integration)', () => {
   describe('Milestones', () => {
     let m1 = '';
 
-    it('creates a milestone (team leader only)', async () => {
+    it('creates a milestone (any student of the team; not another team)', async () => {
       const denied = await http()
         .post(`${API}/milestones`)
-        .set(as('bob'))
+        .set(as('erin'))
         .send({ projectId: projectA, title: 'Chapter 3', dueDate: inDays(30) })
         .expect(403);
-      expect(denied.body.code).toBe('NOT_TEAM_LEADER');
+      expect(denied.body.code).toBe('PROJECT_ACCESS_DENIED');
       const res = await http()
         .post(`${API}/milestones`)
         .set(as('alice'))
@@ -202,7 +202,7 @@ describe('Tasks & milestones (integration)', () => {
         .patch(`${API}/milestones/${m1}`)
         .set(as('carol'))
         .send({ title: 'Member edit' })
-        .expect(403);
+        .expect(200); // every student of the team edits the stages
       const res = await http()
         .patch(`${API}/milestones/${m1}`)
         .set(as('alice'))
@@ -264,13 +264,18 @@ describe('Tasks & milestones (integration)', () => {
       expect(JSON.stringify(res.body)).not.toContain('password');
     });
 
-    it('members cannot create tasks (403 NOT_TEAM_LEADER)', async () => {
+    it('members create tasks too: every student manages the project alike', async () => {
       const res = await http()
         .post(`${API}/tasks`)
         .set(as('bob'))
         .send({ projectId: projectA, title: 'Member task' })
-        .expect(403);
-      expect(res.body.code).toBe('NOT_TEAM_LEADER');
+        .expect(201);
+      expect(res.body.title).toBe('Member task');
+      // removed again so the counts below stay as they were
+      await http()
+        .delete(`${API}/tasks/${res.body.id}`)
+        .set(as('bob'))
+        .expect(200);
     });
 
     it('status COMPLETED on create sets completedAt', async () => {
@@ -627,7 +632,7 @@ describe('Tasks & milestones (integration)', () => {
         .expect(200);
     });
 
-    it('status changes follow the allowed transitions; only the leader cancels or restores', async () => {
+    it('status changes follow the allowed transitions; any student cancels or restores', async () => {
       const id = state.taskIds.erd; // COMPLETED, assigned to bob
       const cancel = await http()
         .patch(`${API}/tasks/${id}`)
@@ -656,20 +661,15 @@ describe('Tasks & milestones (integration)', () => {
           .send({ status })
           .expect(200);
       }
-      const member = await http()
-        .patch(`${API}/tasks/${id}`)
-        .set(as('bob'))
-        .send({ status: 'TODO' })
-        .expect(409);
-      expect(member.body.message).toMatch(/team leader/);
       await http()
         .patch(`${API}/tasks/${id}`)
         .set(as('alice'))
         .send({ status: 'COMPLETED' })
         .expect(409); // a cancelled task is restored to TODO first
+      // a member restores it as well
       await http()
         .patch(`${API}/tasks/${id}`)
-        .set(as('alice'))
+        .set(as('bob'))
         .send({ status: 'TODO' })
         .expect(200);
       await http()
@@ -679,31 +679,38 @@ describe('Tasks & milestones (integration)', () => {
         .expect(200);
     });
 
-    it('a member changes only the status of a task assigned to them', async () => {
-      const fields = await http()
+    it('a member manages any task like the leader: fields, assignee and status', async () => {
+      const erd = await http()
+        .get(`${API}/tasks/${state.taskIds.erd}`)
+        .set(as('alice'))
+        .expect(200);
+      const late = await http()
+        .get(`${API}/tasks/${state.taskIds.late}`)
+        .set(as('alice'))
+        .expect(200);
+      const renamed = await http()
         .patch(`${API}/tasks/${state.taskIds.erd}`)
         .set(as('bob'))
-        .send({ status: 'IN_PROGRESS', title: 'Renamed by member' })
-        .expect(403);
-      expect(fields.body.code).toBe('TASK_STATUS_ONLY');
-      const reassign = await http()
+        .send({ title: 'Renamed by member' })
+        .expect(200);
+      expect(renamed.body.title).toBe('Renamed by member');
+      await http()
         .patch(`${API}/tasks/${state.taskIds.erd}`)
         .set(as('bob'))
-        .send({ assignedStudentId: users.carol.id })
-        .expect(403);
-      expect(reassign.body.code).toBe('TASK_STATUS_ONLY');
+        .send({ title: erd.body.title })
+        .expect(200);
+      // a task assigned to someone else, and an unassigned one
       const notMine = await http()
         .patch(`${API}/tasks/${state.taskIds.late}`)
-        .set(as('bob'))
-        .send({ status: 'IN_PROGRESS' })
-        .expect(403);
-      expect(notMine.body.code).toBe('TASK_NOT_ASSIGNED_TO_YOU');
-      const unassigned = await http()
-        .patch(`${API}/tasks/${state.taskIds.far}`)
         .set(as('carol'))
-        .send({ status: 'IN_PROGRESS' })
-        .expect(403);
-      expect(unassigned.body.code).toBe('TASK_NOT_ASSIGNED_TO_YOU');
+        .send({ priority: 'HIGH' })
+        .expect(200);
+      expect(notMine.body.priority).toBe('HIGH');
+      await http()
+        .patch(`${API}/tasks/${state.taskIds.late}`)
+        .set(as('carol'))
+        .send({ priority: late.body.priority })
+        .expect(200);
     });
 
     it('the leader reassigns a task and the new assignee is notified once', async () => {
@@ -797,12 +804,12 @@ describe('Tasks & milestones (integration)', () => {
       expect(missing.body.code).toBe('TASK_NOT_FOUND');
     });
 
-    it('deletes a task (leader only)', async () => {
+    it('deletes a task (any student of the team; not another team)', async () => {
       const denied = await http()
         .delete(`${API}/tasks/${state.taskIds.far}`)
-        .set(as('carol'))
+        .set(as('erin'))
         .expect(403);
-      expect(denied.body.code).toBe('NOT_TEAM_LEADER');
+      expect(denied.body.code).toBe('PROJECT_ACCESS_DENIED');
       await http()
         .delete(`${API}/tasks/${state.taskIds.far}`)
         .set(as('alice'))
@@ -957,13 +964,10 @@ describe('Tasks & milestones (integration)', () => {
     });
 
     it('deleting a milestone keeps its tasks (milestone link cleared)', async () => {
+      // a member deletes it (every student of the team manages the stages)
       await http()
         .delete(`${API}/milestones/${state.milestoneA}`)
         .set(as('bob'))
-        .expect(403);
-      await http()
-        .delete(`${API}/milestones/${state.milestoneA}`)
-        .set(as('alice'))
         .expect(200);
       const task = await http()
         .get(`${API}/tasks/${state.taskIds.late}`)

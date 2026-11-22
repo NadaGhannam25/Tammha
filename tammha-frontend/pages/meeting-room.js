@@ -74,7 +74,7 @@
     if (cam) { const v = videoFor(cam); v.className = 'meeting-tile-video'; el.append(v); }
     else el.insertAdjacentHTML('beforeend', `<div class="meeting-tile-avatar${p === room.localParticipant ? '' : ' meeting-tile-avatar--soft'}">${UI.avatarHtml(userOf(p), 'meeting-tile-avatar__img')}</div>`);
     const name = p.name || p.identity;
-    el.insertAdjacentHTML('beforeend', `<div class="meeting-tile__label">${micBadge(p)}<b>${esc(name)}</b><small>${esc(p === room.localParticipant ? T('أنت', 'You') : roleOf(p))}</small></div>`);
+    el.insertAdjacentHTML('beforeend', `<div class="meeting-tile__label">${micBadge(p)}<b>${esc(name)}</b><small>${esc(roleOf(p))}</small></div>`);
     return el;
   }
   function paintScreen(presenter, pub) {
@@ -128,7 +128,7 @@
 
     people.innerHTML = list.map((p) => {
       const name = p.name || p.identity;
-      return `<li>${UI.avatarHtml(userOf(p), 'room-people__avatar')}<div><b>${esc(name)}</b><small>${esc(p === room.localParticipant ? T('أنت', 'You') : roleOf(p))}</small></div>${pubOf(p, Src.ScreenShare) ? `<span class="room-mic" title="${esc(T('يعرض شاشته', 'Presenting'))}">${ICON.screen}</span>` : ''}${micBadge(p)}</li>`;
+      return `<li>${UI.avatarHtml(userOf(p), 'room-people__avatar')}<div><b>${esc(name)}</b><small>${esc(roleOf(p))}</small></div>${pubOf(p, Src.ScreenShare) ? `<span class="room-mic" title="${esc(T('يعرض شاشته', 'Presenting'))}">${ICON.screen}</span>` : ''}${micBadge(p)}</li>`;
     }).join('');
     // remote audio
     list.forEach((p) => { if (p === room.localParticipant) return; p.audioTrackPublications.forEach((pub) => { if (pub.track && !pub.track.attachedElements.length) document.body.append(Object.assign(pub.track.attach(), { hidden: true })); }); });
@@ -150,7 +150,7 @@
   function addChat(from, text, mine) {
     const msg = document.createElement('div'); msg.className = `room-chat__message${mine ? ' room-chat__message--mine' : ''}`;
     msg.innerHTML = `<b></b><p></p><small>${esc(UI.fmtTime(new Date()))}</small>`;
-    msg.querySelector('b').textContent = mine ? T('أنت', 'You') : from; msg.querySelector('p').textContent = text;
+    msg.querySelector('b').textContent = mine ? (window.TammhaUI.personName(window.TammhaSession.user || {}) || from) : from; msg.querySelector('p').textContent = text;
     chat.append(msg); chat.scrollTop = chat.scrollHeight;
   }
 

@@ -19,7 +19,10 @@ import { AuthUser } from '@common/types/auth-user.type';
 import { WorkspaceAccessService } from '@common/workspace/workspace-access.service';
 import {
   AI_TEXT_PROVIDER,
+  AiProviderError,
   AiTextProvider,
+  AiTextRequest,
+  AiTextResult,
 } from '@/integrations/ai/ai.provider';
 import { integrationDisabled } from '@/integrations/integration-errors';
 import { AISupportService } from '../ai-support.service';
@@ -32,6 +35,7 @@ import {
   HANDBOOK_TASKS_RESPONSE_SCHEMA,
   HANDBOOK_TASKS_SYSTEM_INSTRUCTION,
   handbookPagesForPrompt,
+  InvalidExplanationError,
   taskPagesForPrompt,
   parseHandbookTasks,
   parseSummary,
@@ -55,6 +59,14 @@ const err = (code: string, message: string) => ({ code, message });
 /** Task extraction: at most this much handbook text per request, and a longer time limit. */
 const TASKS_MAX_CHARS = 60_000;
 const TASKS_TIMEOUT_MS = 140_000;
+/** The summary of seven topics needs room: thinking tokens count against this limit. */
+const SUMMARY_MIN_OUTPUT_TOKENS = 16_384;
+/** Answers worth asking for once more: cut off, empty or not usable JSON. */
+const RETRY_CODES = new Set([
+  'AI_RESPONSE_TRUNCATED',
+  'AI_EMPTY_RESPONSE',
+  'AI_INVALID_RESPONSE',
+]);
 
 const SUMMARY_FEATURE = {
   // stored under the existing enum value (no migration): the record is the summary request
@@ -138,22 +150,28 @@ export class HandbookSummaryService {
       this.aiSupport.settings.handbookExplainMaxChars,
     );
     try {
-      const output = await this.ai.generateText({
-        system: SUMMARY_SYSTEM_INSTRUCTION,
-        prompt: buildSummaryPrompt({
-          title: target.title,
-          language,
-          pages,
-          truncated,
-        }),
-        maxOutputTokens: this.aiSupport.settings.explainMaxOutputTokens,
-        responseSchema: SUMMARY_RESPONSE_SCHEMA as unknown as Record<
-          string,
-          unknown
-        >,
-        timeoutMs: Math.max(this.aiSupport.timeoutMs, 90_000),
-      });
-      const summary = parseSummary(output.text, pages);
+      const { output, value: summary } = await this.generate(
+        {
+          system: SUMMARY_SYSTEM_INSTRUCTION,
+          prompt: buildSummaryPrompt({
+            title: target.title,
+            language,
+            pages,
+            truncated,
+          }),
+          maxOutputTokens: Math.max(
+            this.aiSupport.settings.explainMaxOutputTokens,
+            SUMMARY_MIN_OUTPUT_TOKENS,
+          ),
+          responseSchema: SUMMARY_RESPONSE_SCHEMA as unknown as Record<
+            string,
+            unknown
+          >,
+          timeoutMs: Math.max(this.aiSupport.timeoutMs, 90_000),
+          lightThinking: true,
+        },
+        (raw) => parseSummary(raw, pages),
+      );
       const data = {
         result: summary as unknown as Prisma.InputJsonValue,
         promptVersion: SUMMARY_PROMPT_VERSION,
@@ -232,27 +250,31 @@ export class HandbookSummaryService {
       ),
     );
     try {
-      const output = await this.ai.generateText({
-        system: HANDBOOK_TASKS_SYSTEM_INSTRUCTION,
-        prompt: buildHandbookTasksPrompt({
-          title: target.title,
-          language,
-          pages,
-          truncated,
-          existingTasks: existing,
-        }),
-        maxOutputTokens: this.aiSupport.settings.explainMaxOutputTokens,
-        responseSchema: HANDBOOK_TASKS_RESPONSE_SCHEMA as unknown as Record<
-          string,
-          unknown
-        >,
-        timeoutMs: Math.max(this.aiSupport.timeoutMs, TASKS_TIMEOUT_MS),
-        lightThinking: true,
-      });
-      const { suggestions, dropped } = parseHandbookTasks(
-        output.text,
-        pages,
-        existing,
+      const {
+        output,
+        value: { suggestions, dropped },
+      } = await this.generate(
+        {
+          system: HANDBOOK_TASKS_SYSTEM_INSTRUCTION,
+          prompt: buildHandbookTasksPrompt({
+            title: target.title,
+            language,
+            pages,
+            truncated,
+            existingTasks: existing,
+          }),
+          maxOutputTokens: Math.max(
+            this.aiSupport.settings.explainMaxOutputTokens,
+            SUMMARY_MIN_OUTPUT_TOKENS,
+          ),
+          responseSchema: HANDBOOK_TASKS_RESPONSE_SCHEMA as unknown as Record<
+            string,
+            unknown
+          >,
+          timeoutMs: Math.max(this.aiSupport.timeoutMs, TASKS_TIMEOUT_MS),
+          lightThinking: true,
+        },
+        (raw) => parseHandbookTasks(raw, pages, existing),
       );
       // Stored in the guidance shape the apply endpoint reads (taskSuggestions with ids).
       const guidance: Guidance = {
@@ -294,7 +316,8 @@ export class HandbookSummaryService {
           pageCount: target.pageCount ?? pageCount,
           truncated,
         },
-        canApply: membership?.role === TeamRole.LEADER,
+        // every student of the team applies suggested tasks
+        canApply: !!membership,
         advisoryOnly: true,
       };
     } catch (error) {
@@ -305,6 +328,39 @@ export class HandbookSummaryService {
   // ==========================================================
   // Internals
   // ==========================================================
+
+  /**
+   * Asks the model and parses the answer. An answer that was cut off, empty or not usable
+   * is asked for once more (with twice the output room) before the request fails, so a
+   * single bad answer never reaches the student as an error.
+   */
+  private async generate<T>(
+    request: AiTextRequest,
+    parse: (raw: string) => T,
+  ): Promise<{ output: AiTextResult; value: T }> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const output = await this.ai.generateText(
+          attempt === 1
+            ? request
+            : {
+                ...request,
+                maxOutputTokens: (request.maxOutputTokens ?? 8192) * 2,
+              },
+        );
+        return { output, value: parse(output.text) };
+      } catch (error) {
+        const code =
+          error instanceof AiProviderError
+            ? error.code
+            : error instanceof InvalidExplanationError
+              ? 'AI_INVALID_RESPONSE'
+              : '';
+        if (attempt >= 2 || !RETRY_CODES.has(code)) throw error;
+        this.logger.warn(`handbook AI answer unusable (${code}); asking again`);
+      }
+    }
+  }
 
   /** The project's selected, READY handbook (404 HANDBOOK_NOT_FOUND otherwise). */
   private async target(projectId: string): Promise<Target> {

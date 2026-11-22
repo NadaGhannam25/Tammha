@@ -726,9 +726,11 @@ describe('Notifications, reminders & email (integration)', () => {
       expect(rowsOf('erin')).toHaveLength(0);
     });
 
-    it('members cannot change the status; the leader cannot complete; same status -> 409', async () => {
-      const member = await change('bob', 'REVIEW').expect(403);
-      expect(member.body.code).toBe('NOT_TEAM_LEADER');
+    it('another team cannot change the status; students cannot complete; same status -> 409', async () => {
+      const outsider = await change('erin', 'REVIEW').expect(403);
+      expect(outsider.body.code).toBe('PROJECT_ACCESS_DENIED');
+      const member = await change('bob', 'COMPLETED').expect(403);
+      expect(member.body.code).toBe('PROJECT_STATUS_NOT_ALLOWED');
       const denied = await change('alice', 'COMPLETED').expect(403);
       expect(denied.body.code).toBe('PROJECT_STATUS_NOT_ALLOWED');
       const same = await change('alice', 'IN_PROGRESS').expect(409);

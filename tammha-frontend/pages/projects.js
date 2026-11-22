@@ -30,7 +30,7 @@
     const missing = (w.setupReadiness && w.setupReadiness.missingRequirements) || [];
     const setup = p.setup && !p.setup.completed && missing.length ? `<span class="project-setup-note">${esc(T('الإعداد غير مكتمل', 'Setup incomplete'))}</span>` : '';
     return `<article class="projects-list-card" data-status="${esc(p.status)}">
-      <div class="project-identity">${UI.projectImageSlot(p, !!w.viewer?.isLeader, 'project-identity__image')}
+      <div class="project-identity">${UI.projectImageSlot(p, !!(w.viewer?.canManage ?? w.viewer?.isLeader), 'project-identity__image')}
         <div class="project-identity__text"><h2>${esc(p.name)}</h2><p>${esc(meta)}</p></div>
         <span class="project-status project-status--${STATUS_CLASS[p.status] || 'progress'}">${esc(L(D.PROJECT_STATUSES[p.status]?.label || [p.status, p.status]))}</span></div>
       <div class="project-progress"><div class="project-progress__label"><span>${esc(T('نسبة الإنجاز', 'Completion'))}</span><strong>${pct}%</strong></div>
@@ -179,7 +179,6 @@
       need('wizardCategory', T('اختر تصنيف المشروع', 'Select the project category'));
       need('wizardOrigin', T('اختر نوع المشروع', 'Select the project type'));
       need('wizardStartDate', T('تاريخ البدء مطلوب', 'Start date is required'));
-      need('wizardEndDate', T('تاريخ الإنجاز المتوقع مطلوب', 'Expected completion date is required'));
       if (!blank('wizardStartDate') && !blank('wizardEndDate') && iso('wizardEndDate') <= iso('wizardStartDate')) mark('wizardEndDate', T('تاريخ الإنجاز يجب أن يكون بعد تاريخ البدء', 'The completion date must be after the start date'));
       need('wizardProjectGoal', T('هدف المشروع مطلوب', 'Project objective is required'));
       need('wizardProjectAbout', T('نبذة المشروع مطلوبة', 'Project overview is required'));
@@ -303,14 +302,14 @@
     const loader = window.TammhaLoader.show({ label: T('جارٍ إنشاء المشروع…', 'Creating the project…') });
     try {
       try {
-        w = await Api.post('/projects', { name: $('wizardProjectName').value.trim(), description: $('wizardProjectDescription').value.trim(), teamName: $('wizardTeamName').value.trim(), startDate: start, endDate: end });
+        w = await Api.post('/projects', { name: $('wizardProjectName').value.trim(), description: $('wizardProjectDescription').value.trim(), teamName: $('wizardTeamName').value.trim(), startDate: start, endDate: end || undefined });
       } catch (err) {
         showAlert('error', T('تعذّر إنشاء المشروع', 'The project could not be created'), [Api.message(err)]);
         createBtn.disabled = false; return;
       }
       const pid = w.project.id; const teamId = w.team.id;
       const run = async (label, fn) => { try { await fn(); return true; } catch (err) { problems.push(`${label}: ${Api.message(err)}`); return false; } };
-      const details = { overview: $('wizardProjectAbout').value.trim(), objectives: [$('wizardProjectGoal').value.trim()], category: $('wizardCategory').value, origin: $('wizardOrigin').value, expectedCompletionDate: end };
+      const details = { overview: $('wizardProjectAbout').value.trim(), objectives: [$('wizardProjectGoal').value.trim()], category: $('wizardCategory').value, origin: $('wizardOrigin').value, expectedCompletionDate: end || undefined };
       if (wizardImage) details.thumbnail = wizardImage;
       await run(T('تفاصيل المشروع', 'Project details'), () => Api.patch(`/projects/${pid}`, details));
       // stages, in the chosen order (the backend makes the first one the current stage)

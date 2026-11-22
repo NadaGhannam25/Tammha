@@ -148,19 +148,17 @@ export class TaskCommentsService {
       user,
       task.projectId,
     );
-    if (comment.authorId !== user.id) {
-      const membership = await this.access.findMembershipInTeam(
-        user.id,
-        project.teamId,
+    // any student of the team deletes a comment (every student manages the project alike)
+    if (
+      comment.authorId !== user.id &&
+      !(await this.access.findMembershipInTeam(user.id, project.teamId))
+    ) {
+      throw new ForbiddenException(
+        err(
+          'COMMENT_DELETE_NOT_ALLOWED',
+          'Only a student of this team can delete a comment',
+        ),
       );
-      if (membership?.role !== TeamRole.LEADER) {
-        throw new ForbiddenException(
-          err(
-            'COMMENT_DELETE_NOT_ALLOWED',
-            'Only the author or the team leader can delete a comment',
-          ),
-        );
-      }
     }
     await this.prisma.comment.delete({ where: { id: commentId } });
     return { deleted: true };

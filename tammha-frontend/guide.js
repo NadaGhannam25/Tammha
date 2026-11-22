@@ -22,7 +22,8 @@
   const MAX_FILE_BYTES = 20 * 1024 * 1024;
   let projects = []; let projectId = null; let w = null; let state = null; let universities = [];
   let suggestions = null; // { projectId, aiRequestId, list, canApply, applied: Set }
-  const isLeader = () => !!w?.viewer?.isLeader;
+  // every student of the team selects or uploads the handbook and applies suggested tasks
+  const isLeader = () => !!(w?.viewer?.canManage ?? w?.viewer?.isLeader);
   const uName = (u) => (u ? (lang === 'en' ? u.name.en : u.name.ar) : '');
   const pageChips = (pages) => (pages || []).map((p) => `<span class="hb-page">${esc(T(`ص ${p}`, `p. ${p}`))}</span>`).join('');
   function toast(text) { UI.toast(text, 'success'); }
@@ -175,7 +176,7 @@
         ${t.found ? `${t.summary ? `<p dir="auto">${esc(t.summary)}</p>` : ''}
           ${t.points.length ? `<ul>${t.points.map((pt) => `<li><span dir="auto">${esc(pt.text)}</span>${pt.pages && pt.pages.length ? `<span class="hb-refs">${pageChips(pt.pages)}</span>` : ''}${pt.verified === false ? `<em class="hb-unverified">${esc(T('لم يُعثر على النص في الدليل، يُرجى التحقق منه.', 'Not found in the handbook text; please check it.'))}</em>` : ''}</li>`).join('')}</ul>` : ''}
           ${t.id === 'GRADING' ? `<p class="hb-card__note">${esc(T('للاطلاع فقط؛ لا تحتسب تممها الدرجات ولا تقيّم الطلاب.', 'For reference only; Tammha does not calculate marks or evaluate students.'))}</p>` : ''}`
-        : `<p class="hb-card__none">${esc(T('لا توجد نتائج', 'No results found'))}</p>`}
+        : `<p class="hb-card__none">${esc(T('لا يوجد في الدليل نص واضح حول هذا القسم.', 'The handbook has no clear text on this section.'))}</p>`}
       </article>`).join('')}</div>`;
   }
   function summaryStart(text) { return `<div class="hb-start"><p>${esc(text || T('يستخرج الملخص من الدليل المعتمد المعلومات المتعلقة بسبعة محاور ثابتة، مع الإشارة إلى أرقام الصفحات حيثما أمكن.', 'The summary extracts the information on seven fixed topics from the selected handbook, with page references where available.'))}</p><button class="hb-btn" data-summary type="button">${esc(T('إنشاء الملخص', 'Create summary'))}</button></div>`; }
@@ -194,9 +195,14 @@
   async function createSummary(regenerate) {
     const panel = $('hbSummaryPanel'); panel.innerHTML = '';
     try {
-      const result = await Api.post(`/projects/${projectId}/handbook/summary`, { language: lang, regenerate: !!regenerate }, { timeout: Api.aiTimeout, loader: { target: panel, label: T('جارٍ إعداد ملخص الدليل…', 'Preparing the handbook summary…') } });
+      const result = await Api.post(`/projects/${projectId}/handbook/summary`, { language: lang, regenerate: !!regenerate }, { timeout: Math.max(Api.aiTimeout, 240000), loader: { target: panel, label: T('جارٍ إعداد ملخص الدليل…', 'Preparing the handbook summary…') } });
       showSummary(result);
     } catch (error) {
+      // the summary may have been finished and saved after the connection gave up: show it
+      try {
+        const saved = await Api.get(`/projects/${projectId}/handbook/summary`, { query: { language: lang } });
+        if (saved.status === 'READY' && saved.topics && saved.topics.length) { showSummary(saved); return; }
+      } catch (e) { /* show the error below */ }
       panel.innerHTML = `<div class="hb-error" role="alert"><strong>${esc(T('تعذّر إنشاء الملخص', 'The summary could not be created'))}</strong><p>${esc(Api.message(error))}</p><p>${esc(T('لم يُعرض أي محتوى غير موثّق.', 'No unverified content is shown.'))}</p><button class="hb-btn" data-summary type="button">${esc(T('إعادة المحاولة', 'Try again'))}</button></div>`;
     }
   }
@@ -251,7 +257,7 @@
   async function extractTasks() {
     const panel = $('hbTasksPanel'); panel.innerHTML = '';
     try {
-      const r = await Api.post(`/projects/${projectId}/handbook/task-suggestions`, { language: lang }, { timeout: Math.max(Api.aiTimeout, 160000), loader: { target: panel, label: T('جارٍ استخراج المهام من الدليل…', 'Extracting tasks from the handbook…') } });
+      const r = await Api.post(`/projects/${projectId}/handbook/task-suggestions`, { language: lang }, { timeout: Math.max(Api.aiTimeout, 300000), loader: { target: panel, label: T('جارٍ استخراج المهام من الدليل…', 'Extracting tasks from the handbook…') } });
       suggestions = { projectId, aiRequestId: r.aiRequestId, list: r.suggestions || [], canApply: r.canApply, dropped: r.dropped, applied: new Set() };
       renderTasks();
     } catch (error) { renderTasks(Api.message(error)); }

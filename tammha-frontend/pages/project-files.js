@@ -10,7 +10,8 @@
   const body = $('projectFilesBody');
   let w = null; let docs = [];
   const ICON_MORE = '<svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="18.5" r="1.6"></circle></svg>';
-  const canEdit = (d) => !!w.viewer?.isLeader || d.uploadedBy?.id === S.user.id;
+  // every student of the team manages the project files
+  const canEdit = (d) => !!(w.viewer?.canManage ?? w.viewer?.isLeader) || d.uploadedBy?.id === S.user.id;
 
   function summary() {
     const p = w.project; const sup = ((w.supervisors || [])[0] || {}).user || (w.supervisors || [])[0]; /* { userId, user } from the API */

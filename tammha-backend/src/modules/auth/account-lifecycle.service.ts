@@ -89,27 +89,13 @@ export class AccountLifecycleService {
   }
 
   /** What blocks deleting this account (empty = it can be deleted). */
-  async deletionBlockers(userId: string) {
-    const blockers: { code: string; name: string }[] = [];
-    const leading = await this.prisma.teamMember.findMany({
-      where: { userId, role: TeamRole.LEADER },
-      select: { teamId: true },
-    });
-    for (const { teamId } of leading) {
-      const others = await this.prisma.teamMember.count({
-        where: { teamId, userId: { not: userId } },
-      });
-      if (others > 0) {
-        const team = await this.prisma.team.findUnique({
-          where: { id: teamId },
-          select: { name: true },
-        });
-        blockers.push({ code: 'TEAM_LEADER', name: team?.name ?? '' });
-      }
-    }
-    // a supervisor is not blocked: on deletion the supervision of each project simply ends
-    // (the projects stay with their teams, who can then ask another supervisor)
-    return blockers;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async deletionBlockers(_userId: string) {
+    // Nothing blocks it any more: every student of a team has the same permissions, so a
+    // project owner's projects pass to the earliest remaining member on deletion, and a
+    // supervisor's supervision of each project simply ends (the projects stay with their
+    // teams, who can then ask another supervisor).
+    return [] as { code: string; name: string }[];
   }
 
   async requestDeletion(user: AuthUser, now = new Date()) {
@@ -180,7 +166,24 @@ export class AccountLifecycleService {
         where: { userId: account.id, usedAt: null },
         data: { usedAt: now },
       });
-      // an ordinary member leaves the team; a leader alone in the team keeps the empty team
+      // an ordinary member leaves the team; a project owner leaves it too and the earliest
+      // remaining member becomes the owner; an owner alone in the team keeps the empty team
+      const owned = await tx.teamMember.findMany({
+        where: { userId: account.id, role: TeamRole.LEADER },
+        select: { id: true, teamId: true },
+      });
+      for (const own of owned) {
+        const next = await tx.teamMember.findFirst({
+          where: { teamId: own.teamId, userId: { not: account.id } },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        });
+        if (!next) continue;
+        await tx.teamMember.delete({ where: { id: own.id } });
+        await tx.teamMember.update({
+          where: { id: next.id },
+          data: { role: TeamRole.LEADER },
+        });
+      }
       await tx.teamMember.deleteMany({
         where: { userId: account.id, role: TeamRole.MEMBER },
       });

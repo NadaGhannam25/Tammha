@@ -1054,3 +1054,29 @@ body.has-onb-tour{overflow:hidden}
 .onb-tour__btn--primary{background:#1689b7;color:#fff;box-shadow:none}
 .onb-tour__btn:focus-visible,.onb-tour__end:focus-visible{outline:2px solid #1689b7;outline-offset:2px}
 @media (max-width:760px){.onb-tour__hello{display:none}.onb-tour__tip{padding:16px}.onb-tour__tip h2{font-size:18px}.onb-tour__btn{padding:9px 13px}}
+
+/* ===== QA 21: wizard ===== */
+/* resizing one text box does not stretch the box beside it */
+.wz .wizard-grid{align-items:start}
+.wz .wizard-grid textarea{resize:vertical;flex:none}
+/* the calendar opens above every dialog (the project wizard, the stage dialog) */
+.datepicker{z-index:400}
+/* ===== QA 21: project page ===== */
+/* pencil at the top-left of the idea / objectives panels (top-right in English) */
+.overview-panel--idea,.overview-panel--goals{position:relative}
+.overview-edit{position:absolute;top:12px;inset-inline-end:12px;width:32px;height:32px;display:grid;place-items:center;border:1px solid #dfe7eb;border-radius:9px;background:#fff;color:#0d5c86;cursor:pointer;transition:background .15s,border-color .15s}
+.overview-edit:hover,.overview-edit:focus-visible{background:#eef8fc;border-color:#b9dcea}
+.overview-edit svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.overview-edit[hidden]{display:none}
+.overview-panel--idea h2,.overview-panel--goals h2{padding-inline-end:40px}
+.overview-editor{display:grid;gap:8px;margin-top:6px}
+.overview-editor textarea{width:100%;min-height:96px;resize:vertical;padding:10px 12px;border:1px solid #cfdde4;border-radius:10px;font:inherit;line-height:1.7;background:#fff}
+.overview-editor textarea:focus{outline:none;border-color:#008bbf;box-shadow:0 0 0 3px rgba(0,139,191,.12)}
+.overview-editor__actions{display:flex;gap:8px;flex-wrap:wrap}
+/* leave / delete the project, under the team list */
+.team-exit{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid #e6eef2}
+.team-exit:empty{display:none}
+.team-exit__btn{flex:1 1 140px;min-height:38px;padding:8px 14px;border-radius:10px;border:1px solid #dfe7eb;background:#fff;color:#33475b;font:inherit;font-weight:600;cursor:pointer}
+.team-exit__btn:hover{background:#f5f8fa}
+.team-exit__btn--danger{color:#c0392b;border-color:#f1c9c4}
+.team-exit__btn--danger:hover{background:#fdf2f1}

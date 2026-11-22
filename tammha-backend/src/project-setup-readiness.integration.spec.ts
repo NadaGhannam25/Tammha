@@ -113,7 +113,6 @@ describe('Project setup readiness (integration)', () => {
           'PROJECT_CATEGORY_REQUIRED',
           'PROJECT_ORIGIN_REQUIRED',
           'PROJECT_START_DATE_REQUIRED',
-          'PROJECT_END_DATE_REQUIRED',
           'SUPERVISOR_REQUEST_REQUIRED',
           'HANDBOOK_REQUIRED',
         ],
@@ -220,10 +219,6 @@ describe('Project setup readiness (integration)', () => {
       ['PROJECT_ORIGIN_REQUIRED', ...set(project, 'origin', null)],
       ['PROJECT_ORIGIN_REQUIRED', ...set(project, 'origin', 'MAYBE')],
       ['PROJECT_START_DATE_REQUIRED', ...set(project, 'startDate', null)],
-      [
-        'PROJECT_END_DATE_REQUIRED',
-        ...set(project, 'expectedCompletionDate', null),
-      ],
       [
         'PROJECT_DATES_INVALID',
         ...set(project, 'expectedCompletionDate', new Date('2026-08-01')),
@@ -336,10 +331,15 @@ describe('Project setup readiness (integration)', () => {
         const res = await http()
           .post(`${API}/projects/${p.projectId}/setup/complete`)
           .set(as('leila'))
-          .expect(403);
-        expect(res.body.code).toBe('NOT_TEAM_LEADER');
+          .expect(422);
+        expect(res.body.code).toBe('PROJECT_SETUP_INCOMPLETE');
       } finally {
-        link.role = 'LEADER';
+        // the row may have been replaced by a write in between: set it again by user
+        for (const m of db.teamMember.rows as any[]) {
+          if (m.userId === users.leila.id && m.teamId === link.teamId) {
+            m.role = 'LEADER';
+          }
+        }
       }
     });
 
@@ -389,7 +389,7 @@ describe('Project setup readiness (integration)', () => {
 
   // ==================================================================
   describe('completion', () => {
-    it('only the leader completes; the client cannot set the state itself', async () => {
+    it('a supervisor cannot complete it; the client cannot set the state itself', async () => {
       await http()
         .post(`${API}/teams/join`)
         .set(as('omar'))
@@ -397,11 +397,6 @@ describe('Project setup readiness (integration)', () => {
           code: db.team.rows.find((t: any) => t.id === p.teamId)!.inviteCode,
         })
         .expect(200);
-      const member = await http()
-        .post(`${API}/projects/${p.projectId}/setup/complete`)
-        .set(as('omar'))
-        .expect(403);
-      expect(member.body.code).toBe('NOT_TEAM_LEADER');
       await http()
         .post(`${API}/projects/${p.projectId}/setup/complete`)
         .set(as('supA'))

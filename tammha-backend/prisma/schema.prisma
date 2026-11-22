@@ -252,7 +252,8 @@ model AuthToken {
   tokenHash String        @unique
   expiresAt DateTime
   usedAt    DateTime?
-  // UNIVERSITY_EMAIL_VERIFICATION: the address the link was sent to
+  // UNIVERSITY_EMAIL_VERIFICATION: the address the link was sent to;
+  // PROJECT_DELETION: the id of the project the code deletes
   email     String?
   // 6-digit codes (EMAIL_VERIFICATION codes, ACCOUNT_DELETION): wrong attempts so far.
   // NULL for link tokens.
@@ -273,6 +274,9 @@ enum AuthTokenType {
   ACCOUNT_ACTIVATION
   /// 6-digit code e-mailed to confirm deleting the account
   ACCOUNT_DELETION
+  /// 6-digit code e-mailed to the project owner to confirm deleting a project
+  /// (the project id is kept in auth_tokens.email, so a code works for that project only)
+  PROJECT_DELETION
 }
 
 // ============================================

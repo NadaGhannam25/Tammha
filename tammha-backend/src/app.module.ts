@@ -12,6 +12,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UniversitiesModule } from './modules/universities/universities.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProjectsModule } from './modules/projects/projects.module';
+import { ProjectDeletionModule } from './modules/projects/deletion/project-deletion.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { MilestonesModule } from './modules/milestones/milestones.module';
@@ -48,6 +49,7 @@ import { NotificationsSchedulerModule } from './modules/notifications/notificati
     UniversitiesModule,
     UsersModule,
     ProjectsModule,
+    ProjectDeletionModule,
     TeamsModule,
     TasksModule,
     MilestonesModule,

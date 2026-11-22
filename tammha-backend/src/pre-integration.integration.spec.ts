@@ -516,12 +516,6 @@ describe('Pre-integration features (AppModule integration)', () => {
 
     it("the leader selects another university's handbook; nobody's university changes", async () => {
       const url = `${API}/projects/${p['Smart Campus']}/handbook/university-selection`;
-      const denied = await http()
-        .put(url)
-        .set(as('noor'))
-        .send({ universityKey: 'najran' })
-        .expect(403);
-      expect(denied.body.code).toBe('NOT_TEAM_LEADER');
       await http()
         .put(url)
         .set(as('omar'))
@@ -771,7 +765,9 @@ describe('Pre-integration features (AppModule integration)', () => {
     });
 
     it('a malformed answer or a provider failure is an error, never a summary', async () => {
+      // an unusable answer is asked for once more; two in a row are an error
       ai.nextJson({ sections: [{ title: 'free-form' }] }); // no topics list
+      ai.nextJson({ sections: [{ title: 'free-form' }] });
       const bad = await http()
         .post(summaryUrl())
         .set(as('leila'))
@@ -779,6 +775,7 @@ describe('Pre-integration features (AppModule integration)', () => {
         .expect(502);
       expect(bad.body.code).toBe('AI_INVALID_RESPONSE');
       ai.nextText('not json at all');
+      ai.nextError(new AiProviderError('AI_RESPONSE_TRUNCATED'));
       await http()
         .post(summaryUrl())
         .set(as('leila'))
@@ -800,11 +797,37 @@ describe('Pre-integration features (AppModule integration)', () => {
       const failed = db.aISupport.rows.filter(
         (r: any) => r.kind === 'HANDBOOK_EXPLANATION' && r.status === 'FAILED',
       );
+      // the code of the last attempt is kept
       expect(failed.map((r: any) => r.errorCode)).toEqual([
         'AI_INVALID_RESPONSE',
-        'AI_INVALID_RESPONSE',
+        'AI_RESPONSE_TRUNCATED',
         'AI_PROVIDER_TIMEOUT',
       ]);
+    });
+
+    it('one cut-off or malformed answer is asked again: the student gets the summary', async () => {
+      ai.reset();
+      ai.nextError(new AiProviderError('AI_RESPONSE_TRUNCATED'));
+      ai.nextJson({
+        topics: [
+          {
+            id: 'OVERVIEW',
+            found: true,
+            summary: 'What the handbook covers.',
+            points: [],
+          },
+        ],
+      });
+      const res = await http()
+        .post(summaryUrl())
+        .set(as('leila'))
+        .send({ language: 'ar', regenerate: true })
+        .expect(200);
+      expect(res.body.status).toBe('READY');
+      expect(res.body.topics).toHaveLength(7);
+      expect(res.body.topics[0].found).toBe(true);
+      // topics the handbook does not cover come back as found: false (one message in the page)
+      expect(res.body.topics.slice(1).every((t: any) => t.found === false)).toBe(true);
     });
 
     it("a handbook without the topics: all seven are 'not found' (own upload)", async () => {
@@ -859,7 +882,7 @@ describe('Pre-integration features (AppModule integration)', () => {
       expect(res.body).toMatchObject({
         handbook: { source: 'LIBRARY', fileName: 'beta-gp-handbook.pdf' },
         dropped: { unverified: 1, duplicates: 0 },
-        canApply: false, // only the leader applies
+        canApply: true, // every student of the team applies
         advisoryOnly: true,
       });
       expect(res.body.suggestions).toHaveLength(1);
@@ -870,16 +893,15 @@ describe('Pre-integration features (AppModule integration)', () => {
       });
       expect(ai.lastPrompt).toContain('TASK: HANDBOOK TASKS');
       expect(ai.lastPrompt).toContain('[Page 1]');
-      // a member cannot apply (team leader only)
-      const denied = await http()
+      // a student of another project cannot apply them
+      await http()
         .post(applyUrl())
-        .set(as('noor'))
+        .set(as('omar'))
         .send({
           aiRequestId: res.body.aiRequestId,
           items: [{ suggestionId: 't1' }],
         })
         .expect(403);
-      expect(denied.body.code).toBe('NOT_TEAM_LEADER');
       // supervisors cannot extract tasks
       await http().post(extractUrl()).set(as('supA')).send({}).expect(403);
       await http().post(extractUrl()).set(as('omar')).send({}).expect(403);
@@ -991,6 +1013,7 @@ describe('Pre-integration features (AppModule integration)', () => {
         .send({})
         .expect(200);
       expect(empty.body.suggestions).toEqual([]);
+      ai.nextText('{"title": "no list"}');
       ai.nextText('{"title": "no list"}');
       const bad = await http()
         .post(extractUrl())

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -32,8 +33,7 @@ import {
 } from './dto/team-response.dto';
 import {
   hasUniversityIdentity,
-  targetIdentityMissing,
-} from '@common/identity/university-identity';
+  targetIdentityMissing, assertUniversityIdentity } from '@common/identity/university-identity';
 
 const IDENTITY_SELECT = {
   role: true,
@@ -249,6 +249,15 @@ export class TeamsService {
         await this.access.assertStudentOfTeam(user, teamId, tx);
       } else {
         await this.access.assertLeaderOfTeam(user, teamId, tx);
+        // the project's owner is never removed by another member
+        if (await this.access.isLeaderOfTeam(targetUserId, teamId, tx)) {
+          throw new ForbiddenException(
+            workspaceError(
+              E.NOT_TEAM_LEADER,
+              'The project owner cannot be removed by another member',
+            ),
+          );
+        }
       }
 
       const target = await tx.teamMember.findUnique({
@@ -323,7 +332,8 @@ export class TeamsService {
   /** The current LEADER hands leadership (and its permissions) to another member. */
   async setLeader(user: AuthUser, teamId: string, targetUserId: string) {
     return this.prisma.$transaction(async (tx) => {
-      await this.access.assertLeaderOfTeam(user, teamId, tx);
+      await this.access.assertOwnerOfTeam(user, teamId, tx);
+      assertUniversityIdentity(user);
 
       const target = await tx.teamMember.findUnique({
         where: { teamId_userId: { teamId, userId: targetUserId } },

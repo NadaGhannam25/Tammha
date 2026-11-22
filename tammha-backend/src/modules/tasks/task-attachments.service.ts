@@ -159,8 +159,12 @@ export class TaskAttachmentsService {
       user,
       task.projectId,
     );
-    const leader = await this.access.isLeaderOfTeam(user.id, project.teamId);
-    if (!leader && task.assignedToId !== user.id) {
+    // every student of the team manages the task's attachments
+    const member = await this.access.findMembershipInTeam(
+      user.id,
+      project.teamId,
+    );
+    if (!member && task.assignedToId !== user.id) {
       throw new ForbiddenException({
         code: 'TASK_ATTACHMENT_FORBIDDEN',
         message:

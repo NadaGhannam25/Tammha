@@ -87,6 +87,7 @@ describe('DocumentsService (unit)', () => {
       getProjectSupervisorIds: jest.fn().mockResolvedValue([]),
       // P16: only the uploader or the team leader manages a document
       isLeaderOfTeam: jest.fn().mockResolvedValue(true),
+      findMembershipInTeam: jest.fn().mockResolvedValue({ role: "MEMBER" }),
     };
     notifications = { notify: jest.fn().mockResolvedValue(undefined) };
     quota = {

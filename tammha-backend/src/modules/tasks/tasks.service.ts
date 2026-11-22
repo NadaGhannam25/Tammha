@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,7 +8,6 @@ import {
   NotificationType,
   Prisma,
   TaskStatus,
-  TeamRole,
   UserRole,
 } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -133,15 +131,8 @@ export class TasksService {
       user,
       current.projectId,
     );
-    const membership = await this.access.findMembershipInTeam(
-      user.id,
-      project.teamId,
-    );
-    if (membership?.role !== TeamRole.LEADER) {
-      return this.updateOwnStatus(user, current, dto);
-    }
-    // the leader manages tasks only with a university identity
-    assertUniversityIdentity(user);
+    // every student of the team manages its tasks, with a university identity
+    if (project.teamId) assertUniversityIdentity(user);
 
     const data: Prisma.TaskUncheckedUpdateInput = {};
     if (typeof dto.title === 'string') data.title = dto.title;
@@ -203,54 +194,7 @@ export class TasksService {
         );
       }
     }
-    return this.toView(row);
-  }
-
-  /**
-   * MEMBER path: only { status } of a task assigned to them (TODO, IN_PROGRESS,
-   * IN_REVIEW, COMPLETED, BLOCKED…). Ownership, deadlines and details stay with the leader.
-   */
-  private async updateOwnStatus(
-    user: AuthUser,
-    current: {
-      id: string;
-      projectId: string;
-      status: TaskStatus;
-      assignedToId: string | null;
-    },
-    dto: UpdateTaskDto,
-  ): Promise<TaskViewDto> {
-    const fields = Object.entries(dto)
-      .filter(([, v]) => v !== undefined)
-      .map(([k]) => k);
-    if (fields.some((f) => f !== 'status') || !dto.status) {
-      throw new ForbiddenException(
-        workspaceError(
-          E.TASK_STATUS_ONLY,
-          'Team members can only update the status of their own tasks. Ask the team leader for other changes.',
-        ),
-      );
-    }
-    if (current.assignedToId !== user.id) {
-      throw new ForbiddenException(
-        workspaceError(
-          E.TASK_NOT_ASSIGNED_TO_YOU,
-          'You can only update the status of tasks assigned to you',
-        ),
-      );
-    }
-    const data: Prisma.TaskUncheckedUpdateInput = {};
-    if (dto.status !== current.status) {
-      assertTaskTransition(current.status, dto.status, false);
-      data.status = dto.status;
-      if (dto.status === TaskStatus.COMPLETED) data.completedAt = new Date();
-      else if (current.status === TaskStatus.COMPLETED) data.completedAt = null;
-    }
-    const row = await this.prisma.task.update({
-      where: { id: current.id },
-      data,
-      select: TASK_SELECT,
-    });
+    // the project owner learns when a task is completed (not when they complete it)
     if (
       dto.status === TaskStatus.COMPLETED &&
       current.status !== TaskStatus.COMPLETED
@@ -436,12 +380,15 @@ export class TasksService {
     member: AuthUser,
     task: { id: string; title: string; projectId: string },
   ) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: task.projectId },
-      select: { teamId: true },
-    });
-    const leaderId = project
-      ? await this.access.getTeamLeaderId(project.teamId)
+    // best effort: a missing project or leader never fails the status change
+    const project = await this.prisma.project
+      ?.findUnique({
+        where: { id: task.projectId },
+        select: { teamId: true },
+      })
+      .catch(() => null);
+    const leaderId = project?.teamId
+      ? await this.access.getTeamLeaderId(project.teamId).catch(() => null)
       : null;
     if (!leaderId || leaderId === member.id) return;
     await this.notifications.notify([leaderId], {

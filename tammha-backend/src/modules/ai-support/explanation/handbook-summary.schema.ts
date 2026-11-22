@@ -126,6 +126,8 @@ export const SUMMARY_SYSTEM_INSTRUCTION = [
     'Grading information is copied only as reference information; do not evaluate anyone.',
   'Every point must cite the page numbers ([Page N] markers) where it appears and give a short quote copied ' +
     'exactly from those pages. Use clear, formal language. Return JSON only.',
+  'Write well-organised, formal and complete sentences: a summary of 2-4 sentences and at most 6 points per ' +
+    'topic, each point one distinct requirement, without repeating the summary or another point.',
 ].join('\n');
 
 /** Gemini `responseSchema` for handbook task extraction. */

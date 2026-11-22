@@ -68,8 +68,16 @@ export class WorkspaceViewerDto {
   @ApiProperty({ enum: ['STUDENT', 'SUPERVISOR'] }) role!: string;
   @ApiProperty({ enum: TeamRole, nullable: true })
   teamRole!: TeamRole | null;
-  @ApiProperty({ description: 'Team leader of this project' })
+  @ApiProperty({
+    description:
+      'Owner of this project (the team LEADER): only they hand the ownership over and delete the project',
+  })
   isLeader!: boolean;
+  @ApiProperty({
+    description:
+      'A student of this project team: every student manages the project alike',
+  })
+  canManage!: boolean;
   @ApiProperty({ description: 'Supervisor linked to this project' })
   isSupervisor!: boolean;
   @ApiProperty({
@@ -92,7 +100,7 @@ export class SetupReadinessDto {
       'What is still missing, in setup order. TEAM_LEADER_REQUIRED, EMAIL_NOT_VERIFIED (leader account e-mail), ' +
       'UNIVERSITY_IDENTITY_REQUIRED (leader student number / verified university e-mail), TEAM_NAME_REQUIRED, PROJECT_NAME_REQUIRED, ' +
       'PROJECT_DESCRIPTION_REQUIRED, PROJECT_OVERVIEW_REQUIRED, PROJECT_OBJECTIVES_REQUIRED, PROJECT_CATEGORY_REQUIRED, ' +
-      'PROJECT_ORIGIN_REQUIRED, PROJECT_START_DATE_REQUIRED, PROJECT_END_DATE_REQUIRED (expected completion or end date), ' +
+      'PROJECT_ORIGIN_REQUIRED, PROJECT_START_DATE_REQUIRED, PROJECT_END_DATE_REQUIRED (no longer raised: the expected completion date is optional) (expected completion or end date), ' +
       'PROJECT_DATES_INVALID (an end/expected completion date not after the start date), SUPERVISOR_REQUEST_REQUIRED ' +
       '(only with SETUP_REQUIRE_SUPERVISOR=true: no PENDING or ACCEPTED request), SUPERVISOR_APPROVAL_REQUIRED (only with SETUP_REQUIRE_SUPERVISOR_APPROVAL=true: ' +
       'the request is still pending), HANDBOOK_REQUIRED / HANDBOOK_PROCESSING / HANDBOOK_FAILED (no applicable handbook READY: ' +

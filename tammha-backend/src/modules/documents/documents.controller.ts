@@ -156,7 +156,7 @@ export class DocumentsController {
   @ApiResponse({
     status: 403,
     description:
-      'DOCUMENT_NOT_OWNER (uploader or team leader only) or PROJECT_ACCESS_DENIED',
+      'DOCUMENT_NOT_OWNER or PROJECT_ACCESS_DENIED (any student of the team manages the files)',
   })
   @ApiResponse({ status: 404, description: 'DOCUMENT_NOT_FOUND' })
   update(

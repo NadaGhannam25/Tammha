@@ -290,6 +290,66 @@ export class AccountEmailService implements OnApplicationShutdown {
     });
   }
 
+  /** 6-digit code that confirms deleting a project (sent to its owner). */
+  async sendProjectDeletionCode(
+    to: string,
+    name: string | null,
+    projectName: string,
+    code: string,
+    preferredLanguage: string = 'ar',
+  ) {
+    const language = emailLanguage(preferredLanguage);
+    const copy =
+      language === 'ar'
+        ? {
+            subject: 'تمّمها | رمز تأكيد حذف المشروع',
+            body: `تلقينا طلبًا لحذف مشروع "${projectName}" نهائيًا من منصة تمّمها. لإتمام الطلب، استخدم رمز التأكيد التالي:`,
+            codeNote:
+              'الرمز صالح لمدة 15 دقيقة ويُستخدم مرة واحدة. بعد إدخاله يُحذف المشروع بجميع مراحله ومهامه وملفاته واجتماعاته نهائيًا، ولا يمكن استرجاعه.\nإذا لم تطلب ذلك، تجاهل هذه الرسالة.',
+          }
+        : {
+            subject: 'Tammha | Project deletion code',
+            body: `We received a request to permanently delete the project "${projectName}" from Tammha. To complete it, use this confirmation code:`,
+            codeNote:
+              'The code is valid for 15 minutes and can be used once. Once entered, the project and all of its stages, tasks, files and meetings are deleted permanently and cannot be restored.\nIf you did not request this, ignore this email.',
+          };
+    await this.deliver(to, 'project deletion code', {
+      ...renderTammhaMail({ language, recipientName: name, code, ...copy }),
+      link: `code ${code}`,
+    });
+  }
+
+  /** Sent to every student of the team after their project was deleted. */
+  async sendProjectDeleted(
+    to: string,
+    name: string | null,
+    projectName: string,
+    deletedByName: string,
+    preferredLanguage: string = 'ar',
+  ) {
+    const language = emailLanguage(preferredLanguage);
+    const copy =
+      language === 'ar'
+        ? {
+            subject: 'تمّمها | تأكيد حذف المشروع',
+            body:
+              `نود إعلامك بأنه تم حذف مشروع "${projectName}" من منصة تمّمها نهائيًا بطلب من ${deletedByName}، وحُذفت معه جميع مراحله ومهامه وملفاته واجتماعاته.\n\n` +
+              'يبقى حسابك في تمّمها كما هو، ويمكنك إنشاء مشروع جديد أو الانضمام إلى مشروع آخر في أي وقت.\n\n' +
+              'فريق تمّمها يتمنى لك كل التوفيق في مسيرتك.',
+          }
+        : {
+            subject: 'Tammha | Project deletion confirmed',
+            body:
+              `This is to let you know that the project "${projectName}" was permanently deleted from Tammha at the request of ${deletedByName}, together with all of its stages, tasks, files and meetings.\n\n` +
+              'Your Tammha account stays as it is; you can create a new project or join another one at any time.\n\n' +
+              'The Tammha team wishes you every success.',
+          };
+    await this.deliver(to, 'project deleted', {
+      ...renderTammhaMail({ language, recipientName: name, ...copy }),
+      link: '',
+    });
+  }
+
   /** Sent after the account was deleted (to the address it had). */
   async sendAccountDeleted(
     to: string,

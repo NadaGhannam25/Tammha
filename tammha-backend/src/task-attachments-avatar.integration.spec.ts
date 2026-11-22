@@ -180,20 +180,20 @@ describe('Task attachments and profile photo (integration)', () => {
         .send({ documentId: docB })
         .expect(400);
       expect(other.body.code).toBe('ATTACHMENT_DOCUMENT_INVALID');
-      const notMine = await http()
+      // a student of another team cannot attach (any student of this team can)
+      await http()
         .post(path())
-        .set(as('carl'))
+        .set(as('erin'))
         .send({ documentId: docA })
         .expect(403);
-      expect(notMine.body.code).toBe('TASK_ATTACHMENT_FORBIDDEN');
       await http().get(path()).set(as('erin')).expect(403);
     });
 
-    it('the leader removes it; the file stays in the project', async () => {
+    it('a student of the team removes it; the file stays in the project', async () => {
       const list = await http().get(path()).set(as('alice')).expect(200);
       await http()
         .delete(`${path()}/${list.body[0].id}`)
-        .set(as('carl'))
+        .set(as('erin'))
         .expect(403);
       const r = await http()
         .delete(`${path()}/${list.body[0].id}`)

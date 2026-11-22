@@ -89,7 +89,8 @@
     };
     if (still) { fill.style.clipPath = 'inset(0)'; box.classList.add('is-still'); } else raf = requestAnimationFrame(frame);
 
-    const slowTimer = options.showSlow === false ? null : setTimeout(() => {
+    // no "taking longer than usual" line unless a page asks for its own text
+    const slowTimer = !options.slowText ? null : setTimeout(() => {
       const slow = box.querySelector('.tm-loader__slow');
       slow.textContent = options.slowText || T('تستغرق العملية وقتًا أطول من المعتاد، يُرجى الانتظار.', 'This is taking longer than usual. Please wait.');
       slow.hidden = false;

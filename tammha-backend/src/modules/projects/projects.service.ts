@@ -373,12 +373,15 @@ export class ProjectsService {
       },
       leader: leader?.user ?? null,
       supervisors,
-      // the invitation code/link is managed by the leader (P16)
-      invitation: isLeader ? this.teamsService.toInvitationView(team) : null,
+      // the invitation code/link is managed by every student of the team
+      invitation: viewerMember
+        ? this.teamsService.toInvitationView(team)
+        : null,
       viewer: {
         role: viewer.role,
         teamRole: viewerMember?.teamRole ?? null,
         isLeader,
+        canManage: !!viewerMember,
         isSupervisor:
           viewer.role === UserRole.SUPERVISOR &&
           supervisors.some((s) => s.userId === viewer.id),

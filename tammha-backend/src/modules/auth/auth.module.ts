@@ -59,6 +59,6 @@ import {
     UniversityIdentityService,
     SupervisorAccountsService,
   ],
-  exports: [AuthService],
+  exports: [AuthService, AuthTokensService, AccountEmailService],
 })
 export class AuthModule {}

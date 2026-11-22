@@ -22,7 +22,7 @@
     S.projectHeroProgress(w);
   }
   function render() {
-    const isLeader = !!w.viewer?.isLeader;
+    const isLeader = !!(w.viewer?.canManage ?? w.viewer?.isLeader); // every student of the team manages the stages
     if (!stages.length) { UI.state(body, 'empty', { title: T('لا توجد مراحل بعد', 'No stages yet'), text: isLeader ? T('أضف مراحل المشروع من زر "إضافة مرحلة".', 'Add the project stages with "Add stage".') : T('يضيف قائد الفريق مراحل المشروع.', 'The Team Leader adds the project stages.') }); return; }
     // the current stage = the first one in order that is in progress (the backend starts the
     // first stage automatically when the stages are created)
@@ -88,7 +88,7 @@
     try {
       w = await S.currentWorkspace();
       if (!w) { UI.state(body, 'empty', { title: T('لا توجد مشاريع بعد', 'No projects yet'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } }); $('openStageModal').hidden = true; return; }
-      $('openStageModal').hidden = !w.viewer?.isLeader;
+      $('openStageModal').hidden = !!!(w.viewer?.canManage ?? w.viewer?.isLeader);
       summary(); load();
     } catch (e) { UI.state(body, 'error', { error: e, retry: () => location.reload() }); }
   });

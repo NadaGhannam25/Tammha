@@ -209,10 +209,9 @@ export class ProjectSetupReadinessService {
     }
 
     // ---- dates ----
+    // the expected completion date is optional; when given it must follow the start
     const start = project.startDate;
-    const finish = project.expectedCompletionDate ?? project.endDate;
     if (!isDate(start)) missing.add('PROJECT_START_DATE_REQUIRED');
-    if (!isDate(finish)) missing.add('PROJECT_END_DATE_REQUIRED');
     if (isDate(start)) {
       const after = [project.expectedCompletionDate, project.endDate].filter(
         isDate,

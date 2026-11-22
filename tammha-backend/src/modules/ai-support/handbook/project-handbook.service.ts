@@ -290,7 +290,10 @@ export class ProjectHandbookService implements OnApplicationShutdown {
           orderBy: { version: 'desc' },
           select: VERSION_SELECT,
         }),
-        this.access.isLeaderOfTeam(user.id, project.teamId),
+        // every student of the team uploads or selects the project handbook
+        this.access
+          .findMembershipInTeam(user.id, project.teamId)
+          .then((m) => !!m),
         this.access
           .getTeamUniversityId(project.teamId)
           .then((id) => this.universityHandbooks.summaryForUniversity(id)),
@@ -709,7 +712,7 @@ export class ProjectHandbookService implements OnApplicationShutdown {
 }
 
 /** Project handbook PDFs live under handbooks/projects/<projectId>/ only. */
-function isProjectHandbookPath(path: string, projectId: string): boolean {
+export function isProjectHandbookPath(path: string, projectId: string): boolean {
   const prefix = `${HANDBOOK_FOLDER}/projects/${projectId}/`;
   return (
     path.startsWith(prefix) &&

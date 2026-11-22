@@ -52,10 +52,14 @@ describe('TeamsService', () => {
       getTeamOrThrow: jest.fn(),
       getTeamUniversityId: jest.fn().mockResolvedValue('uni-1'),
       assertSameUniversity: jest.fn(),
-      // P16: team management is leader-only
+      // every student of the team manages it; the owner (LEADER) hands it over
       assertLeaderOfTeam: jest
         .fn()
         .mockResolvedValue({ id: 't1', inviteCode: null }),
+      assertOwnerOfTeam: jest
+        .fn()
+        .mockResolvedValue({ id: 't1', inviteCode: null }),
+      isLeaderOfTeam: jest.fn().mockResolvedValue(false),
     };
   });
 
@@ -239,7 +243,8 @@ describe('TeamsService', () => {
         },
       ]);
 
-      await make().removeMember(student, 't1', 's2');
+      // the owner leaves the team (removes themselves)
+      await make().removeMember({ ...student, id: 's2' }, 't1', 's2');
 
       expect(prisma.$transaction).toHaveBeenCalled();
       expect(prisma.teamMember.delete).toHaveBeenCalledWith({

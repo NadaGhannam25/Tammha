@@ -28,10 +28,11 @@ type Db = PrismaService | Prisma.TransactionClient;
  * - SUPERVISOR: access only projects they are linked to (project_members).
  * - Any other role: no access to workspaces.
  *
- * P16: TeamRole grants permissions. The team LEADER (a STUDENT) manages the team,
- * invitations, the supervisor request, project details and setup, tasks, milestones
- * and the project handbook (assertLeaderOf*). MEMBERS read the project and work on
- * the tasks assigned to them. Supervisors monitor and review, never manage the team.
+ * Every student of the team manages the team, invitations, the supervisor request,
+ * project details and setup, tasks, milestones and the project handbook alike
+ * (assertLeaderOf*). The team LEADER is the project's owner: only they hand the
+ * ownership over and delete the project (assertOwnerOf*). Supervisors monitor and
+ * review, never manage the team.
  */
 @Injectable()
 export class WorkspaceAccessService {
@@ -333,10 +334,11 @@ export class WorkspaceAccessService {
   }
 
   /**
-   * Management access to a team: only its LEADER, who must also have a university
+   * Management access to a team: every student of the team manages it alike (the
+   * team LEADER is its owner, not a separate permission level), with a university
    * identity (student number or verified university e-mail).
-   * Non-members get 403 TEAM_ACCESS_DENIED; members get 403 NOT_TEAM_LEADER; a leader
-   * without a university identity gets 403 UNIVERSITY_IDENTITY_REQUIRED.
+   * Non-members get 403 TEAM_ACCESS_DENIED; a member without a university identity
+   * gets 403 UNIVERSITY_IDENTITY_REQUIRED.
    */
   async assertLeaderOfTeam(
     user: AuthUser,
@@ -344,19 +346,33 @@ export class WorkspaceAccessService {
     db: Db = this.prisma,
   ): Promise<Team> {
     const team = await this.assertStudentOfTeam(user, teamId, db);
-    if (!(await this.isLeaderOfTeam(user.id, team.id, db))) {
-      throw new ForbiddenException(
-        workspaceError(E.NOT_TEAM_LEADER, 'Only the team leader can do this'),
-      );
-    }
     assertUniversityIdentity(user);
     return team;
   }
 
   /**
-   * Management access to a project: only the LEADER of its team, with a university
-   * identity. Non-members (and supervisors) get 403 PROJECT_ACCESS_DENIED; members get
-   * 403 NOT_TEAM_LEADER; a leader without identity 403 UNIVERSITY_IDENTITY_REQUIRED.
+   * The team's owner (its LEADER: the student who created the project, or who it
+   * was handed to). Only the owner hands the ownership over and deletes the project.
+   * Members get 403 NOT_TEAM_LEADER.
+   */
+  async assertOwnerOfTeam(
+    user: AuthUser,
+    teamId: string,
+    db: Db = this.prisma,
+  ): Promise<Team> {
+    const team = await this.assertStudentOfTeam(user, teamId, db);
+    if (!(await this.isLeaderOfTeam(user.id, team.id, db))) {
+      throw new ForbiddenException(
+        workspaceError(E.NOT_TEAM_LEADER, 'Only the project owner can do this'),
+      );
+    }
+    return team;
+  }
+
+  /**
+   * Management access to a project: any student of its team, with a university
+   * identity. Non-members (and supervisors) get 403 PROJECT_ACCESS_DENIED; a student
+   * without identity 403 UNIVERSITY_IDENTITY_REQUIRED.
    */
   async assertLeaderOfProject(
     user: AuthUser,
@@ -373,7 +389,7 @@ export class WorkspaceAccessService {
   }
 
   /**
-   * The LEADER of the project's team, WITHOUT the university-identity gate. Only for
+   * A student of the project's team, WITHOUT the university-identity gate. Only for
    * Complete Project Setup, which reports a missing identity among its readiness
    * requirements (422 PROJECT_SETUP_INCOMPLETE) instead of failing early.
    */
@@ -382,10 +398,19 @@ export class WorkspaceAccessService {
     projectId: string,
     db: Db = this.prisma,
   ): Promise<Project> {
+    return this.assertStudentOfProject(user, projectId, db);
+  }
+
+  /** The project's owner (the LEADER of its team): only they delete the project. */
+  async assertOwnerOfProject(
+    user: AuthUser,
+    projectId: string,
+    db: Db = this.prisma,
+  ): Promise<Project> {
     const project = await this.assertStudentOfProject(user, projectId, db);
     if (!(await this.isLeaderOfTeam(user.id, project.teamId, db))) {
       throw new ForbiddenException(
-        workspaceError(E.NOT_TEAM_LEADER, 'Only the team leader can do this'),
+        workspaceError(E.NOT_TEAM_LEADER, 'Only the project owner can do this'),
       );
     }
     return project;

@@ -34,6 +34,8 @@
     return dialog;
   }
   function closeDialog() { if (dialog) { dialog.remove(); dialog = null; } }
+  // the same dialog for other pages (project page: leave / delete the project)
+  window.TammhaDialog = { open: openDialog, close: closeDialog };
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dialog && !dialog.dataset.locked) closeDialog(); });
   const minutes = (sec) => Math.max(1, Math.ceil(sec / 60));
 

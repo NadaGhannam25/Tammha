@@ -240,6 +240,8 @@ export class DashboardViewerDto {
   @ApiProperty({ enum: TeamRole, nullable: true })
   teamRole!: TeamRole | null;
   @ApiProperty() isLeader!: boolean;
+  @ApiProperty({ description: 'A student of the team: every student manages the project alike' })
+  canManage!: boolean;
   @ApiProperty({
     description:
       'false when the student has no student number and no verified university e-mail ' +

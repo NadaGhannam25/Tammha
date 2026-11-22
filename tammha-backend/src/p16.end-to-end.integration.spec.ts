@@ -553,20 +553,13 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
       ).toBeGreaterThan(0);
     });
 
-    it('a MEMBER cannot invite, manage the team, read the invite link or change the leader', async () => {
-      const inv = await http()
-        .post(`${API}/teams/${p.teamId}/student-invitations`)
+    it('a MEMBER manages the team like its owner, but cannot remove the owner or hand the ownership over', async () => {
+      // every student reads the invite link
+      await http()
+        .get(`${API}/teams/${p.teamId}/invitation`)
         .set(as('noor'))
-        .send({ studentNumber: 'S2026-003' })
-        .expect(403);
-      expect(inv.body.code).toBe('NOT_TEAM_LEADER');
-      const attempts = [
-        () => http().get(`${API}/teams/${p.teamId}/invitation`).set(as('noor')),
-        () =>
-          http()
-            .patch(`${API}/teams/${p.teamId}`)
-            .set(as('noor'))
-            .send({ name: 'Renamed' }),
+        .expect(200);
+      for (const attempt of [
         () =>
           http()
             .patch(`${API}/teams/${p.teamId}/leader`)
@@ -576,18 +569,25 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
           http()
             .delete(`${API}/teams/${p.teamId}/members/${ids.leila}`)
             .set(as('noor')),
-      ];
-      for (const attempt of attempts) {
+      ]) {
         const res = await attempt().expect(403);
         expect(res.body.code).toBe('NOT_TEAM_LEADER');
       }
+      // a student of another team manages nothing here
+      const outsider = await http()
+        .patch(`${API}/teams/${p.teamId}`)
+        .set(as('sara'))
+        .send({ name: 'Renamed' })
+        .expect(403);
+      expect(outsider.body.code).toBe('TEAM_ACCESS_DENIED');
       const ws = await http()
         .get(`${API}/projects/${p.projectId}`)
         .set(as('noor'))
         .expect(200);
-      expect(ws.body.invitation).toBeNull();
+      expect(ws.body.invitation).not.toBeNull();
       expect(ws.body.viewer).toMatchObject({
         isLeader: false,
+        canManage: true,
         teamRole: 'MEMBER',
       });
     });
@@ -623,13 +623,13 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
 
   // ==================================================================
   describe('Supervisor invitation (leader only, separate from the team)', () => {
-    it('members cannot request a supervisor; the leader can; the supervisor is notified', async () => {
+    it('another team cannot request a supervisor; a student of the team can; the supervisor is notified', async () => {
       const denied = await http()
         .post(`${API}/projects/${p.projectId}/supervision-requests`)
-        .set(as('noor'))
+        .set(as('sara'))
         .send({ supervisorEmail: 'supA@uni.test' })
         .expect(403);
-      expect(denied.body.code).toBe('NOT_TEAM_LEADER');
+      expect(denied.body.code).toBe('PROJECT_ACCESS_DENIED');
       const req = await http()
         .post(`${API}/projects/${p.projectId}/supervision-requests`)
         .set(as('leila'))
@@ -681,12 +681,12 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
         origin: 'NEW',
         expectedCompletionDate: '2027-05-30',
       };
-      const denied = await http()
+      // a member edits the details as well
+      await http()
         .patch(`${API}/projects/${p.projectId}`)
         .set(as('noor'))
         .send(body)
-        .expect(403);
-      expect(denied.body.code).toBe('NOT_TEAM_LEADER');
+        .expect(200);
       await http()
         .patch(`${API}/projects/${p.projectId}`)
         .set(as('supA'))
@@ -718,7 +718,7 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
       await http()
         .post(`${API}/projects/${p.projectId}/setup/complete`)
         .set(as('noor'))
-        .expect(403);
+        .expect(422);
       const res = await http()
         .post(`${API}/projects/${p.projectId}/setup/complete`)
         .set(as('leila'))
@@ -776,7 +776,7 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
         .expect(200);
       expect(member.body).toMatchObject({
         state: 'NONE',
-        canUpload: false,
+        canUpload: true,
         active: null,
       });
       const sup = await http()
@@ -786,13 +786,13 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
       expect(sup.body.canUpload).toBe(false);
       const denied = await http()
         .put(`${API}/projects/${p.projectId}/handbook`)
-        .set(as('noor'))
+        .set(as('erin'))
         .attach('file', HANDBOOK_PDF, {
           filename: 'handbook.pdf',
           contentType: 'application/pdf',
         })
         .expect(403);
-      expect(denied.body.code).toBe('NOT_TEAM_LEADER');
+      expect(denied.body.code).toBe('PROJECT_ACCESS_DENIED');
       await http()
         .put(`${API}/projects/${p.projectId}/handbook`)
         .set(as('supA'))
@@ -971,7 +971,7 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
     it('milestones (stages) have an order and are leader-managed', async () => {
       await http()
         .post(`${API}/milestones`)
-        .set(as('noor'))
+        .set(as('erin'))
         .send({ projectId: p.projectId, title: 'Nope', dueDate: inDays(5) })
         .expect(403);
       for (const [title, order, due] of [
@@ -1082,17 +1082,17 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
       expect(db.task.rows.length).toBe(tasksBefore);
     });
 
-    it('non-leaders cannot apply suggestions', async () => {
+    it('other teams and supervisors cannot apply suggestions', async () => {
       const body = {
         aiRequestId: memberRequestId,
         items: [{ suggestionId: 't1' }],
       };
       const member = await http()
         .post(`${API}/projects/${p.projectId}/ai-task-suggestions/apply`)
-        .set(as('noor'))
+        .set(as('erin'))
         .send(body)
         .expect(403);
-      expect(member.body.code).toBe('NOT_TEAM_LEADER');
+      expect(member.body.code).toBe('PROJECT_ACCESS_DENIED');
       await http()
         .post(`${API}/projects/${p.projectId}/ai-task-suggestions/apply`)
         .set(as('supA'))
@@ -1214,7 +1214,7 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
       ids.taskT3 = t3.id;
     });
 
-    it('applied tasks behave like manual ones: leader assigns, member updates own status only', async () => {
+    it('applied tasks behave like manual ones: assigned, updated by the students of the team', async () => {
       const assign = await http()
         .patch(`${API}/tasks/${ids.taskT3}`)
         .set(as('leila'))
@@ -1227,17 +1227,17 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
         .set(as('noor'))
         .send({ status: 'IN_PROGRESS' })
         .expect(200);
-      const reassign = await http()
-        .patch(`${API}/tasks/${ids.taskT1}`)
-        .set(as('noor'))
-        .send({ assignedStudentId: ids.omar })
-        .expect(403);
-      expect(reassign.body.code).toBe('TASK_STATUS_ONLY');
+      // a member manages any task too (here: a field of omar's task, restored)
       await http()
         .patch(`${API}/tasks/${ids.taskT3}`)
         .set(as('noor'))
-        .send({ status: 'COMPLETED' })
-        .expect(403);
+        .send({ priority: 'LOW' })
+        .expect(200);
+      await http()
+        .patch(`${API}/tasks/${ids.taskT3}`)
+        .set(as('noor'))
+        .send({ priority: assign.body.priority })
+        .expect(200);
       await http()
         .patch(`${API}/tasks/${ids.taskT1}`)
         .set(as('supA'))
@@ -1351,7 +1351,7 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
   describe('Regression: documents, feedback, meetings, dashboard, notifications', () => {
     let docId = '';
 
-    it('documents: members upload; only the uploader or the leader may change/delete', async () => {
+    it('documents: members upload; any student of the team may change/delete', async () => {
       const up = await http()
         .post(`${API}/documents/upload`)
         .set(as('noor'))
@@ -1364,14 +1364,15 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
         })
         .expect(201);
       docId = up.body.id;
+      // a student of another team changes nothing; any student of this team may
       const del = await http()
         .delete(`${API}/documents/${docId}`)
-        .set(as('omar'))
+        .set(as('sara'))
         .expect(403);
-      expect(del.body.code).toBe('DOCUMENT_NOT_OWNER');
+      expect(del.body.code).toBe('PROJECT_ACCESS_DENIED');
       await http()
         .patch(`${API}/documents/${docId}`)
-        .set(as('omar'))
+        .set(as('sara'))
         .send({ title: 'Hijacked' })
         .expect(403);
       await http()
@@ -1513,6 +1514,97 @@ describe('P16 end-to-end flow (AppModule integration)', () => {
         .set(sup)
         .expect(200);
       expect(JSON.stringify(dash.body)).toContain(p.projectId);
+    });
+  });
+
+  // ==================================================================
+  describe('Leaving and deleting a project (equal permissions; the owner deletes)', () => {
+    const q: { projectId: string; teamId: string; code: string } = {
+      projectId: '',
+      teamId: '',
+      code: '',
+    };
+
+    it('sara creates a project; erin joins, manages it, then leaves', async () => {
+      const created = await http()
+        .post(`${API}/projects`)
+        .set(as('sara'))
+        .send({ name: 'Throwaway project' })
+        .expect(201);
+      q.projectId = created.body.project.id;
+      q.teamId = created.body.team.id;
+      q.code = created.body.invitation.code;
+      await http()
+        .post(`${API}/teams/join`)
+        .set(as('erin'))
+        .send({ code: q.code })
+        .expect(200);
+      // erin manages the project like its owner
+      await http()
+        .post(`${API}/tasks`)
+        .set(as('erin'))
+        .send({ projectId: q.projectId, title: 'Draft the proposal' })
+        .expect(201);
+      // ... but only the owner deletes it
+      const denied = await http()
+        .post(`${API}/projects/${q.projectId}/deletion/request`)
+        .set(as('erin'))
+        .expect(403);
+      expect(denied.body.code).toBe('NOT_TEAM_LEADER');
+      const left = await http()
+        .delete(`${API}/teams/${q.teamId}/members/${ids.erin}`)
+        .set(as('erin'))
+        .expect(200);
+      expect(left.body.message).toBe('You left the team');
+      await http()
+        .get(`${API}/projects/${q.projectId}`)
+        .set(as('erin'))
+        .expect(403);
+      // she joins again for the deletion e-mail below
+      await http()
+        .post(`${API}/teams/join`)
+        .set(as('erin'))
+        .send({ code: q.code })
+        .expect(200);
+    });
+
+    it('the owner deletes it with the e-mailed code; every student is told; a wrong or reused code fails', async () => {
+      await http()
+        .post(`${API}/projects/${q.projectId}/deletion/request`)
+        .set(as('sara'))
+        .expect(200);
+      const codeMail = [...mail.sent]
+        .reverse()
+        .find((m) => m.to === 'sara@uni.test')!;
+      expect(codeMail.subject).toBe('تمّمها | رمز تأكيد حذف المشروع');
+      const mailCode = /\b(\d{6})\b/.exec(codeMail.text)![1];
+      // the code is in the message only, never in the subject
+      expect(codeMail.subject).not.toContain(mailCode);
+      const wrong = await http()
+        .post(`${API}/projects/${q.projectId}/deletion/confirm`)
+        .set(as('sara'))
+        .send({ code: mailCode === '000000' ? '111111' : '000000' })
+        .expect(400);
+      expect(wrong.body.code).toBe('DELETION_CODE_INVALID');
+      await http()
+        .post(`${API}/projects/${q.projectId}/deletion/confirm`)
+        .set(as('sara'))
+        .send({ code: mailCode })
+        .expect(200);
+      expect(db.project.rows.some((r: any) => r.id === q.projectId)).toBe(false);
+      expect(db.team.rows.some((r: any) => r.id === q.teamId)).toBe(false);
+      // (stages, tasks, files... follow the project by the database cascade)
+      for (const to of ['sara@uni.test', 'erin@uni.test']) {
+        const done = [...mail.sent]
+          .reverse()
+          .find((m) => m.to === to && m.subject === 'تمّمها | تأكيد حذف المشروع');
+        expect(done?.text).toContain('Throwaway project');
+      }
+      await http()
+        .post(`${API}/projects/${q.projectId}/deletion/confirm`)
+        .set(as('sara'))
+        .send({ code: mailCode })
+        .expect(404);
     });
   });
 

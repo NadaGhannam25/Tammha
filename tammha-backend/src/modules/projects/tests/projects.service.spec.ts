@@ -124,7 +124,7 @@ describe('ProjectsService', () => {
     });
   });
 
-  it('returns the invitation to the team leader only (not members or supervisors)', async () => {
+  it('returns the invitation to the students of the team (not supervisors)', async () => {
     access.assertCanViewProject = jest.fn().mockResolvedValue({ id: 'p1' });
     const supervisor = { id: 'v1', role: UserRole.SUPERVISOR } as AuthUser;
     const member = { id: 's2', role: UserRole.STUDENT } as AuthUser;
@@ -144,7 +144,13 @@ describe('ProjectsService', () => {
     expect(
       (await service.getWorkspace(supervisor, 'p1')).invitation,
     ).toBeNull();
-    expect((await service.getWorkspace(member, 'p1')).invitation).toBeNull();
+    // every student of the team manages the invitation
+    const memberView = await service.getWorkspace(member, 'p1');
+    expect(memberView.invitation).toMatchObject({ code: 'K7QXM2PA' });
+    expect(memberView.viewer).toMatchObject({
+      isLeader: false,
+      canManage: true,
+    });
     const leaderView = await service.getWorkspace(student, 'p1');
     expect(leaderView.invitation).toMatchObject({ code: 'K7QXM2PA' });
     expect(leaderView.viewer).toMatchObject({

@@ -196,6 +196,7 @@ export class DashboardService {
     const viewer = {
       teamRole: membership?.role ?? null,
       isLeader: membership?.role === TeamRole.LEADER,
+      canManage: !!membership,
       // NO_PROJECT + false: ask for a student number or university e-mail before "Create project"
       profileComplete: hasUniversityIdentity(user),
     };
