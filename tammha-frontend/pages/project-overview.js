@@ -23,9 +23,10 @@
     $('overviewProjectName').textContent = p.name;
     document.title = p.name;
     S.projectHeroProgress(w); // the completion, once, in the title bar
-    $('ovOverview').textContent = p.overview || p.description || T('لم تُكتب نبذة المشروع بعد.', 'No overview yet.');
+    // nothing written yet: the section stays empty (renderSetup shows what is missing)
+    $('ovOverview').textContent = p.overview || p.description || '';
     const goals = (p.objectives || []).filter(Boolean);
-    $('ovGoals').innerHTML = goals.length ? goals.map((g) => `<li>${esc(g)}</li>`).join('') : `<li class="app-muted">${esc(T('لم تُحدد الأهداف بعد.', 'No objectives yet.'))}</li>`;
+    $('ovGoals').innerHTML = goals.length ? goals.map((g) => `<li>${esc(g)}</li>`).join('') : '';
     // a pencil (top-left) edits the idea and the objectives, for every student of the team
     document.querySelectorAll('[data-edit-panel]').forEach((b) => { b.hidden = !canManage; });
     const members = w.team?.members || [];
@@ -84,18 +85,56 @@
     } catch (e) { /* the list is optional */ }
   }
 
+  // No "setup is not complete" panel: whatever is still missing is shown in its own section
+  // ("not complete yet"). When nothing is missing the setup is completed quietly.
+  const SECTION_OF = {
+    PROJECT_OVERVIEW_REQUIRED: 'idea', PROJECT_DESCRIPTION_REQUIRED: 'idea',
+    PROJECT_OBJECTIVES_REQUIRED: 'goals',
+    SUPERVISOR_REQUEST_REQUIRED: 'supervisor', SUPERVISOR_APPROVAL_REQUIRED: 'supervisor',
+    TEAM_LEADER_REQUIRED: 'team', EMAIL_NOT_VERIFIED: 'team', UNIVERSITY_IDENTITY_REQUIRED: 'team', TEAM_NAME_REQUIRED: 'team',
+    HANDBOOK_REQUIRED: 'handbook', HANDBOOK_PROCESSING: 'handbook', HANDBOOK_FAILED: 'handbook',
+  };
+  const SECTION_EL = { idea: '.overview-panel--idea', goals: '.overview-panel--goals', supervisor: '#ovSupervision', team: '.overview-team' };
   async function renderSetup() {
-    const box = $('ovSetup');
-    if (w.project.setup?.completed) { box.innerHTML = ''; return; }
-    try {
-      const st = await Api.get(`/projects/${w.id}/setup`);
-      const missing = st.readiness?.missingRequirements || [];
-      // the academic supervisor is optional: only real missing items make the setup incomplete
-      box.innerHTML = `<div class="app-panel"><h2>${esc(missing.length ? T('إعداد المشروع غير مكتمل', 'Project setup is not complete') : T('الإعداد جاهز للإكمال', 'The setup is ready to complete'))}</h2>
-        ${missing.length ? `<p class="app-muted">${esc(T('المتبقي:', 'Still needed:'))}</p><ul class="overview-goals">${missing.map((m) => `<li>${esc(UI.setupRequirement(m))}</li>`).join('')}</ul>` : `<p class="app-muted">${esc(T('اكتملت المتطلبات، ويمكن لقائد الفريق إكمال الإعداد.', 'Every requirement is met; the Team Leader can complete the setup.'))}</p>`}
-        ${missing.includes('HANDBOOK_REQUIRED') ? `<a class="app-btn" href="guide.html?project=${encodeURIComponent(w.id)}">${esc(T('اختيار دليل المشروع', 'Choose the project handbook'))}</a>` : ''}
-        ${!!(w.viewer?.canManage ?? w.viewer?.isLeader) ? ` <button class="app-btn app-btn--primary" type="button" data-complete-setup ${missing.length ? 'disabled' : ''}>${esc(T('إكمال الإعداد', 'Complete the setup'))}</button>` : ''}</div>`;
-    } catch (e) { UI.state(box, 'error', { error: e }); }
+    const box = $('ovSetup'); box.innerHTML = '';
+    document.querySelectorAll('.ov-empty').forEach((x) => x.remove());
+    if (w.project.setup?.completed) return;
+    let missing = [];
+    try { missing = (await Api.get(`/projects/${w.id}/setup`)).readiness?.missingRequirements || []; }
+    catch (e) { return; } // nothing to mark; the sections still show their content
+    const canManage = !!(w.viewer?.canManage ?? w.viewer?.isLeader);
+    if (!missing.length) {
+      if (canManage) Api.post(`/projects/${w.id}/setup/complete`, {}).then(() => { w.project.setup = { ...(w.project.setup || {}), completed: true }; S.invalidateProjects(); }).catch(() => {});
+      return;
+    }
+    const groups = {};
+    missing.forEach((m) => { const k = SECTION_OF[m] || 'details'; (groups[k] = groups[k] || []).push(m); });
+    // an empty-state card inside the section: what is missing, and the way to add it
+    const ADD = {
+      idea: [T('أضف فكرة المشروع ليتعرّف عليها الفريق والمشرف.', 'Add the project idea for the team and the supervisor.'), 'idea'],
+      goals: [T('أضف أهداف المشروع، هدفًا في كل سطر.', 'Add the project objectives, one per line.'), 'goals'],
+      supervisor: [T('أرسل طلب إشراف إلى مشرفك الأكاديمي من الحقل أدناه.', 'Send a supervision request to your academic supervisor below.')],
+      handbook: [T('اختر دليل المشروع من المكتبة أو ارفع دليل جامعتك.', "Choose the project handbook from the library or upload your university's.")],
+    };
+    const card = (k, codes) => {
+      const [text, edit] = ADD[k] || [codes.map((c) => UI.setupRequirement(c)).join('، ')];
+      const action = edit && canManage
+        ? `<button class="ov-empty__btn" type="button" data-edit-panel="${edit}">${esc(T('إضافة', 'Add'))}</button>`
+        : k === 'handbook' ? `<a class="ov-empty__btn" href="guide.html?project=${encodeURIComponent(w.id)}">${esc(T('اختيار الدليل', 'Choose'))}</a>` : '';
+      return `<div class="ov-empty" role="note"><div class="ov-empty__body"><strong>${esc(T('لم يكتمل بعد', 'Not complete yet'))}</strong><span>${esc(text)}</span></div>${action}</div>`;
+    };
+    Object.entries(groups).forEach(([k, codes]) => {
+      const el = SECTION_EL[k] && document.querySelector(SECTION_EL[k]);
+      const h = el && el.querySelector('h2');
+      if (h) {
+        if (k === 'idea') $('ovOverview').hidden = true;
+        if (k === 'goals') $('ovGoals').hidden = true;
+        h.insertAdjacentHTML('afterend', card(k, codes)); return;
+      }
+      // sections that are not on this page: the handbook and the project details
+      const title = k === 'handbook' ? T('دليل المشروع', 'Project handbook') : T('بيانات المشروع', 'Project details');
+      box.insertAdjacentHTML('beforeend', `<article class="overview-panel ov-missing"><h2>${esc(title)}</h2>${card(k, codes)}</article>`);
+    });
   }
 
   async function loadSupervision() {
@@ -167,6 +206,7 @@
   // ----- edit the project idea / objectives in place -----
   function editPanel(kind, btn) {
     const panel = btn.closest('.overview-panel'); btn.hidden = true;
+    panel.querySelector('.ov-empty')?.remove(); const pen = panel.querySelector('.overview-edit'); if (pen) pen.hidden = true;
     const p = w.project;
     const value = kind === 'idea' ? (p.overview || p.description || '') : (p.objectives || []).filter(Boolean).join('\n');
     const target = kind === 'idea' ? $('ovOverview') : $('ovGoals');
@@ -222,7 +262,7 @@
   // ----- delete the project (owner): a warning, a 6-digit code by e-mail, then deleted -----
   function confirmDeleteProject() {
     const d = Dlg().open({
-      image: 'assets/account-warning.png', tone: 'danger',
+      image: 'assets/project-warning.png', tone: 'danger',
       title: T('حذف المشروع نهائيًا؟', 'Delete the project permanently?'),
       body: `<p>${esc(T(`سيُحذف مشروع "${w.project.name}" نهائيًا مع جميع مراحله ومهامه وملفاته واجتماعاته وملاحظات المشرف عليه، ولا يمكن استرجاعه.`, `The project "${w.project.name}" is deleted permanently with all of its stages, tasks, files, meetings and supervisor feedback, and cannot be restored.`))}</p>` +
         `<p>${esc(T('يخرج جميع أعضاء الفريق من المشروع، وتصلهم رسالة على بريدهم الإلكتروني بحذفه. للتأكيد نرسل رمزًا إلى بريدك الإلكتروني.', 'Every team member leaves the project and receives an email about it. To confirm, we send a code to your email.'))}</p>`,

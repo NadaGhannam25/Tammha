@@ -490,7 +490,10 @@ function openLinkDialog(name, url, meta) {
     const r = active.getBoundingClientRect();
     const w = popup.offsetWidth, h = popup.offsetHeight;
     let top = r.bottom + 6;
-    if (top + h > window.innerHeight - 8 && r.top - h - 6 > 8) top = r.top - h - 6;
+    // inside a dialog (the project wizard) the calendar opens upward, so the dialog keeps its size
+    const upFirst = !!active.closest('.wizard-modal, .wz, .app-modal, [role="dialog"]');
+    if (upFirst && r.top - h - 6 > 8) top = r.top - h - 6;
+    else if (top + h > window.innerHeight - 8 && r.top - h - 6 > 8) top = r.top - h - 6;
     // never cut off: when neither side has room, keep the whole popup inside the window
     top = Math.max(8, Math.min(top, window.innerHeight - h - 8));
     let left = r.right - w; // RTL: align with the field's right edge
@@ -618,7 +621,10 @@ function openLinkDialog(name, url, meta) {
     const r = active.getBoundingClientRect();
     const w = popup.offsetWidth, h = popup.offsetHeight;
     let top = r.bottom + 6;
-    if (top + h > window.innerHeight - 8 && r.top - h - 6 > 8) top = r.top - h - 6;
+    // inside a dialog (the project wizard) the calendar opens upward, so the dialog keeps its size
+    const upFirst = !!active.closest('.wizard-modal, .wz, .app-modal, [role="dialog"]');
+    if (upFirst && r.top - h - 6 > 8) top = r.top - h - 6;
+    else if (top + h > window.innerHeight - 8 && r.top - h - 6 > 8) top = r.top - h - 6;
     // never cut off: when neither side has room, keep the whole popup inside the window
     top = Math.max(8, Math.min(top, window.innerHeight - h - 8));
     const left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8));

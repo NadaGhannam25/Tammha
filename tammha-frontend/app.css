@@ -1080,3 +1080,21 @@ body.has-onb-tour{overflow:hidden}
 .team-exit__btn:hover{background:#f5f8fa}
 .team-exit__btn--danger{color:#c0392b;border-color:#f1c9c4}
 .team-exit__btn--danger:hover{background:#fdf2f1}
+/* ===== QA 22 ===== */
+/* pencil without the grey frame */
+.overview-edit{border:0;background:transparent}
+.overview-edit:hover,.overview-edit:focus-visible{background:#eef8fc;border:0}
+/* "not complete yet": an empty-state card inside the section that is missing something */
+.ov-empty{display:flex;align-items:center;gap:12px;margin:4px 0 2px;padding:14px 16px;border:0;border-radius:12px;background:#f5f9fb}
+.ov-empty__body{flex:1;min-width:0;display:grid;gap:2px}
+.ov-empty__body strong{font-size:13.5px;color:#173d57}
+.ov-empty__body span{font-size:13px;color:#56707d;line-height:1.7}
+.ov-empty__btn{flex:none;display:inline-flex;align-items:center;min-height:34px;padding:6px 16px;border:0;border-radius:9px;background:#008bbf;color:#fff;font:inherit;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer}
+.ov-empty__btn:hover{background:#0077a5}
+@media (max-width:700px){.ov-empty{flex-wrap:wrap;align-items:flex-start}.ov-empty__body{flex:1 1 100%}}
+.ov-missing{margin-bottom:16px}
+.ov-missing .app-btn{margin-top:4px}
+/* the supervision request button in our blue */
+#ovSupForm .app-btn--primary{border-color:#008bbf;background:#008bbf}
+#ovSupForm .app-btn--primary:hover{border-color:#0077a5;background:#0077a5}
+.ov-missing:last-child{margin-bottom:0}
