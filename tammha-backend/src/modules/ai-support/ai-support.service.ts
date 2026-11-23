@@ -298,7 +298,10 @@ export class AISupportService {
           string,
           unknown
         >,
-        timeoutMs: this.timeoutMs,
+        // a short, structured answer: light thinking keeps it fast, and the answer gets enough
+        // time even on a busy model (the default 30 s ran out on long project summaries)
+        timeoutMs: Math.max(this.timeoutMs, 90_000),
+        lightThinking: true,
       });
       const guidance = parseGuidance(output.text, excerpts);
       if (user.role === UserRole.SUPERVISOR) guidance.taskSuggestions = [];
@@ -540,7 +543,7 @@ export class AISupportService {
               in: [AISupportStatus.PENDING, AISupportStatus.IN_PROGRESS],
             },
             createdAt: {
-              gte: new Date(now - this.timeoutMs - IN_FLIGHT_MARGIN_MS),
+              gte: new Date(now - Math.max(this.timeoutMs, 90_000) - IN_FLIGHT_MARGIN_MS),
             },
           },
         }),

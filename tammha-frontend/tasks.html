@@ -7,17 +7,17 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="مهام المشروع في منصة تممها" name="description"/>
 <title data-en="Tasks">المهام</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
-<link href="style.css" rel="stylesheet"/>
-<link href="ltr.css" rel="stylesheet"/>
-<link href="loader.css" rel="stylesheet"/>
-<script src="i18n-en.js"></script>
-<script src="i18n.js"></script>
-<script src="loader.js"></script>
-<script src="config.js"></script>
-<script src="api.js"></script>
-<script src="session.js"></script>
-<script src="domain.js"></script>
-<link href="app.css" rel="stylesheet"/>
+<link href="style.css?v=qa25" rel="stylesheet"/>
+<link href="ltr.css?v=qa25" rel="stylesheet"/>
+<link href="loader.css?v=qa25" rel="stylesheet"/>
+<script src="i18n-en.js?v=qa25"></script>
+<script src="i18n.js?v=qa25"></script>
+<script src="loader.js?v=qa25"></script>
+<script src="config.js?v=qa25"></script>
+<script src="api.js?v=qa25"></script>
+<script src="session.js?v=qa25"></script>
+<script src="domain.js?v=qa25"></script>
+<link href="app.css?v=qa25" rel="stylesheet"/>
 </head>
 <body class="tasks-page" data-app-role="STUDENT">
 <div class="app-shell">
@@ -121,11 +121,17 @@
 <div class="tasks-toolbar__end"><button class="tasks-add" id="openTaskModal" type="button">+ إضافة مهمة</button></div>
 </div>
 
+<section class="tasks-card" aria-labelledby="tasksSectionTitle">
+<div class="section-head">
+<h2 id="tasksSectionTitle">المهام</h2>
+<p>مهام المشروع وتوزيعها على أعضاء الفريق، ومتابعة حالة كل مهمة وموعد تسليمها.</p>
+</div>
 <div class="tasks-table" role="table" aria-label="قائمة المهام">
 <div class="tasks-row tasks-row--head" role="row"><span role="columnheader">المهمة</span><span role="columnheader">المسؤول</span><span role="columnheader">الحالة</span><span role="columnheader">تاريخ التسليم</span><span role="columnheader"><span class="visually-hidden">عرض</span></span></div>
 <div id="tasksBody"></div>
 <p class="tasks-empty" hidden id="tasksEmpty">لا توجد مهام في هذا القسم.</p>
 </div>
+</section>
 </section>
 
 <!-- Task details: side panel on the left -->
@@ -179,7 +185,7 @@
 <footer class="footer projects-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
 </main>
 </div>
-<script src="tasks.js"></script>
-<script src="script.js"></script>
+<script src="tasks.js?v=qa25"></script>
+<script src="script.js?v=qa25"></script>
 </body>
 </html>

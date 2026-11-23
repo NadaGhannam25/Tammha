@@ -92,8 +92,8 @@
       names = Object.fromEntries(projects.map((p) => [p.id, p.name]));
       files = (Array.isArray(list) ? list : list.items || []).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
       if (!files.length) {
-        UI.state(tableBody, 'empty', { title: T('لا توجد ملفات بعد', 'No files yet'), text: T('تُرفع الملفات من صفحة ملفات المشروع، وتظهر هنا ملفات جميع مشاريعك.', 'Files are uploaded on each project’s Files page; the files of all your projects appear here.'), action: projects.length ? { href: 'project-files.html', label: T('ملفات المشروع', 'Project files') } : null });
-        UI.state(cardsGrid, 'empty', { title: T('لا توجد ملفات بعد', 'No files yet') });
+        UI.state(tableBody, 'empty', { image: 'assets/empty-files.webp', title: T('لا توجد ملفات بعد', 'No files yet'), text: T('تُرفع الملفات من صفحة ملفات المشروع، وتظهر هنا ملفات جميع مشاريعك.', 'Files are uploaded on each project’s Files page; the files of all your projects appear here.'), action: projects.length ? { href: 'project-files.html', label: T('ملفات المشروع', 'Project files') } : null });
+        UI.state(cardsGrid, 'empty', { image: 'assets/empty-files.webp', title: T('لا توجد ملفات بعد', 'No files yet') });
         return;
       }
       render();

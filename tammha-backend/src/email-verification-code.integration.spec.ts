@@ -224,6 +224,33 @@ describe('E-mail verification by code (P17, AppModule integration)', () => {
     expect(codeRows('huda').filter((t) => !t.usedAt)).toHaveLength(1);
   });
 
+  it('change-email/me: the signed-in unverified user changes the address without the password', async () => {
+    const email = await signUp('lama');
+    const before = codesTo(email);
+    expect(before).toBeGreaterThan(0);
+    // no session: refused
+    await http()
+      .post(`${API}/auth/verify-email/change-email/me`)
+      .send({ newEmail: 'lama@gmail.com' })
+      .expect(401);
+    const res = await http()
+      .post(`${API}/auth/verify-email/change-email/me`)
+      .set(as('lama'))
+      .send({ newEmail: 'lama@gmail.com' })
+      .expect(200);
+    expect(res.body.email).toBe('lama@gmail.com');
+    const code = lastCode('lama@gmail.com');
+    expect(code).toBeTruthy();
+    await verify('lama@gmail.com', code).expect(200);
+    // once verified, no more changes
+    const again = await http()
+      .post(`${API}/auth/verify-email/change-email/me`)
+      .set(as('lama'))
+      .send({ newEmail: 'lama2@gmail.com' })
+      .expect(409);
+    expect(again.body.code).toBe('EMAIL_ALREADY_VERIFIED');
+  });
+
   it('change-email: wrong password, verified account and taken address are refused', async () => {
     const email = await signUp('noor');
     await http()

@@ -27,7 +27,9 @@
       const items = await S.projects(true);
       projectNames = Object.fromEntries(items.map((w) => [w.id, w.name]));
       if (!items.length) {
-        UI.state(box, 'empty', { title: T('لا توجد مشاريع بعد', 'No projects yet'), text: T('أنشئ مشروعًا جديدًا بصفتك قائد الفريق، أو انضم إلى مشروع زميلك برمز الدعوة.', 'Create a new project as Team Leader, or join a classmate’s project with an invitation code.'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } });
+        // a white box, like the empty meetings box
+        box.innerHTML = '<div class="dash-projects-empty"></div>';
+        UI.state(box.firstChild, 'empty', { image: 'assets/empty-files.webp', title: T('لا توجد مشاريع بعد', 'No projects yet'), text: T('أنشئ مشروعًا جديدًا بصفتك قائد الفريق، أو انضم إلى مشروع زميلك برمز الدعوة.', 'Create a new project as Team Leader, or join a classmate’s project with an invitation code.'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } });
         return;
       }
       box.innerHTML = items.slice(0, 2).map((w) => {
@@ -47,7 +49,7 @@
     try {
       const page = await Api.get('/meetings/upcoming', { query: { limit: 3 } });
       const items = page.items || page;
-      if (!items.length) { UI.state(meetingsBox, 'empty', { title: T('لا توجد اجتماعات قادمة', 'No upcoming meetings'), text: T('تظهر هنا الاجتماعات المجدولة لمشاريعك.', 'Scheduled meetings of your projects appear here.') }); return; }
+      if (!items.length) { UI.state(meetingsBox, 'empty', { image: 'assets/empty-meetings.webp', title: T('لا توجد اجتماعات قادمة', 'No upcoming meetings'), text: T('تظهر هنا الاجتماعات المجدولة لمشاريعك.', 'Scheduled meetings of your projects appear here.') }); return; }
       // one tidy row per meeting: icon, title + project, date and time, join (when open)
       meetingsBox.innerHTML = `<ul class="dash-meetings">${items.map((m) => `<li class="dash-meeting">
         <span class="dash-meeting__kind" aria-hidden="true"><span class="meeting-kind-line"></span><span class="meeting-kind-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"></rect><path d="m16 10 5-3v10l-5-3"></path></svg></span></span>

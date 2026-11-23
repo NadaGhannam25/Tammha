@@ -72,7 +72,7 @@
       start: dayOf(pr.startDate), end: dayOf(pr.expectedCompletionDate || pr.endDate),
       desc: pr.overview || pr.description || '', goals: pr.objectives || [], teamName: ws.team ? ws.team.name : '',
       leader, members: members.filter((m) => m.userId !== leader).map((m) => m.userId), stages,
-      tasks: items(tasks).map((t) => ({ id: t.id, title: t.title, description: t.description || '', who: remember(t.assignedStudent) || t.assignedStudentId, priority: t.priority, status: t.status, due: dayOf(t.dueDate), stageName: t.milestone ? t.milestone.title : '' }))
+      tasks: items(tasks).map((t) => ({ id: t.id, title: t.title, description: t.description || '', who: remember(t.assignedStudent) || t.assignedStudentId, priority: t.priority, status: t.status, due: dayOf(t.dueDate), stageName: t.milestone ? t.milestone.title : '', stageId: t.milestoneId || (t.milestone ? t.milestone.id : '') }))
     };
     const files = items(docs).map((d) => ({ id: d.id, project: pid, name: d.title || d.fileName, fileName: d.fileName, status: d.reviewStatus || 'SUBMITTED', by: remember(d.uploadedBy) || d.uploadedById, date: dayOf(d.createdAt), version: d.currentVersion || 1, size: UI.fmtSize(d.fileSize), taskId: d.taskId || null }));
     const feedback = items(fb).map((f) => ({ id: f.id, project: f.projectId || pid, scope: f.documentId ? 'DOCUMENT' : f.taskId ? 'TASK' : 'PROJECT', file: f.documentId, fileName: f.document ? f.document.title || f.document.fileName : '', task: f.taskId, taskName: f.task ? f.task.title : '', status: f.status, by: remember(f.supervisor) || f.supervisorId, date: dayOf(f.createdAt), at: f.createdAt, text: f.comment || '' }));
@@ -167,14 +167,16 @@
     stages: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 21V4"></path><path d="M5 4h11l-2 4 2 4H5"></path></svg>',
     inbox: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path><path d="M3 13h5l1.5 2.5h5L16 13h5"></path></svg>',
   };
+  // pictures for the common empty states (projects and files, tasks and stages, meetings)
+  const pic = (name) => `<img class="sv-empty__img" src="assets/${name}.webp" alt="">`;
   const emptyIcon = (title) => {
     const t = String(title);
-    if (/مشاريع|مشروع|project/i.test(t)) return EMPTY_ICONS.folder;
-    if (/ملف|مراجع|file|review/i.test(t)) return ICONS.file;
-    if (/مواعيد|dates/i.test(t)) return EMPTY_ICONS.calendar;
-    if (/اجتماع|meeting/i.test(t)) return ICONS.meet;
-    if (/مراحل|stage/i.test(t)) return EMPTY_ICONS.stages;
-    if (/مهام|task/i.test(t)) return ICONS.clock;
+    if (/مشاريع|مشروع|project/i.test(t)) return pic('sv-empty-folder');
+    if (/ملف|مراجع|file|review/i.test(t)) return pic('sv-empty-folder');
+    if (/مواعيد|dates/i.test(t)) return pic('sv-empty-meetings');
+    if (/اجتماع|meeting/i.test(t)) return pic('sv-empty-meetings');
+    if (/مراحل|stage/i.test(t)) return pic('sv-empty-tasks');
+    if (/مهام|task/i.test(t)) return pic('sv-empty-tasks');
     if (/ملاحظات|feedback/i.test(t)) return ICONS.note;
     if (/إشعار|notification/i.test(t)) return EMPTY_ICONS.bell;
     if (/طلب|request/i.test(t)) return ICONS.request;
@@ -436,7 +438,7 @@
     qs('#svDashProjects').innerHTML = active.length ? active.slice(0, 2).map((p) => projectCard(p, true)).join('') : empty(T('لا توجد مشاريع نشطة', 'No active projects'), T('عند قبول طلب إشراف سيظهر المشروع هنا.', 'Accepted supervision requests appear here.'));
 
     const files = pendingFiles();
-    qs('#svDashReviews').innerHTML = files.length ? `<ul class="sv-list">${files.map((f) => `<li><button class="sv-list__row" data-file="${esc(f.id)}" type="button">${fileIcon(f)}<span class="sv-list__main"><strong>${esc(L(f.name))}</strong><small>${esc(L(project(f.project).name))} · ${esc(person(f.by))} · ${relDay(f.date)}</small></span><span class="sv-list__go">${T('مراجعة', 'Review')}${ICONS.arrow}</span></button></li>`).join('')}</ul>` : empty(T('لا توجد ملفات بانتظارك', 'Nothing waiting for review'));
+    qs('#svDashReviews').innerHTML = files.length ? `<ul class="sv-list">${files.map((f) => `<li><button class="sv-list__row" data-file="${esc(f.id)}" type="button">${fileIcon(f)}<span class="sv-list__main"><strong>${esc(L(f.name))}</strong><small>${esc(L(project(f.project).name))} · ${esc(person(f.by))} · ${relDay(f.date)}</small></span><span class="sv-list__go">${T('مراجعة', 'Review')}${ICONS.arrow}</span></button></li>`).join('')}</ul>` : empty(T('لا توجد ملفات بانتظارك', 'Nothing waiting for review'), T('تظهر هنا الملفات التي يرفعها الطلاب لمراجعتك.', 'Files the students upload for your review appear here.'));
     qsa('[data-file]', qs('#svDashReviews')).forEach((b) => b.addEventListener('click', () => openFile(b.dataset.file, renderDashboard)));
 
     // Agenda: meetings, milestones and stage deadlines in the next weeks
@@ -453,11 +455,11 @@
     const od = [];
     db.projects.forEach((p) => p.tasks.forEach((t, i) => { if (isOverdue(t)) od.push({ p, t, i }); }));
     od.sort((a, b) => String(a.t.due).localeCompare(String(b.t.due)));
-    qs('#svOverdue').innerHTML = od.length ? `<ul class="sv-list">${od.map(({ p, t, i }) => `<li><button class="sv-list__row" data-task="${esc(p.id)}|${i}" type="button"><span class="sv-list__main"><strong>${esc(L(t.title))}</strong><small>${esc(L(p.name))} · ${esc(person(t.who))}</small></span><span class="sv-late sv-nowrap">${fmtShort(t.due)}</span></button></li>`).join('')}</ul>` : empty(T('لا توجد مهام متأخرة', 'No overdue tasks'));
+    qs('#svOverdue').innerHTML = od.length ? `<ul class="sv-list">${od.map(({ p, t, i }) => `<li><button class="sv-list__row" data-task="${esc(p.id)}|${i}" type="button"><span class="sv-list__main"><strong>${esc(L(t.title))}</strong><small>${esc(L(p.name))} · ${esc(person(t.who))}</small></span><span class="sv-late sv-nowrap">${fmtShort(t.due)}</span></button></li>`).join('')}</ul>` : empty(T('لا توجد مهام متأخرة', 'No overdue tasks'), T('تظهر هنا مهام الفرق التي تجاوزت موعد تسليمها.', 'Team tasks past their due date appear here.'));
     qsa('[data-task]').forEach((b) => b.addEventListener('click', () => { const [pid, i] = b.dataset.task.split('|'); openTask(project(pid), Number(i)); }));
 
     const fb = db.feedback.filter((f) => project(f.project)).slice(0, 3);
-    qs('#svActivity').innerHTML = fb.length ? `<ul class="sv-feed">${fb.map((f) => `<li><div class="sv-feed__meta"><strong>${esc(L(project(f.project).name))}</strong><span>${fmtShort(f.date)}</span></div><p>${esc(f.text || (f.status && REVIEW[f.status] ? L(REVIEW[f.status].label) : ''))}</p></li>`).join('')}</ul>` : empty(T('لا توجد ملاحظات بعد', 'No feedback yet'));
+    qs('#svActivity').innerHTML = fb.length ? `<ul class="sv-feed">${fb.map((f) => `<li><div class="sv-feed__meta"><strong>${esc(L(project(f.project).name))}</strong><span>${fmtShort(f.date)}</span></div><p>${esc(f.text || (f.status && REVIEW[f.status] ? L(REVIEW[f.status].label) : ''))}</p></li>`).join('')}</ul>` : empty(T('لا توجد ملاحظات بعد', 'No feedback yet'), T('تظهر هنا آخر ملاحظاتك للفرق.', 'Your latest feedback to the teams appears here.'));
   }
 
   // the calendar (same as the student's): meetings, stage deadlines and task due dates of the projects
@@ -496,7 +498,7 @@
         qsa('[data-reject]').forEach((b) => b.addEventListener('click', () => reject(b.dataset.reject)));
       } else {
         const list = db.projects.filter((p) => view === 'all' || p.status === VIEW_STATUS[view]);
-        grid.innerHTML = list.length ? list.map(projectListCard).join('') : empty(T('لا توجد مشاريع هنا', 'No projects here'));
+        grid.innerHTML = list.length ? list.map(projectListCard).join('') : empty(T('لا توجد مشاريع هنا', 'No projects here'), T('تظهر هنا المشاريع التي تشرف عليها حسب حالتها.', 'The projects you supervise appear here by their status.'));
       }
     };
     function recount() {
@@ -551,7 +553,7 @@
       return;
     }
     qs('#svProjName').textContent = L(p.name);
-    qs('#svProjMeta').textContent = `${CATEGORY[p.category] ? L(CATEGORY[p.category]) : ''}${p.category ? ' · ' : ''}${T('القائد', 'Leader')}: ${person(p.leader)}`;
+    qs('#svProjMeta').textContent = ''; qs('#svProjMeta').hidden = true;
     // the completion as on the student's project pages: label, bar and percentage under the name
     qs('#svProjProgress').hidden = true;
     const heroText = qs('.project-detail-hero__content');
@@ -561,8 +563,7 @@
       <span class="project-hero-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p.progress}" aria-label="${esc(T(`نسبة إنجاز المشروع ${p.progress} بالمئة`, `Project completion ${p.progress} percent`))}"><span style="width:${p.progress}%"></span></span>
       <strong dir="ltr">${p.progress}%</strong>`;
     qs('#svAskAi').href = `supervisor-assistant.html?p=${encodeURIComponent(p.id)}`;
-    qs('#svAddFeedback').addEventListener('click', () => openFeedback(p.id, () => show('feedback')));
-    qs('#svScheduleMeeting').href = `supervisor-meetings.html?new=${encodeURIComponent(p.id)}`;
+    ['#svAddFeedback', '#svScheduleMeeting'].forEach((sel) => { const el = qs(sel); if (el) el.remove(); });
     openTask.onChange = () => { p = project(p.id) || p; };
     document.title = L(p.name);
     const tabs = qsa('[data-tab]');
@@ -587,46 +588,52 @@
         </div>`;
       },
       stages() {
-        if (!p.stages.length) return empty(T('لم يضف قائد الفريق مراحل بعد', 'The Team Leader has not added stages yet'));
+        if (!p.stages.length) return empty(T('لم يضف قائد الفريق مراحل بعد', 'The Team Leader has not added stages yet'), T('تظهر هنا مراحل المشروع ومواعيدها عندما يضيفها الفريق.', 'The project stages and their dates appear here when the team adds them.'));
         return `<div class="sv-table" role="table" aria-label="${T('مراحل المشروع', 'Project stages')}">
-          <div class="sv-row sv-row--head sv-row--stages" role="row"><span role="columnheader">${T('المرحلة', 'Stage')}</span><span role="columnheader">${T('تاريخ الاستحقاق', 'Due date')}</span><span role="columnheader">${T('الوصف', 'Description')}</span><span role="columnheader">${T('الحالة', 'Status')}</span><span role="columnheader">${T('الإنجاز', 'Progress')}</span></div>
-          ${p.stages.map((s, i) => `<div class="sv-row sv-row--stages" role="row"><span role="cell"><b class="sv-step sv-step--plain">${i + 1}.</b><strong>${esc(L(s.name))}</strong></span><span role="cell">${fmtDate(s.to)}</span><span role="cell">${s.desc ? esc(s.desc) : '—'}</span><span role="cell">${pill(stageStatus(s).cls, L(stageStatus(s).label))}</span><span role="cell" class="sv-row__bar">${bar(s.status === 'COMPLETED' ? 100 : s.progress, s.status === 'COMPLETED')}<b>${s.status === 'COMPLETED' ? 100 : s.progress}%</b></span></div>`).join('')}
+          <div class="sv-row sv-row--head sv-row--stages" role="row"><span role="columnheader">${T('المرحلة', 'Stage')}</span><span role="columnheader">${T('تاريخ الاستحقاق', 'Due date')}</span><span role="columnheader">${T('الوصف', 'Description')}</span><span role="columnheader">${T('الحالة', 'Status')}</span><span role="columnheader">${T('الإنجاز', 'Progress')}</span><span role="columnheader"><span class="visually-hidden">${T('المهام', 'Tasks')}</span></span></div>
+          ${p.stages.map((s, i) => `<div class="sv-row sv-row--stages" role="row"><span role="cell"><b class="sv-step sv-step--plain">${i + 1}.</b><strong>${esc(L(s.name))}</strong></span><span role="cell">${fmtDate(s.to)}</span><span role="cell">${s.desc ? esc(s.desc) : '—'}</span><span role="cell">${pill(stageStatus(s).cls, L(stageStatus(s).label))}</span><span role="cell" class="sv-row__bar">${bar(s.status === 'COMPLETED' ? 100 : s.progress, s.status === 'COMPLETED')}<b>${s.status === 'COMPLETED' ? 100 : s.progress}%</b></span><span role="cell"><button class="sv-stage-tasks" type="button" data-stage-tasks="${esc(s.id)}">${T('المهام', 'Tasks')}</button></span></div>`).join('')}
         </div>`;
       },
       tasks() {
-        const rows = p.tasks.map((t, i) => ({ t, i })).sort((a, b) => Number(isOverdue(b.t)) - Number(isOverdue(a.t)) || String(a.t.due).localeCompare(String(b.t.due)));
+        const stage = stageFilter && p.stages.find((x) => x.id === stageFilter);
+        const rows = p.tasks.map((t, i) => ({ t, i })).filter(({ t }) => !stage || t.stageId === stage.id || (!t.stageId && t.stageName === stage.name)).sort((a, b) => Number(isOverdue(b.t)) - Number(isOverdue(a.t)) || String(a.t.due).localeCompare(String(b.t.due)));
         return `<p class="sv-readonly">${ICONS.lock}<span>${T('عرض للمتابعة فقط. إنشاء المهام وإسنادها من صلاحيات قائد الفريق.', 'Read-only view. Creating and assigning tasks is done by the Team Leader.')}</span></p>
-          ${p.tasks.length ? `<div class="tasks-table sv-tasks" role="table" aria-label="${T('مهام المشروع', 'Project tasks')}">
+          ${stage ? `<div class="sv-stage-filter"><span>${T('مهام مرحلة', 'Tasks of the stage')} <b>${esc(L(stage.name))}</b></span><button class="sv-stage-filter__all" type="button" data-all-tasks>${T('عرض كل المهام', 'Show all tasks')}</button></div>` : ''}
+          ${rows.length ? `<div class="tasks-table sv-tasks" role="table" aria-label="${T('مهام المشروع', 'Project tasks')}">
           <div class="tasks-row tasks-row--head sv-task-row" role="row"><span role="columnheader">${T('المهمة', 'Task')}</span><span role="columnheader">${T('المسؤول', 'Assigned to')}</span><span role="columnheader">${T('الأولوية', 'Priority')}</span><span role="columnheader">${T('الحالة', 'Status')}</span><span role="columnheader">${T('تاريخ التسليم', 'Due date')}</span><span role="columnheader"><span class="visually-hidden">${T('عرض', 'View')}</span></span></div>
           ${rows.map(({ t, i }) => { const s = TASK_STATUS(t); return `<div class="tasks-row sv-task-row" role="row"><div class="tasks-row__main" role="cell"><strong>${esc(L(t.title))}</strong><small>${esc(t.stageName || '—')}</small></div><span role="cell">${esc(person(t.who))}</span><span role="cell">${esc(PRIORITY[t.priority] ? L(PRIORITY[t.priority]) : '—')}</span><span role="cell">${pill(s.cls, s.label)}</span><span class="${isOverdue(t) ? 'tasks-row__due--late' : ''}" role="cell">${fmtDate(t.due)}</span><span role="cell"><button class="tasks-row__open" data-open-task="${i}" type="button">${T('عرض', 'View')}${ICONS.arrow}</button></span></div>`; }).join('')}
-          </div>` : empty(T('لم يضف قائد الفريق مهامًا بعد', 'The Team Leader has not added tasks yet'))}`;
+          </div>` : stage ? empty(T('لا توجد مهام في هذه المرحلة', 'No tasks in this stage'), T('تظهر هنا مهام المرحلة عندما يضيفها الفريق.', 'The stage tasks appear here when the team adds them.')) : empty(T('لم يضف قائد الفريق مهامًا بعد', 'The Team Leader has not added tasks yet'), T('تظهر هنا مهام المشروع وحالتها عندما يضيفها الفريق.', 'The project tasks and their status appear here when the team adds them.'))}`;
       },
       files() {
         const files = db.files.filter((f) => f.project === p.id);
-        return files.length ? fileTable(files, false) : empty(T('لا توجد ملفات في هذا المشروع', 'No files in this project'));
+        return files.length ? fileTable(files, false) : empty(T('لا توجد ملفات في هذا المشروع', 'No files in this project'), T('تظهر هنا ملفات المشروع عندما يرفعها الفريق.', 'The project files appear here when the team uploads them.'));
       },
       feedback() {
         const list = db.feedback.filter((f) => f.project === p.id);
-        return `<div class="sv-section-head"><h2>${T('ملاحظاتك للفريق', 'Your feedback to the team')}</h2><button class="sv-btn" data-new-feedback type="button">${T('+ ملاحظة جديدة', '+ New feedback')}</button></div>
-          ${list.length ? `<ul class="sv-feed sv-feed--full">${list.map(feedItem).join('')}</ul>` : empty(T('لا توجد ملاحظات بعد', 'No feedback yet'))}`;
+        return `<section class="sv-tab-card"><div class="sv-tab-card__head"><div class="section-head"><h2>${T('الملاحظات', 'Feedback')}</h2><p>${T('ملاحظاتك للفريق على المشروع ومهامه وملفاته، تصلهم فور إضافتها.', 'Your feedback to the team on the project, its tasks and files; they receive it at once.')}</p></div><button class="sv-btn" data-new-feedback type="button">${T('+ ملاحظة جديدة', '+ New feedback')}</button></div>
+          ${list.length ? `<ul class="sv-feed sv-feed--full">${list.map(feedItem).join('')}</ul>` : empty(T('لا توجد ملاحظات بعد', 'No feedback yet'), T('تظهر هنا ملاحظاتك للفريق بعد إضافتها.', 'Your feedback to the team appears here once added.'))}</section>`;
       },
       meetings() {
         const list = db.meetings.filter((m) => m.project === p.id).sort((a, b) => b.date.localeCompare(a.date));
-        return `<div class="sv-section-head"><h2>${T('اجتماعات المشروع', 'Project meetings')}</h2><a class="sv-btn" href="supervisor-meetings.html?new=${encodeURIComponent(p.id)}">${T('+ جدولة اجتماع', '+ Schedule meeting')}</a></div>
-          ${list.length ? meetingTable(list) : empty(T('لا توجد اجتماعات بعد', 'No meetings yet'))}`;
+        return `<section class="sv-tab-card"><div class="sv-tab-card__head"><div class="section-head"><h2>${T('الاجتماعات', 'Meetings')}</h2><p>${T('اجتماعات المشروع مع الفريق، والانضمام إليها في وقتها.', 'The project meetings with the team, and joining them on time.')}</p></div><a class="sv-btn" href="supervisor-meetings.html?new=${encodeURIComponent(p.id)}">${T('+ جدولة اجتماع', '+ Schedule meeting')}</a></div>
+          ${list.length ? meetingTable(list) : empty(T('لا توجد اجتماعات بعد', 'No meetings yet'), T('تظهر هنا اجتماعات المشروع عند جدولتها.', 'The project meetings appear here when they are scheduled.'))}</section>`;
       }
     };
+    let stageFilter = '';
     function show(tab) {
       p = project(p.id) || p;
+      if (tab !== 'tasks') stageFilter = '';
       tabs.forEach((t) => { const on = t.dataset.tab === tab; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', String(on)); });
       body.innerHTML = panels[tab]();
       qsa('[data-open-task]', body).forEach((b) => b.addEventListener('click', () => openTask(p, Number(b.dataset.openTask))));
       qsa('[data-file]', body).forEach((b) => b.addEventListener('click', () => openFile(b.dataset.file, () => show(tab))));
       qsa('[data-new-feedback]', body).forEach((b) => b.addEventListener('click', () => openFeedback(p.id, () => show('feedback'))));
+      qsa('[data-stage-tasks]', body).forEach((b) => b.addEventListener('click', () => { stageFilter = b.dataset.stageTasks; show('tasks'); }));
+      qsa('[data-all-tasks]', body).forEach((b) => b.addEventListener('click', () => { stageFilter = ''; show('tasks'); }));
       bindMeetingActions(body, () => show(tab));
       history.replaceState(null, '', `?p=${encodeURIComponent(p.id)}&tab=${tab}`);
     }
-    tabs.forEach((t) => t.addEventListener('click', () => show(t.dataset.tab)));
+    tabs.forEach((t) => t.addEventListener('click', () => { stageFilter = ''; show(t.dataset.tab); }));
     show(panels[params.get('tab')] ? params.get('tab') : 'overview');
   }
 
@@ -804,7 +811,7 @@
       tabs.forEach((t) => { const on = t.dataset.meetTab === tab; t.classList.toggle('is-active', on); t.setAttribute('aria-selected', String(on)); t.querySelector('[data-count]').textContent = groups[t.dataset.meetTab].length; });
       const list = groups[tab];
       const head = qs('#svMeetingsHeading'); if (head) head.textContent = { upcoming: T('الاجتماعات المجدولة', 'Scheduled meetings'), previous: T('الاجتماعات السابقة', 'Previous meetings'), cancelled: T('الاجتماعات الملغاة', 'Cancelled meetings') }[tab];
-      qs('#svMeetingsTable').innerHTML = list.length ? meetingTable(list) : empty(tab === 'upcoming' ? T('لا توجد اجتماعات قادمة', 'No upcoming meetings') : T('لا توجد اجتماعات هنا', 'No meetings here'));
+      qs('#svMeetingsTable').innerHTML = list.length ? meetingTable(list) : empty(tab === 'upcoming' ? T('لا توجد اجتماعات قادمة', 'No upcoming meetings') : T('لا توجد اجتماعات هنا', 'No meetings here'), T('تظهر هنا اجتماعاتك مع الفرق عند جدولتها أو عند دعوتك إليها.', 'Your meetings with the teams appear here when scheduled or when you are invited.'));
       bindMeetingActions(qs('#svMeetingsTable'), draw);
     };
     tabs.forEach((t) => t.addEventListener('click', () => { tab = t.dataset.meetTab; draw(); }));
@@ -855,7 +862,8 @@
   // ----- AI assistant (supervisor scope: guidance only; no task actions) -----
   function renderAssistant() {
     const sel = qs('#svAiProject');
-    sel.innerHTML = db.projects.map((p) => `<option value="${esc(p.id)}">${esc(L(p.name))}</option>`).join('');
+    // never an empty box: "Choose the project" until one is chosen
+    sel.innerHTML = `<option value="" disabled selected>${esc(T('اختر المشروع', 'Choose the project'))}</option>` + db.projects.map((p) => `<option value="${esc(p.id)}">${esc(L(p.name))}</option>`).join('');
     if (project(params.get('p'))) sel.value = params.get('p');
     const thread = qs('#svAiThread');
     if (!db.projects.length) {
@@ -920,7 +928,7 @@
       const typing = document.createElement('div'); typing.className = 'sv-msg sv-msg--ai sv-msg--typing'; typing.innerHTML = '<span></span><span></span><span></span>'; thread.append(typing); thread.scrollTop = thread.scrollHeight;
       const send = qs('#svAiForm [type="submit"]'); if (send) send.disabled = true;
       try {
-        const r = await Api.post('/ai-support/requests', { projectId: sel.value, kind: 'PROJECT_QUESTION', question: question || text, language: lang }, { timeout: Api.aiTimeout || 100000 });
+        const r = await Api.post('/ai-support/requests', { projectId: sel.value, kind: 'PROJECT_QUESTION', question: question || text, language: lang }, { timeout: Math.max(Api.aiTimeout || 0, 150000) });
         typing.remove();
         if (r.status && r.status !== 'COMPLETED') say('ai', `<p class="sv-late">${esc(Api.message({ code: r.errorCode || 'AI_PROVIDER_UNAVAILABLE' }))}</p>`);
         else say('ai', render(r).replace('<p class="sv-muted"><small>', `${withFacts ? factsBlock(sel.value) : ''}<p class="sv-muted"><small>`));
@@ -928,7 +936,10 @@
         typing.remove(); say('ai', `<p class="sv-late">${esc(Api.message(e))}</p>`);
       } finally { busy = false; if (send) send.disabled = false; }
     };
-    const greet = () => { thread.innerHTML = ''; say('ai', `<p>${T(`يلخّص لك المساعد مشروع "${esc(L(project(sel.value).name))}": فكرته، وأين وصل الفريق، والمهام المكتملة والمتبقية والمتأخرة، ونسبة الإنجاز، وأعضاء الفريق. اختر أحد الأسئلة المقترحة أو اكتب سؤالك.`, `The assistant summarises "${esc(L(project(sel.value).name))}" for you: its idea, where the team is, the completed, remaining and overdue tasks, the completion and the team members. Choose a suggested question or type your own.`)}</p>`); };
+    const lock = (on) => qsa('#svAiForm input, #svAiForm textarea, #svAiForm button, #svAiPrompts button').forEach((el) => { el.disabled = on; });
+    const greet = () => {
+      if (!sel.value) { lock(true); thread.innerHTML = empty(T('اختر المشروع', 'Choose the project'), T('اختر مشروعًا من القائمة ليلخّصه المساعد ويجيب عن أسئلتك حوله.', 'Choose a project from the list for the assistant to summarise it and answer your questions.')); return; }
+      lock(false); thread.innerHTML = ''; say('ai', `<p>${T(`يلخّص لك المساعد مشروع "${esc(L(project(sel.value).name))}": فكرته، وأين وصل الفريق، والمهام المكتملة والمتبقية والمتأخرة، ونسبة الإنجاز، وأعضاء الفريق. اختر أحد الأسئلة المقترحة أو اكتب سؤالك.`, `The assistant summarises "${esc(L(project(sel.value).name))}" for you: its idea, where the team is, the completed, remaining and overdue tasks, the completion and the team members. Choose a suggested question or type your own.`)}</p>`); };
     qsa('[data-ai]').forEach((b) => b.addEventListener('click', () => {
       const pr = PROMPTS.find(([k]) => k === b.dataset.ai);
       ask(b.textContent, pr && pr[2] ? L(pr[2]) : '', b.dataset.ai !== 'handbook');

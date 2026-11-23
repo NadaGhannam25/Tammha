@@ -1098,3 +1098,114 @@ body.has-onb-tour{overflow:hidden}
 #ovSupForm .app-btn--primary{border-color:#008bbf;background:#008bbf}
 #ovSupForm .app-btn--primary:hover{border-color:#0077a5;background:#0077a5}
 .ov-missing:last-child{margin-bottom:0}
+/* ===== QA 23 ===== */
+/* pictures in the empty states (meetings, tasks, files) and beside "scheduled meetings" */
+.app-state__img{display:block;width:96px;height:96px;margin:0 auto 10px;object-fit:contain}
+.meetings-empty-state__icon--img{width:auto!important;height:auto!important;background:none!important;border:0!important;box-shadow:none!important}
+.meetings-empty-state__icon--img img{width:96px;height:96px;object-fit:contain;display:block}
+#tasksEmpty:not([hidden]){display:flex;flex-direction:column;align-items:center;gap:4px}
+#tasksEmpty .app-state__img{margin-bottom:6px}
+/* dashboard without projects: a white box */
+.dash-projects-empty{min-height:180px;display:flex;align-items:center;justify-content:center;padding:24px 20px;border:1px solid #e4edf1;border-radius:15px;background:#fff}
+.dash-projects-empty .app-state{background:none;border:0;box-shadow:none;padding:0}
+/* tasks: the project boxes a little bigger */
+.tasks-pick__list{grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
+.tasks-pick__item{padding:24px 20px;gap:18px;min-height:124px;border-radius:14px}
+.tasks-pick__img{flex:0 0 112px!important;width:112px!important;height:74px!important}
+.tasks-pick__img svg{width:24px!important;height:24px!important}
+.tasks-pick__text{gap:5px!important;padding-inline-start:18px!important}
+.tasks-pick__text b{font-size:17px}
+.tasks-pick__text small{font-size:13px}
+.tasks-pick__pct{font-size:16px}
+@media (max-width:560px){.tasks-pick__list{grid-template-columns:1fr}.tasks-pick__item{padding:18px 14px;min-height:104px}.tasks-pick__img{flex-basis:88px!important;width:88px!important;height:58px!important}}
+/* section heading with a short description (meetings, tasks) */
+.section-head{display:grid;gap:3px}
+.section-head h2{margin:0;color:#183c55;font-size:20.5px;font-weight:800}
+.section-head p{margin:0;color:#7d909b;font-size:13px;line-height:1.7}
+/* tasks: the list sits in a white card under its heading, like the meetings */
+.tasks-card{margin-top:4px;padding:18px;background:#fff;border:1px solid #edf1f3;border-radius:14px}
+.tasks-card .section-head{margin:0 0 14px}
+.tasks-card .tasks-table{border-radius:12px}
+.tasks-card:has(.tasks-table[hidden]),.tasks-main-content.is-booting .tasks-card{display:none!important}
+/* dashboard empty states keep their picture small */
+#dashProjects .app-state__img,#dashMeetings .app-state__img{width:84px;height:84px}
+/* ===== QA 24 ===== */
+/* "use another email": its own view instead of a box under the code */
+.vcode.is-changing .vcode__sent,.vcode.is-changing .vcode__form,.vcode.is-changing .vcode__resend,.vcode.is-changing .vcode__hint{display:none!important}
+.vcode.is-changing .vcode__change{border:0;padding:0;max-width:360px;margin:0 auto}
+.vcode__change-text{margin:0 0 4px;color:#5c7280;font-size:13.5px;line-height:1.8}
+/* supervisor dashboard: the projects box reaches down to the calendar, no empty gap under it */
+@media(min-width:1181px){
+.sv-dash.sv-dash--v2{align-items:stretch!important}
+.sv-dash--v2 .sv-dash__projects{display:flex;flex-direction:column}
+.sv-dash--v2 #svDashProjects{flex:1;grid-auto-rows:1fr}
+.sv-dash--v2 #svDashProjects>.sv-card,.sv-dash--v2 #svDashProjects>article{height:100%}
+.sv-dash--v2 #svDashProjects:has(>.sv-empty){min-height:0;margin-bottom:0}
+}
+/* supervisor: today's circle in the calendar in the supervisor sky blue */
+.sv-page .calendar-day.is-selected{background:#7fb6ca!important;color:#fff!important}
+/* supervisor empty states: the pictures (projects, tasks, meetings), centred across the whole box */
+.sv-page .sv-empty__img{display:block;width:88px;height:88px;object-fit:contain}
+#svProjectsGrid.sv-cards:has(>.sv-empty){grid-template-columns:1fr!important}
+.sv-page .sv-empty{grid-column:1/-1}
+/* create project: "Next" and "Add" (members, supervisor) in our blue */
+.wz-btn--primary{border-color:#008bbf!important;background:#008bbf!important;color:#fff!important}
+.wz-btn--primary:hover{border-color:#0077a5!important;background:#0077a5!important}
+.wz .invite-row button,.invite-row button{border:0!important;background:#008bbf!important;color:#fff!important}
+.wz .invite-row button:hover,.invite-row button:hover{background:#0077a5!important}
+/* project page: "+ Add member" and the other team links in our blue */
+.team-link{color:#008bbf}
+/* handbook page: no empty white box at the top */
+.hb-selected.is-empty{padding:0;background:none;border:0;box-shadow:none}
+.hb-selected.is-empty:not(:has(.hb-project:not([hidden]))){display:none}
+.wz__steps .wizard-tab.is-active{border-color:#008bbf!important;color:#0b5f86}
+.wz__steps .wizard-tab.is-active b{background:#008bbf}
+.wz__steps .wizard-tab.is-done b{background:#e3f3f9;color:#008bbf}
+.wz-stage__check input{accent-color:#008bbf}
+.wz-stage__tag{color:#008bbf}
+/* ===== QA 25 ===== */
+.vcode__change-text{margin:0;color:#304d5f;font-size:14px;line-height:1.9;text-align:center}
+.vcode__change-note{margin:0 0 8px;color:#7a8e99;font-size:12.5px;line-height:1.8;text-align:center}
+/* supervisor dashboard: when one project fills the box, the picture and the text grow with it */
+@media(min-width:1181px){
+.sv-dash--v2 #svDashProjects>article{display:flex;align-items:stretch}
+.sv-dash--v2 #svDashProjects>article .project-card__visual{height:auto!important;min-height:130px;align-self:stretch}
+.sv-dash--v2 #svDashProjects>article:only-child .project-card__body{display:flex;flex-direction:column;justify-content:center;gap:14px}
+.sv-dash--v2 #svDashProjects>article:only-child h3{font-size:27px!important}
+.sv-dash--v2 #svDashProjects>article:only-child .project-card__topline p{font-size:15px!important}
+.sv-dash--v2 #svDashProjects>article:only-child .progress-track{height:9px!important}
+.sv-dash--v2 #svDashProjects>article:only-child .progress-row strong{font-size:16px!important}
+.sv-dash--v2 #svDashProjects>article:only-child .project-card__date{font-size:13.5px!important}
+}
+/* the calendar "Tasks and dates" items on white, not grey */
+.calendar-agenda__item,.calendar-agenda li,.calendar-agenda .calendar-agenda__event{background:#fff!important}
+/* supervisor: the messages at the bottom in the supervisor sky blue */
+.sv-page .app-toast,.sv-page .app-toast--success,.sv-page .sv-toast{background:#7fb6ca;color:#fff;box-shadow:0 8px 24px rgba(127,182,202,.35)}
+.sv-page .app-toast--error{background:#9a2b1f}
+/* create project: the handbook file is chosen with a blue button */
+.wz-file{display:flex!important;align-items:center;gap:12px;flex-wrap:wrap}
+.wz-file[hidden]{display:none!important}
+.wz-file__btn{display:inline-flex;align-items:center;min-height:40px;padding:0 20px;border-radius:10px;background:#008bbf;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer}
+.wz-file__btn:hover{background:#0077a5}
+#wizardHandbookFile:focus-visible+.wz-file__btn{outline:2px solid #008bbf;outline-offset:2px}
+.wz-file__name{color:#6c818c;font-size:13px;overflow-wrap:anywhere}
+.handbook-drop__button{background:#008bbf!important;color:#fff!important}
+/* supervisor project: meetings and feedback in a white card with a heading, like the student's meetings */
+.sv-tab-card{padding:18px;background:#fff;border:1px solid #edf1f3;border-radius:14px}
+.sv-tab-card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin:0 0 14px}
+.sv-tab-card .section-head h2{color:#393939}
+.sv-tab-card .sv-empty{padding:26px 16px}
+.sv-tab-card>.sv-empty,.sv-tab-card>.sv-table,.sv-tab-card>ul{border:1px solid #edf1f3;border-radius:12px}
+#svTabPanel:has(>.sv-tab-card){background:none!important;border:0!important;min-height:0!important;display:block!important}
+/* supervisor stages: a "Tasks" button on each stage opens its tasks */
+.sv-page .sv-row--stages{grid-template-columns:minmax(0,1.6fr) 150px minmax(0,1.2fr) 100px 160px 84px!important}
+.sv-stage-tasks{min-height:32px;padding:0 14px;border:0;border-radius:9px;background:#7fb6ca;color:#fff;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.sv-stage-tasks:hover{background:#6aa8be}
+.sv-stage-filter{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;padding:10px 14px;border:1px solid #cfe6ee;border-radius:10px;background:#f4fafc;color:#393939;font-size:13.5px}
+.sv-stage-filter__all{border:0;background:none;color:#2f7f9c;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+@media(max-width:900px){.sv-page .sv-row--stages{grid-template-columns:1fr!important}}
+@media(min-width:1181px){
+.sv-dash--v2 #svDashProjects>article .project-card__visual{flex:0 0 260px!important;width:260px!important;max-width:260px!important}
+.sv-dash--v2 #svDashProjects>article .project-card__body{flex:1 1 auto;min-width:0}
+.sv-dash--v2 #svDashProjects>article:only-child .project-card__visual{flex-basis:300px!important;width:300px!important;max-width:300px!important}
+}

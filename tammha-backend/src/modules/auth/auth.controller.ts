@@ -38,6 +38,7 @@ import {
   VerifyEmailCodeDto,
   ResendVerificationCodeDto,
   ChangeUnverifiedEmailDto,
+  ChangeOwnUnverifiedEmailDto,
 } from './dto/account.dto';
 import { AccountLifecycleService } from './account-lifecycle.service';
 import { AllowUnverifiedEmail, JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -311,6 +312,30 @@ export class AuthController {
       dto.password,
       dto.newEmail,
     );
+  }
+
+  @Post('verify-email/change-email/me')
+  @AllowUnverifiedEmail()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt')
+  @StrictRateLimit()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Use another e-mail address, signed in (unverified accounts only)',
+    description:
+      'The signed-in user whose e-mail is not verified yet changes it without the password; ' +
+      'a new code is sent to newEmail. Same rules and errors as verify-email/change-email.',
+  })
+  @ApiResponse({ status: 200 })
+  @ApiResponse({
+    status: 409,
+    description: 'EMAIL_ALREADY_VERIFIED or EMAIL_TAKEN',
+  })
+  changeOwnUnverifiedEmail(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: ChangeOwnUnverifiedEmailDto,
+  ) {
+    return this.authService.changeOwnUnverifiedEmail(req.user.id, dto.newEmail);
   }
 
   @Post('verify-email')

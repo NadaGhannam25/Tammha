@@ -44,13 +44,15 @@
   function renderSelected() {
     const sel = selected(); const body = $('hbSelectedBody');
     if (!sel) {
-      body.innerHTML = `<p class="hb-empty">${esc(T('لم يُعتمد دليل لهذا المشروع بعد. اختر أحد أدلة الجامعات الجاهزة أو ارفع دليلًا مخصصًا، علمًا بأن إعداد المشروع لا يكتمل دون دليل معتمد.', 'No handbook has been set for this project yet. Choose a university handbook or upload one; project setup cannot be completed without a handbook.'))}</p>`;
+      // no white notice box at the top: the two options below say what to do
+      body.innerHTML = ''; $('hbSelected').classList.add('is-empty');
       return;
     }
     const statusText = sel.kind === 'UPLOAD' && !sel.ready ? (sel.failed ? T('تعذّرت قراءة نص الدليل. ارفع ملف PDF يحتوي على نص قابل للتحديد.', 'The handbook text could not be read. Upload a PDF with selectable text.') : T('جارٍ استخراج نص الدليل…', 'Extracting the handbook text…')) : '';
     // the selected handbook is not shown as a card (QA review 2): the options below show the
     // choice; only a problem with an uploaded handbook is reported here
     body.innerHTML = statusText ? `<p class="${sel.failed ? 'hb-file__error' : 'hb-file__note'}">${esc(statusText)}</p>` : '';
+    $('hbSelected').classList.toggle('is-empty', !body.innerHTML);
   }
   $('hbSelectedBody').addEventListener('click', async (e) => {
     if (e.target.closest('[data-view-selected]')) {

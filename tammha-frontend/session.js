@@ -95,7 +95,7 @@
     const title = opts.title || (kind === 'error' ? T('تعذّر تحميل البيانات', 'Could not load the data') : kind === 'empty' ? T('لا توجد بيانات بعد', 'Nothing here yet') : T('جارٍ التحميل…', 'Loading…'));
     const text = opts.error ? Api.message(opts.error) : opts.text || '';
     container.innerHTML = `<div class="app-state app-state--${kind}" ${kind === 'error' ? 'role="alert"' : 'role="status"'}>
-      <strong>${esc(title)}</strong>${text ? `<p>${esc(text)}</p>` : ''}
+      ${opts.image ? `<img class="app-state__img" src="${esc(opts.image)}" alt="" aria-hidden="true">` : ''}<strong>${esc(title)}</strong>${text ? `<p>${esc(text)}</p>` : ''}
       ${opts.action ? `<a class="app-state__action" href="${esc(opts.action.href)}">${esc(opts.action.label)}</a>` : ''}
       ${opts.retry ? `<button class="app-state__action" type="button" data-retry>${esc(T('إعادة المحاولة', 'Try again'))}</button>` : ''}</div>`;
     if (opts.retry) container.querySelector('[data-retry]').addEventListener('click', opts.retry);
@@ -268,6 +268,12 @@
   function onboarding(u) {
     if (u.role !== 'STUDENT' || u.onboardingCompleted) return;
     if (document.getElementById('onbTour')) return;
+    // shown once only: as soon as the tour opens it counts as seen, so moving to another page
+    // (or closing the tab) never starts it again
+    const seenKey = `tammha-tour-seen:${u.id}`;
+    try { if (localStorage.getItem(seenKey)) return; localStorage.setItem(seenKey, '1'); } catch (e) { /* private mode */ }
+    u.onboardingCompleted = true; Api.saveUser(u);
+    Api.post('/users/me/onboarding/complete', {}).catch(() => {});
     const STEPS = [
       ['home', T('الرئيسية', 'Home'), T('لوحة التحكم: ملخص مشاريعك واجتماعاتك القادمة، وتقويم المهام والمواعيد.', 'Your dashboard: your projects, upcoming meetings and a calendar of tasks and dates.')],
       ['projects', T('المشاريع', 'Projects'), T('من هنا تنشئ مشروعك بصفتك قائد الفريق، أو تنضم إلى مشروع زميلك برمز الدعوة. لكل مشروع مراحله ومهامه وملفاته.', 'Create your project as Team Leader, or join a classmate’s project with an invitation code. Each project has its own stages, tasks and files.')],
@@ -315,8 +321,7 @@
     const finish = async () => {
       window.removeEventListener('resize', place); document.removeEventListener('keydown', onKey);
       root.remove(); document.body.classList.remove('has-onb-tour');
-      // once only: finishing or ending the tour closes it for good
-      try { await Api.post('/users/me/onboarding/complete', {}); u.onboardingCompleted = true; Api.saveUser(u); } catch (err) { /* shown again next time */ }
+      // already recorded as seen when it opened
     };
     const onKey = (e) => { if (e.key === 'Escape') finish(); };
     root.addEventListener('click', (e) => {

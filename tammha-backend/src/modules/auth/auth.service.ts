@@ -403,6 +403,22 @@ export class AuthService {
     if (!user || !passwordOk || !user.isActive) {
       throw new UnauthorizedException('Invalid email or password');
     }
+    return this.applyUnverifiedEmailChange(user, newEmail);
+  }
+
+  /**
+   * The signed-in (still unverified) user uses another e-mail address: the session already
+   * proves who they are, so no password is asked.
+   */
+  async changeOwnUnverifiedEmail(userId: string, newEmail: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Invalid session');
+    }
+    return this.applyUnverifiedEmailChange(user, newEmail);
+  }
+
+  private async applyUnverifiedEmailChange(user: User, newEmail: string) {
     if (user.emailVerifiedAt) {
       throw new ConflictException({
         code: 'EMAIL_ALREADY_VERIFIED',

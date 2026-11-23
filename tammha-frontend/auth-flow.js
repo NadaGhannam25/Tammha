@@ -180,10 +180,12 @@
         <p class="vcode__hint">${esc(T('لم تجد الرسالة؟ تحقق من مجلد Junk أو Other. قد تحجب بعض صناديق البريد الجامعي الرسائل، والبريد الشخصي يصل عادة.', 'Not in your inbox? Check the Junk or Other folder. Some university mailboxes block messages; a personal email usually works.'))}</p>
         <button class="vcode__link vcode__other" type="button" id="vcodeOther">${esc(T('ما وصلك الرمز؟ جرّب بريدًا آخر', 'No code? Try another email'))}</button>
         <form class="vcode__change" id="vcodeChange" hidden novalidate>
-          <label><span>${esc(T('البريد الجديد', 'New email'))}</span><input type="email" id="vcodeNewEmail" dir="ltr" autocomplete="email" required></label>
-          <label><span>${esc(T('كلمة المرور', 'Password'))}</span><input type="password" id="vcodePassword" autocomplete="current-password" required></label>
+          <p class="vcode__change-text">${esc(T('إذا لم يصلك رمز التحقق على بريدك الحالي، فبإمكانك استخدام بريد إلكتروني آخر، كبريدك الشخصي.', 'If the verification code has not reached your current email, you may use another email address, such as your personal email.'))}</p>
+          <p class="vcode__change-note">${esc(T('سيُرسل رمز التحقق إلى البريد الجديد، ويُعتمد بريدًا لحسابك بعد تأكيده.', 'The verification code will be sent to the new address, which becomes your account email once confirmed.'))}</p>
+          <label><span>${esc(T('البريد الإلكتروني الجديد', 'New email address'))}</span><input type="email" id="vcodeNewEmail" dir="ltr" autocomplete="email" placeholder="name@example.com" required></label>
+          ${signedIn ? '' : `<label><span>${esc(T('كلمة المرور', 'Password'))}</span><input type="password" id="vcodePassword" autocomplete="current-password" required></label>`}
           <p class="vcode__error" id="vcodeChangeError" role="alert"></p>
-          <div class="vcode__change-actions"><button class="auth-secondary-button" type="button" id="vcodeChangeCancel">${esc(T('إلغاء', 'Cancel'))}</button><button class="auth-primary-button" type="submit">${esc(T('إرسال الرمز', 'Send code'))}</button></div>
+          <div class="vcode__change-actions"><button class="auth-secondary-button" type="button" id="vcodeChangeCancel">${esc(T('رجوع', 'Back'))}</button><button class="auth-primary-button" type="submit">${esc(T('إرسال رمز التحقق', 'Send the code'))}</button></div>
         </form>`;
       const digits = [...actions.querySelectorAll('.vcode__digit')];
       const errEl = actions.querySelector('#vcodeError');
@@ -267,23 +269,34 @@
       // another address (unverified accounts): new e-mail + password
       const change = actions.querySelector('#vcodeChange');
       const other = actions.querySelector('#vcodeOther');
-      other.addEventListener('click', () => { change.hidden = false; other.hidden = true; actions.querySelector('#vcodeNewEmail').focus(); });
-      actions.querySelector('#vcodeChangeCancel').addEventListener('click', () => { change.hidden = true; other.hidden = false; });
+      // its own view: the code part is hidden while the new address is typed
+      const codeTitle = title.textContent;
+      const openChange = (on) => {
+        actions.classList.toggle('is-changing', on); change.hidden = !on; other.hidden = on;
+        title.textContent = on ? T('استخدام بريد آخر', 'Use another email') : codeTitle;
+        if (on) actions.querySelector('#vcodeNewEmail').focus(); else digits[0].focus();
+      };
+      other.addEventListener('click', () => openChange(true));
+      actions.querySelector('#vcodeChangeCancel').addEventListener('click', () => openChange(false));
       change.addEventListener('submit', async (e) => {
         e.preventDefault();
         const cErr = actions.querySelector('#vcodeChangeError'); cErr.textContent = '';
         const newEmail = actions.querySelector('#vcodeNewEmail').value.trim();
-        const password = actions.querySelector('#vcodePassword').value;
+        const pwd = actions.querySelector('#vcodePassword'); const password = pwd ? pwd.value : '';
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) { cErr.textContent = T('اكتب بريدًا إلكترونيًا صحيحًا.', 'Enter a valid email address.'); return; }
-        if (!password) { cErr.textContent = T('اكتب كلمة المرور.', 'Enter your password.'); return; }
-        if (!email) { cErr.textContent = T('سجّل الدخول أولًا.', 'Sign in first.'); return; }
+        if (pwd && !password) { cErr.textContent = T('اكتب كلمة المرور.', 'Enter your password.'); return; }
+        if (!signedIn && !email) { cErr.textContent = T('سجّل الدخول أولًا.', 'Sign in first.'); return; }
         const btn = change.querySelector('[type="submit"]'); btn.disabled = true;
         try {
-          const r = await Api.post('/auth/verify-email/change-email', { currentEmail: email, password, newEmail }, { auth: false, loader: { label: T('جارٍ الإرسال…', 'Sending…') } });
+          // signed in: the session proves who you are, so no password is asked
+          const loader = { loader: { label: T('جارٍ الإرسال…', 'Sending…') } };
+          const r = signedIn
+            ? await Api.post('/auth/verify-email/change-email/me', { newEmail }, loader)
+            : await Api.post('/auth/verify-email/change-email', { currentEmail: email, password, newEmail }, { auth: false, ...loader });
           email = r.email || newEmail;
           const u = Api.session()?.user; if (u) Api.saveUser(Object.assign({}, u, { email }));
           const url = new URL(location.href); url.searchParams.set('email', email); history.replaceState(null, '', url);
-          showEmail(); change.hidden = true; other.hidden = false; change.reset();
+          showEmail(); change.reset(); openChange(false);
           digits.forEach((d) => { d.value = ''; }); digits[0].focus();
           note.textContent = T('أرسلنا رمزًا جديدًا إلى البريد الجديد.', 'A new code was sent to the new email.');
           countdown(r.retryAfterSeconds || 60);

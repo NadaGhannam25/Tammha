@@ -99,6 +99,15 @@ export class ResendVerificationCodeDto {
 }
 
 /** P17: an unverified account moves to another address and gets a new code there. */
+/** The signed-in, still unverified user uses another address (no password: the session proves it). */
+export class ChangeOwnUnverifiedEmailDto {
+  @ApiProperty({ example: 'student@gmail.com' })
+  @NormalizeEmail()
+  @IsEmail()
+  @MaxLength(254)
+  newEmail!: string;
+}
+
 export class ChangeUnverifiedEmailDto {
   @ApiProperty({ example: 'student@pnu.edu.sa' })
   @NormalizeEmail()

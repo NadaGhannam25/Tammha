@@ -113,10 +113,24 @@
     location.href = `login.html?next=${encodeURIComponent(here)}&expired=1`;
   }
 
+  // A GET that fails because the server is waking up or briefly unreachable (no connection,
+  // 502/503/504, a timeout) is tried again a few times before the page shows an error, so a
+  // first visit after a quiet period does not end on "could not load the data".
+  const RETRY_DELAYS = [1500, 3000, 6000];
+  const retryable = (e) => e instanceof ApiError && (e.kind === 'network' || e.kind === 'timeout' || [502, 503, 504].includes(e.status));
+  async function rawWithRetry(method, path, opts) {
+    for (let i = 0; ; i++) {
+      try { return await raw(method, path, opts); } catch (e) {
+        if (method !== 'GET' || i >= RETRY_DELAYS.length || !retryable(e) || (opts.signal && opts.signal.aborted)) throw e;
+        await new Promise((r) => setTimeout(r, RETRY_DELAYS[i]));
+      }
+    }
+  }
+
   async function request(method, path, opts = {}) {
     const run = async () => {
       try {
-        return await raw(method, path, opts);
+        return await rawWithRetry(method, path, opts);
       } catch (e) {
         const auth = opts.auth !== false;
         if (auth && e instanceof ApiError && e.status === 401 && store.read()?.refreshToken && !opts._retried) {

@@ -24,7 +24,7 @@
   const isEn = saved === 'en';
   // English uses the mirrored stylesheet (style-ltr.css, generated from style.css). This file is
   // loaded in <head> right after the stylesheet links, so the swap happens before the page draws.
-  if (isEn) document.querySelectorAll('link[rel="stylesheet"][href="style.css"]').forEach((l) => { l.href = 'style-ltr.css'; });
+  if (isEn) document.querySelectorAll('link[rel="stylesheet"][href^="style.css"]').forEach((l) => { l.href = l.getAttribute('href').replace(/^style\.css/, 'style-ltr.css'); });
 
   function setLanguage(next) {
     if (next !== 'en' && next !== 'ar') return;

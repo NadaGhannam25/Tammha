@@ -121,6 +121,8 @@
   const syncSource = () => { document.querySelectorAll('[data-handbook-source]').forEach((el) => { el.hidden = el.dataset.handbookSource !== srcOf(); }); updateNote(); };
   document.querySelectorAll('input[name="wizardHandbookSource"]').forEach((r) => r.addEventListener('change', () => { syncSource(); setErr('wizardHandbook', ''); }));
   $('wizardHandbookUniversity').addEventListener('change', () => { updateNote(); setErr('wizardHandbook', ''); });
+  // the chosen handbook file's name beside the blue "Choose the file" button
+  $('wizardHandbookFile').addEventListener('change', () => { const f = $('wizardHandbookFile').files[0]; $('wizardHandbookFileName').textContent = f ? f.name : T('لم يتم اختيار ملف (PDF)', 'No file chosen (PDF)'); setErr('wizardHandbook', ''); });
   $('wizardHandbookFile').addEventListener('change', () => setErr('wizardHandbook', ''));
   function setErr(id, msg) { const el = document.querySelector(`[data-error-for="${id}"]`); const input = $(id); if (el) { el.textContent = msg || ''; el.hidden = !msg; } if (input) { input.classList.toggle('is-invalid', !!msg); input.setAttribute('aria-invalid', String(!!msg)); } return !msg; }
   const iso = (id) => $(id).dataset.iso || $(id).value;
@@ -190,10 +192,11 @@
       const typed = $('supervisorInviteInput').value.trim();
       if (typed && !/^\S+@\S+\.\S+$/.test(typed)) mark('supervisorInviteInput', T('بريد المشرف غير صحيح، أو اترك الحقل فارغًا', "The supervisor's e-mail is not valid, or leave the field empty"));
     }
+    // the handbook is optional: nothing chosen means it is added later from the handbook page
     if (n === 3) {
       let msg = '';
-      if (srcOf() === 'UNIVERSITY') { const u = uni($('wizardHandbookUniversity').value); msg = !u ? T('اختر جامعة الدليل', "Select the handbook's university") : !u.handbook ? T('دليل هذه الجامعة غير متاح حاليًا؛ ارفع دليلًا خاصًا', "This university's handbook is not available yet; upload a handbook instead") : ''; }
-      if (srcOf() === 'UPLOAD') { const f = $('wizardHandbookFile').files[0]; msg = !f ? T('اختر ملف الدليل', 'Select the handbook file') : !(f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) ? T('ملف الدليل يجب أن يكون بصيغة PDF', 'The handbook must be a PDF file') : f.size === 0 ? T('ملف الدليل فارغ', 'The handbook file is empty') : f.size > 20 * 1024 * 1024 ? T('حجم ملف الدليل يتجاوز 20MB', 'The handbook file is larger than 20 MB') : ''; }
+      if (srcOf() === 'UNIVERSITY') { const u = uni($('wizardHandbookUniversity').value); msg = !u ? '' : !u.handbook ? T('دليل هذه الجامعة غير متاح حاليًا؛ ارفع دليلًا خاصًا', "This university's handbook is not available yet; upload a handbook instead") : ''; }
+      if (srcOf() === 'UPLOAD') { const f = $('wizardHandbookFile').files[0]; msg = !f ? '' : !(f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) ? T('ملف الدليل يجب أن يكون بصيغة PDF', 'The handbook must be a PDF file') : f.size === 0 ? T('ملف الدليل فارغ', 'The handbook file is empty') : f.size > 20 * 1024 * 1024 ? T('حجم ملف الدليل يتجاوز 20MB', 'The handbook file is larger than 20 MB') : ''; }
       if (msg) { setErr('wizardHandbook', msg); bad.push(srcOf() === 'UNIVERSITY' ? 'wizardHandbookUniversity' : 'wizardHandbookFile'); msgs.push(msg); } else setErr('wizardHandbook', '');
     }
     if (n === 4) {
@@ -228,6 +231,7 @@
     document.querySelectorAll('#projectWizardForm .is-invalid').forEach((el) => el.classList.remove('is-invalid'));
     panels.forEach((p) => p.querySelectorAll('input,select,textarea,button').forEach((el) => { el.disabled = false; }));
     resetStages(); syncSource(); setWizardImage(null);
+    $('wizardHandbookFileName').textContent = T('لم يتم اختيار ملف (PDF)', 'No file chosen (PDF)');
   }
   // ----- project image (optional): shown on the project cards -----
   function setWizardImage(data) {
@@ -251,14 +255,28 @@
     if (modal.hidden && !createdProjectId) resetWizard();
     modal.hidden = false; document.body.classList.add('has-wizard'); render(); syncSource();
     $('wizardProjectName').focus({ preventScroll: true });
-    if (!universities.length) {
-      const [unis, sups] = await Promise.allSettled([Api.get('/handbooks/universities'), Api.get('/supervision-requests/supervisors')]);
-      if (unis.status === 'fulfilled') {
-        universities = unis.value || [];
-        $('wizardHandbookUniversity').insertAdjacentHTML('beforeend', universities.map((u) => `<option value="${esc(u.key)}">${esc(uName(u))}${u.handbook ? '' : esc(T(' — غير متاح', ' — not available'))}</option>`).join(''));
-      } else setErr('wizardHandbook', Api.message(unis.reason));
-    }
+    if (!universities.length) loadUniversities();
   }
+  // the universities are loaded with the page (retried while the server wakes up), so the list
+  // is ready when the wizard reaches the handbook step
+  let loadingUnis = null;
+  function loadUniversities() {
+    if (loadingUnis) return loadingUnis;
+    loadingUnis = (async () => {
+      for (let attempt = 0; attempt < 4 && !universities.length; attempt++) {
+        if (attempt) await new Promise((r) => setTimeout(r, 1500 * attempt));
+        try {
+          const list = await Api.get('/handbooks/universities', { quiet: true });
+          universities = list || [];
+          $('wizardHandbookUniversity').insertAdjacentHTML('beforeend', universities.map((u) => `<option value="${esc(u.key)}">${esc(uName(u))}${u.handbook ? '' : esc(T(' — غير متاح', ' — not available'))}</option>`).join(''));
+          setErr('wizardHandbook', '');
+        } catch (err) { if (attempt === 3) setErr('wizardHandbook', Api.message(err)); }
+      }
+      loadingUnis = null;
+    })();
+    return loadingUnis;
+  }
+  loadUniversities();
   const close = () => {
     modal.hidden = true; document.body.classList.remove('has-wizard');
     if (createdProjectId) { createdProjectId = null; resetWizard(); }
@@ -319,9 +337,9 @@
         const due = UI.isoDay(new Date(t0 + ((t1 - t0) * (i + 1)) / names.length));
         await run(T(`المرحلة "${title}"`, `Stage "${title}"`), () => Api.post('/milestones', { projectId: pid, title, dueDate: due, order: i + 1 }));
       }
-      if (srcOf() === 'UNIVERSITY') {
+      if (srcOf() === 'UNIVERSITY' && $('wizardHandbookUniversity').value) {
         await run(T('دليل الجامعة', 'University handbook'), () => Api.put(`/projects/${pid}/handbook/university-selection`, { universityKey: $('wizardHandbookUniversity').value }));
-      } else {
+      } else if (srcOf() === 'UPLOAD' && $('wizardHandbookFile').files[0]) {
         const fd = new FormData(); fd.append('file', $('wizardHandbookFile').files[0]);
         await run(T('رفع الدليل', 'Handbook upload'), () => Api.upload('PUT', `/projects/${pid}/handbook`, fd));
       }
