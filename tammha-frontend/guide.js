@@ -10,6 +10,10 @@
 //      "ملخص الدليل" — GET/POST /projects/:id/handbook/summary (seven fixed topics; cached per language)
 //      "استخراج المهام" — POST /projects/:id/handbook/task-suggestions, then the Team Leader adds only the
 //      ticked ones with POST /projects/:id/ai-task-suggestions/apply (idempotent; duplicates skipped).
+// Layout (QA 32): until a handbook is chosen the two options are shown; once chosen, one bar shows the
+// file with "View file" and "Change file", and under it two cards (summary / extract tasks). Choosing an
+// edition selects it at once. "Change file" shows the two options again (Cancel goes back). Tasks are
+// extracted only when the project has stages; each suggested task is added to a chosen stage.
 // A failure is shown as an error, never as content; a topic the handbook does not cover shows "لا توجد نتائج".
 (function () {
   'use strict';
@@ -22,6 +26,9 @@
   const MAX_FILE_BYTES = 20 * 1024 * 1024;
   let projects = []; let projectId = null; let w = null; let state = null; let universities = [];
   let suggestions = null; // { projectId, aiRequestId, list, canApply, applied: Set }
+  let changing = false; // "Change file" was pressed: the two options are shown again
+  let aiOpen = false; // a summary or the extracted tasks are shown in place of the two cards
+  let stages_ = []; // the project's stages, in order (tasks are added to one of them)
   // every student of the team selects or uploads the handbook and applies suggested tasks
   const isLeader = () => !!(w?.viewer?.canManage ?? w?.viewer?.isLeader);
   const uName = (u) => (u ? (lang === 'en' ? u.name.en : u.name.ar) : '');
@@ -54,6 +61,46 @@
     body.innerHTML = statusText ? `<p class="${sel.failed ? 'hb-file__error' : 'hb-file__note'}">${esc(statusText)}</p>` : '';
     $('hbSelected').classList.toggle('is-empty', !body.innerHTML);
   }
+  async function viewSelected() {
+    const sel = selected(); if (!sel) return;
+    try {
+      const r = sel.kind === 'UNIVERSITY' ? await Api.get(`/handbooks/universities/${encodeURIComponent(sel.key)}/file`) : await Api.get(`/projects/${projectId}/handbook/file`);
+      window.open(r.url || r.signedUrl, '_blank', 'noopener');
+    } catch (err) { UI.toast(Api.message(err), 'error'); }
+  }
+  // ---------- the bar with the project's handbook, and which parts of the page are shown ----------
+  function barMeta(sel) {
+    const pages = sel.pageCount ? `${sel.pageCount} ${T('صفحة', 'pages')}` : '';
+    if (sel.kind === 'UNIVERSITY') {
+      const uni = universities.find((u) => u.key === sel.key); const h = uni && uni.handbook;
+      return [T(`دليل ${uni ? uName(uni) : sel.universityName || ''}`, `${uni ? uName(uni) : sel.universityName || ''} handbook`), h ? editionName(h) : '', pages].filter(Boolean).join(' · ');
+    }
+    if (!sel.ready && !sel.failed) return T('جارٍ استخراج نص الدليل…', 'Extracting the handbook text…');
+    return [T('دليل مرفوع للمشروع', 'Uploaded handbook'), sel.fileSize ? UI.fmtSize(sel.fileSize) : '', pages].filter(Boolean).join(' · ');
+  }
+  const EYE = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const SWAP = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h13l-3-3"/><path d="M20 17H7l3 3"/></svg>';
+  function renderView() {
+    const sel = selected(); const has = !!(sel && !sel.failed);
+    const choosing = !has || changing;
+    const bar = $('hbBar'); bar.hidden = !has;
+    if (has) {
+      bar.innerHTML = `<img alt="" class="hbv-bar__img" src="assets/file-pdf.png"/>
+        <div class="hbv-bar__text"><span class="hbv-bar__label">${esc(changing ? T('الدليل الحالي (يُستبدل بعد اختيار دليل جديد)', 'Current handbook (replaced once you choose a new one)') : T('دليل المشروع', 'Project handbook'))}</span>
+        <strong><bdi>${esc(sel.fileName || sel.title || '')}</bdi></strong><small>${esc(barMeta(sel))}</small></div>
+        <div class="hbv-bar__actions">${changing ? `<button class="hbv-btn" data-cancel-change type="button">${esc(T('إلغاء', 'Cancel'))}</button>`
+          : `<button class="hbv-btn" data-view-selected type="button">${EYE}${esc(T('عرض الملف', 'View file'))}</button>${isLeader() ? `<button class="hbv-btn" data-change-file type="button">${SWAP}${esc(T('تغيير الملف', 'Change file'))}</button>` : ''}`}</div>`;
+    }
+    $('hbChooseHead').hidden = !(has && changing);
+    document.querySelector('.hb-options').hidden = !choosing;
+    $('hbActions').hidden = !(sel && sel.ready && !changing && !aiOpen);
+    renderAi();
+  }
+  $('hbBar').addEventListener('click', (e) => {
+    if (e.target.closest('[data-view-selected]')) viewSelected();
+    if (e.target.closest('[data-change-file]')) { changing = true; uniSelect.value = ''; renderUniversity(); showChosen(null); showFileError(''); renderView(); }
+    if (e.target.closest('[data-cancel-change]')) { changing = false; renderView(); }
+  });
   $('hbSelectedBody').addEventListener('click', async (e) => {
     if (e.target.closest('[data-view-selected]')) {
       const sel = selected();
@@ -84,16 +131,18 @@
     const sel = selected();
     if (h && sel && sel.kind === 'UNIVERSITY' && sel.key === uni.key) editionSelect.value = h.versionId;
   }
-  function renderFile() {
-    const box = $('hbUniversityFile'); const uni = universities.find((u) => u.key === uniSelect.value);
-    if (!uni || !uni.handbook || !editionSelect.value) { if (!uni || uni.handbook) box.innerHTML = ''; return; }
-    const h = uni.handbook; const sel = selected();
-    const inUse = sel && sel.kind === 'UNIVERSITY' && sel.key === uni.key;
-    box.innerHTML = `<div class="hb-file hb-file--option"><img alt="" src="assets/file-pdf.png"/>
-      <div class="hb-file__text"><strong dir="auto">${esc(T(`دليل ${uName(uni)}`, `${uName(uni)} handbook`))} · ${esc(editionName(h))}</strong><small>${esc(UI.fmtSize(h.fileSize))}${h.pageCount ? ` · ${esc(h.pageCount)} ${esc(T('صفحة', 'pages'))}` : ''} · ${esc(T('أُضيف في', 'added'))} ${esc(UI.fmtDate(h.uploadedAt))}</small></div></div>
-      <div class="hb-actions"><button class="hb-btn hb-btn--primary" data-view-university type="button">${esc(T('عرض الملف', 'View file'))}</button>
-      ${inUse ? '' : `<button class="hb-btn" data-use-university ${isLeader() ? '' : 'disabled'} type="button">${esc(T('اعتماد الدليل للمشروع', 'Use for the project'))}</button>`}</div>
-      ${isLeader() ? '' : `<p class="hb-note">${esc(T('يعتمد دليل المشروع قائد الفريق.', 'The Team Leader sets the project handbook.'))}</p>`}`;
+  // choosing an edition makes it the project's handbook at once (Team Leader)
+  async function useEdition() {
+    const uni = universities.find((u) => u.key === uniSelect.value);
+    if (!uni || !uni.handbook || !editionSelect.value) return;
+    const sel = selected();
+    if (sel && sel.kind === 'UNIVERSITY' && sel.key === uni.key && !changing) return;
+    if (!isLeader()) { UI.toast(T('يعتمد دليل المشروع قائد الفريق.', 'The Team Leader sets the project handbook.'), 'error'); editionSelect.value = ''; return; }
+    try {
+      state = await Api.put(`/projects/${projectId}/handbook/university-selection`, { universityKey: uni.key }, { loader: { label: T('جارٍ اعتماد الدليل…', 'Setting the handbook…') } });
+      changing = false; aiOpen = false; suggestions = null; afterChange();
+      toast(T(`اعتُمد دليل ${uName(uni)} لمشروع ${w.name}.`, `${uName(uni)}'s handbook is now used for ${w.name}.`));
+    } catch (err) { UI.toast(Api.message(err), 'error'); editionSelect.value = ''; }
   }
   function renderUniversity() {
     const box = $('hbUniversityFile'); const uni = universities.find((u) => u.key === uniSelect.value);
@@ -102,22 +151,10 @@
       box.innerHTML = `<div class="hb-unavailable"><strong>${esc(T('الدليل غير متاح حاليًا', 'Handbook not available'))}</strong><p>${esc(T(`لم يُضف الدليل الرسمي لـ${uName(uni)} إلى المنصة بعد. يمكن رفعه من خيار "رفع دليل مخصص (PDF)".`, `The official handbook of ${uName(uni)} has not been added to the platform yet. You can upload it with "Upload a custom handbook (PDF)".`))}</p></div>`;
       return;
     }
-    renderFile();
+    box.innerHTML = '';
   }
-  editionSelect.addEventListener('change', renderFile);
+  editionSelect.addEventListener('change', useEdition);
   uniSelect.addEventListener('change', renderUniversity);
-  $('hbUniversityFile').addEventListener('click', async (e) => {
-    const uni = universities.find((u) => u.key === uniSelect.value); if (!uni) return;
-    if (e.target.closest('[data-view-university]')) {
-      try { const r = await Api.get(`/handbooks/universities/${encodeURIComponent(uni.key)}/file`); window.open(r.url, '_blank', 'noopener'); } catch (err) { UI.toast(Api.message(err), 'error'); }
-    }
-    const use = e.target.closest('[data-use-university]');
-    if (use) UI.busy(use, async () => {
-      state = await Api.put(`/projects/${projectId}/handbook/university-selection`, { universityKey: uni.key }, { loader: { label: T('جارٍ اعتماد الدليل…', 'Setting the handbook…') } });
-      afterChange(); toast(T(`اعتُمد دليل ${uName(uni)} لمشروع ${w.name}.`, `${uName(uni)}'s handbook is now used for ${w.name}.`));
-    });
-  });
-
   // ---------- Option B: own PDF ----------
   const fileInput = $('hbFile'); const drop = $('hbDrop'); const fileError = $('hbFileError');
   const showFileError = (text) => { fileError.textContent = text; fileError.hidden = !text; };
@@ -144,6 +181,7 @@
       await Api.upload('PUT', `/projects/${projectId}/handbook`, fd, { loader: { label: T('جارٍ رفع الدليل ومعالجته…', 'Uploading and processing the handbook…') } });
       // a university selection is replaced by the own upload
       try { await Api.del(`/projects/${projectId}/handbook/university-selection`); } catch (e) { /* not selected */ }
+      changing = false; aiOpen = false; suggestions = null;
       await waitForProcessing();
       const sel = selected();
       if (sel && sel.failed) { showChosen(file, T('تعذّرت قراءة النص', 'Text could not be read')); showFileError(T('تعذّرت قراءة نص الدليل. ارفع ملف PDF يحتوي على نص قابل للتحديد.', 'The handbook text could not be read. Upload a PDF with selectable text.')); }
@@ -170,11 +208,32 @@
 
   // ---------- AI actions ----------
   let tab = 'summary';
-  document.querySelectorAll('[data-hb-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.hbTab; renderAi(); }));
+  // tasks are added to the project's stages: without stages the extraction does not start
+  async function hasStages() {
+    try {
+      const r = await Api.get('/milestones', { query: { projectId, limit: 100 }, loader: false });
+      stages_ = (r.items || r || []).slice().sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || String(a.dueDate).localeCompare(String(b.dueDate)));
+    } catch (e) { /* keep the last list */ }
+    if (stages_.length) return true;
+    UI.toast(T('أضف مراحل المشروع أولًا، ثم استخرج المهام.', 'Add the project stages first, then extract the tasks.'), 'error');
+    return false;
+  }
+  const currentStage = () => (stages_.find((m) => m.status !== 'COMPLETED' && m.status !== 'CANCELLED') || stages_[0] || {}).id || '';
+  async function openAi(which) {
+    if (which === 'tasks' && !(await hasStages())) return;
+    tab = which; aiOpen = true; autoCreate = which === 'summary'; renderView();
+    if (which === 'tasks' && (!suggestions || suggestions.projectId !== projectId)) extractTasks();
+  }
+  $('hbActions').addEventListener('click', (e) => { const b = e.target.closest('[data-open-ai]'); if (b) openAi(b.dataset.openAi); });
+  document.querySelectorAll('[data-hb-tab]').forEach((b) => b.addEventListener('click', async () => {
+    if (b.dataset.hbTab === tab) return;
+    if (b.dataset.hbTab === 'tasks' && !(await hasStages())) return;
+    tab = b.dataset.hbTab; renderAi();
+  }));
   function renderAi() {
     const sel = selected();
-    $('hbAi').hidden = !(sel && sel.ready);
-    if (!sel || !sel.ready) return;
+    $('hbAi').hidden = !(sel && sel.ready && aiOpen && !changing);
+    if ($('hbAi').hidden) return;
     document.querySelectorAll('[data-hb-tab]').forEach((b) => { const on = b.dataset.hbTab === tab; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', String(on)); });
     $('hbSummaryPanel').hidden = tab !== 'summary'; $('hbTasksPanel').hidden = tab !== 'tasks';
     if (tab === 'summary') loadSummary(); else renderTasks();
@@ -191,18 +250,25 @@
         : `<p class="hb-card__none">${esc(T('لا يوجد في الدليل نص واضح حول هذا القسم.', 'The handbook has no clear text on this section.'))}</p>`}
       </article>`).join('')}</div>`;
   }
-  function summaryStart(text) { return `<div class="hb-start"><p>${esc(text || T('يستخرج الملخص من الدليل المعتمد المعلومات المتعلقة بسبعة محاور ثابتة، مع الإشارة إلى أرقام الصفحات حيثما أمكن.', 'The summary extracts the information on seven fixed topics from the selected handbook, with page references where available.'))}</p><button class="hb-btn" data-summary type="button">${esc(T('إنشاء الملخص', 'Create summary'))}</button></div>`; }
+  const panelHead = (title, text, end) => `<div class="hbv-panel-head"><div><h2>${esc(title)}</h2><p>${esc(text)}</p></div>${end || ''}</div>`;
+  const SUMMARY_HEAD = () => panelHead(T('ملخص الدليل', 'Handbook Summary'), T('أهم ما في الدليل في سبعة محاور، مع أرقام الصفحات.', 'The key points of the handbook in seven topics, with page numbers.'));
+  const TASKS_HEAD = (end) => panelHead(T('استخراج المهام', 'Extract Tasks'), T('مهام مقترحة من الدليل، تراجعها قبل إضافتها.', 'Suggested tasks from the handbook, to review before adding them.'), end);
+  function summaryStart(text) { return SUMMARY_HEAD() + `<div class="hb-start"><p>${esc(text || T('يستخرج الملخص من الدليل المعتمد المعلومات المتعلقة بسبعة محاور ثابتة، مع الإشارة إلى أرقام الصفحات حيثما أمكن.', 'The summary extracts the information on seven fixed topics from the selected handbook, with page references where available.'))}</p><button class="hb-btn" data-summary type="button">${esc(T('إنشاء الملخص', 'Create summary'))}</button></div>`; }
   function showSummary(result) {
     const meta = result.coverage && result.coverage.truncated ? `<p class="hb-note">${esc(T(`شمل الملخص ${result.coverage.pagesIncluded} من ${result.coverage.pageCount} صفحة لطول الدليل.`, `The summary covered ${result.coverage.pagesIncluded} of ${result.coverage.pageCount} pages because the handbook is long.`))}</p>` : '';
-    $('hbSummaryPanel').innerHTML = summaryCards(result) + meta + `<p class="hb-disclaimer">${esc(T('الملخص مساعد ومبني على نص الدليل، ولا يغني عن الرجوع إلى الدليل في الصفحات المذكورة.', 'The summary is based on the handbook text and does not replace reading the cited pages of the handbook.'))}</p>
+    $('hbSummaryPanel').innerHTML = SUMMARY_HEAD() + summaryCards(result) + meta + `<p class="hb-disclaimer">${esc(T('الملخص مساعد ومبني على نص الدليل، ولا يغني عن الرجوع إلى الدليل في الصفحات المذكورة.', 'The summary is based on the handbook text and does not replace reading the cited pages of the handbook.'))}</p>
       <p class="hb-actions"><button class="hb-btn" data-summary="regenerate" type="button">${esc(T('إعادة إنشاء الملخص', 'Create the summary again'))}</button></p>`;
   }
+  // "Create summary" on the card: the saved summary is shown, or a new one is created
+  let autoCreate = false;
   async function loadSummary() {
+    const auto = autoCreate; autoCreate = false;
     const panel = $('hbSummaryPanel'); UI.state(panel, 'loading');
     try {
       const r = await Api.get(`/projects/${projectId}/handbook/summary`, { query: { language: lang } });
-      if (r.status === 'READY' && r.topics && r.topics.length) showSummary(r); else panel.innerHTML = summaryStart();
-    } catch (e) { panel.innerHTML = summaryStart(); }
+      if (r.status === 'READY' && r.topics && r.topics.length) { showSummary(r); return; }
+    } catch (e) { /* no saved summary */ }
+    if (auto) createSummary(false); else panel.innerHTML = summaryStart();
   }
   async function createSummary(regenerate) {
     const panel = $('hbSummaryPanel'); panel.innerHTML = '';
@@ -215,7 +281,7 @@
         const saved = await Api.get(`/projects/${projectId}/handbook/summary`, { query: { language: lang } });
         if (saved.status === 'READY' && saved.topics && saved.topics.length) { showSummary(saved); return; }
       } catch (e) { /* show the error below */ }
-      panel.innerHTML = `<div class="hb-error" role="alert"><strong>${esc(T('تعذّر إنشاء الملخص', 'The summary could not be created'))}</strong><p>${esc(Api.message(error))}</p><p>${esc(T('لم يُعرض أي محتوى غير موثّق.', 'No unverified content is shown.'))}</p><button class="hb-btn" data-summary type="button">${esc(T('إعادة المحاولة', 'Try again'))}</button></div>`;
+      panel.innerHTML = SUMMARY_HEAD() + `<div class="hb-error" role="alert"><strong>${esc(T('تعذّر إنشاء الملخص', 'The summary could not be created'))}</strong><p>${esc(Api.message(error))}</p><p>${esc(T('لم يُعرض أي محتوى غير موثّق.', 'No unverified content is shown.'))}</p><button class="hb-btn" data-summary type="button">${esc(T('إعادة المحاولة', 'Try again'))}</button></div>`;
     }
   }
   $('hbSummaryPanel').addEventListener('click', (e) => { const b = e.target.closest('[data-summary]'); if (b) createSummary(b.dataset.summary === 'regenerate'); });
@@ -226,19 +292,21 @@
   function renderTasks(errorText) {
     const panel = $('hbTasksPanel');
     if (errorText) {
-      panel.innerHTML = `<div class="hb-error" role="alert"><strong>${esc(T('تعذّر استخراج المهام', 'Tasks could not be extracted'))}</strong><p>${esc(errorText)}</p><p>${esc(T('لم تُضف أي مهام.', 'No task was added.'))}</p><button class="hb-btn" data-extract type="button">${esc(T('إعادة المحاولة', 'Try again'))}</button></div>`;
+      panel.innerHTML = TASKS_HEAD() + `<div class="hb-error" role="alert"><strong>${esc(T('تعذّر استخراج المهام', 'Tasks could not be extracted'))}</strong><p>${esc(errorText)}</p><p>${esc(T('لم تُضف أي مهام.', 'No task was added.'))}</p><button class="hb-btn" data-extract type="button">${esc(T('إعادة المحاولة', 'Try again'))}</button></div>`;
       return;
     }
     if (!suggestions || suggestions.projectId !== projectId) {
-      panel.innerHTML = `<div class="hb-start"><p>${esc(T('تُستخرج من الدليل المعتمد مهام مقترحة، ثم يراجعها الفريق ويحدد ما يُضاف منها إلى مهام المشروع.', 'Suggested tasks are extracted from the selected handbook; the team reviews them and selects which ones to add to the project tasks.'))}</p><button class="hb-btn" data-extract type="button">${esc(T('استخراج المهام', 'Extract tasks'))}</button></div>`;
+      panel.innerHTML = TASKS_HEAD() + `<div class="hb-start"><p>${esc(T('تُستخرج من الدليل المعتمد مهام مقترحة، ثم يراجعها الفريق ويحدد ما يُضاف منها إلى مهام المشروع.', 'Suggested tasks are extracted from the selected handbook; the team reviews them and selects which ones to add to the project tasks.'))}</p><button class="hb-btn" data-extract type="button">${esc(T('استخراج المهام', 'Extract tasks'))}</button></div>`;
       return;
     }
     const dropped = suggestions.dropped || {};
     const droppedNote = dropped.unverified || dropped.duplicates ? `<p class="hb-note">${esc(T(`استُبعدت ${dropped.unverified || 0} مقترحات لم يُعثر على نصها في الدليل، و${dropped.duplicates || 0} مكررة مع مهام موجودة.`, `${dropped.unverified || 0} suggestions not found in the handbook text and ${dropped.duplicates || 0} duplicates of existing tasks were left out.`))}</p>` : '';
-    if (!suggestions.list.length) { panel.innerHTML = `<div class="hb-start"><p>${esc(T('لم يتضمن الدليل مهامًا جديدة يمكن اقتراحها.', 'The handbook contains no new tasks to suggest.'))}</p>${droppedNote}<button class="hb-btn hb-btn--ghost" data-extract type="button">${esc(T('استخراج المهام مجددًا', 'Extract again'))}</button></div>`; return; }
+    if (!suggestions.list.length) { panel.innerHTML = TASKS_HEAD() + `<div class="hb-start"><p>${esc(T('لم يتضمن الدليل مهامًا جديدة يمكن اقتراحها.', 'The handbook contains no new tasks to suggest.'))}</p>${droppedNote}<button class="hb-btn hb-btn--ghost" data-extract type="button">${esc(T('استخراج المهام مجددًا', 'Extract again'))}</button></div>`; return; }
     const canApply = isLeader() && suggestions.canApply !== false;
     const owners = `<option value="">${esc(T('غير مُسنَدة', 'Unassigned'))}</option>` + members().map((m) => `<option value="${esc(m.userId)}">${esc(m.label)}</option>`).join('');
-    panel.innerHTML = `
+    const stageOpts = stages_.map((m) => `<option value="${esc(m.id)}">${esc(m.title)}</option>`).join('');
+    const cur = currentStage();
+    panel.innerHTML = TASKS_HEAD() + `
       <div class="hb-tasks__bar">
         <label class="handbook-check"><input id="hbSelectAll" type="checkbox"/><span>${esc(T('تحديد الكل', 'Select all'))}</span></label>
         <span class="hb-tasks__end"><button class="hb-btn hb-btn--ghost" data-extract type="button">${esc(T('استخراج المهام مجددًا', 'Extract again'))}</button>
@@ -251,7 +319,7 @@
         return `<li class="handbook-item${done ? ' is-added' : ''}">
           <label class="handbook-check"><input data-sugg="${esc(s.id)}" type="checkbox"${done || !canApply ? ' disabled' : ''}${done ? ' checked' : ''} aria-label="${esc(T('تحديد', 'Select'))}: ${esc(s.title)}"/></label>
           <div class="handbook-item__text"><strong dir="auto">${esc(s.title)}</strong><small dir="auto">${esc(s.description || '')}</small>${s.quote ? `<small class="hb-quote" dir="auto">"${esc(s.quote)}"</small>` : ''}</div>
-          <div class="handbook-item__meta">${pageChips(s.pages)}${canApply && !done ? `<select class="hb-owner" data-owner="${esc(s.id)}" aria-label="${esc(T('المسؤول', 'Owner'))}">${owners}</select>` : ''}</div>
+          <div class="handbook-item__meta">${pageChips(s.pages)}${canApply && !done && stageOpts ? `<select class="hb-owner hb-stage" data-stage="${esc(s.id)}" aria-label="${esc(T('المرحلة', 'Stage'))}">${stageOpts.replace(`value="${esc(cur)}"`, `value="${esc(cur)}" selected`)}</select>` : ''}${canApply && !done ? `<select class="hb-owner" data-owner="${esc(s.id)}" aria-label="${esc(T('المسؤول', 'Owner'))}">${owners}</select>` : ''}</div>
           ${done ? `<a class="handbook-item__done" href="tasks.html?project=${encodeURIComponent(projectId)}">${esc(T('مضافة إلى المهام', 'In tasks'))}</a>` : ''}
         </li>`;
       }).join('')}</ul>
@@ -278,7 +346,14 @@
     if (!isLeader()) return;
     const ids = [...document.querySelectorAll('#hbTasksPanel input[data-sugg]:checked:not(:disabled)')].map((b) => b.dataset.sugg);
     if (!ids.length) return;
-    const items = ids.map((id) => { const o = document.querySelector(`[data-owner="${CSS.escape(id)}"]`); return o && o.value ? { suggestionId: id, assignedStudentId: o.value } : { suggestionId: id }; });
+    // each task goes to the chosen stage and, when chosen, to its owner
+    const items = ids.map((id) => {
+      const o = document.querySelector(`[data-owner="${CSS.escape(id)}"]`); const st = document.querySelector(`[data-stage="${CSS.escape(id)}"]`);
+      const it = { suggestionId: id };
+      if (o && o.value) it.assignedStudentId = o.value;
+      if (st && st.value) it.milestoneId = st.value;
+      return it;
+    });
     await UI.busy(btn, async () => {
       const r = await Api.post(`/projects/${projectId}/ai-task-suggestions/apply`, { aiRequestId: suggestions.aiRequestId, items }, { loader: { label: T('جارٍ إضافة المهام…', 'Adding the tasks…') } });
       const created = r.created || [];
@@ -291,7 +366,7 @@
     });
   }
   $('hbTasksPanel').addEventListener('click', (e) => {
-    if (e.target.closest('[data-extract]')) extractTasks();
+    if (e.target.closest('[data-extract]')) hasStages().then((ok) => { if (ok) extractTasks(); });
     const add = e.target.closest('#hbAddSelected'); if (add) addSelected(add);
   });
   $('hbTasksPanel').addEventListener('change', (e) => {
@@ -300,16 +375,16 @@
   });
 
   // ---------- project ----------
-  function afterChange() { renderSelected(); renderUniversity(); suggestions = suggestions && suggestions.projectId === projectId ? suggestions : null; renderAi(); }
+  function afterChange() { renderSelected(); renderUniversity(); suggestions = suggestions && suggestions.projectId === projectId ? suggestions : null; renderView(); }
   // The handbook shown always belongs to the project chosen in the selector: answers of a
   // project the user has already left are ignored (fast switching), and the university list
   // shows the new project's own choice (or nothing) instead of the previous project's.
   let loadSeq = 0;
   async function loadProject(id) {
     const seq = ++loadSeq;
-    projectId = id; S.setCurrentProject(id); suggestions = null; w = null; state = null; owners_ = [];
+    projectId = id; S.setCurrentProject(id); suggestions = null; w = null; state = null; owners_ = []; changing = false; aiOpen = false; stages_ = [];
     const url = new URL(location.href); url.searchParams.set('project', id); history.replaceState(null, '', url);
-    UI.state($('hbSelectedBody'), 'loading'); $('hbAi').hidden = true;
+    UI.state($('hbSelectedBody'), 'loading'); $('hbAi').hidden = true; $('hbBar').hidden = true; $('hbActions').hidden = true;
     try {
       const listed = projects.find((p) => p.id === id);
       const [ws, st, owners] = await Promise.all([Api.get(`/projects/${id}`), Api.get(`/projects/${id}/handbook`), S.assignees(listed)]);

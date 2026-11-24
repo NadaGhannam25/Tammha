@@ -45,7 +45,7 @@
       const list = await Api.get('/documents', { query: { projectId: w.id } });
       docs = Array.isArray(list) ? list : list.items || [];
       body.innerHTML = docs.map(row).join('');
-      if (!docs.length) UI.state(body, 'empty', { image: 'assets/empty-files.webp', title: T('لا توجد ملفات بعد', 'No files yet'), text: T('تُحفظ هنا ملفات المشروع ومرفقاته، مثل المقترح والتقارير والعروض. ارفع الملف من زر "إضافة ملف"، ويمكن إرساله إلى المشرف للمراجعة ومتابعة إصداراته.', 'The project files and attachments are kept here, such as the proposal, reports and presentations. Upload a file with "Add file"; it can be sent to the supervisor for review and its versions are kept.') });
+      if (!docs.length) UI.state(body, 'empty', { image: 'assets/empty-files.webp', title: T('لا توجد ملفات بعد', 'No files yet'), text: T('ارفع ملفات المشروع من زر "إضافة ملف".', 'Upload the project files with "Add file".') });
       filter();
     } catch (e) { UI.state(body, 'error', { error: e, retry: load }); }
   }

@@ -1276,3 +1276,53 @@ html[dir="rtl"] .prejoin-v43-back svg{transform:scaleX(-1)}
 .sv-check input:checked{border-color:transparent;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%23fff'/%3E%3Cpath d='M4.8 8.3 7 10.4 11.2 5.9' fill='none' stroke='%237fb6ca' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
 .meeting-participants__item:has(input:disabled){opacity:1}
 .meeting-participants__item input:disabled{cursor:default}
+/* ===== QA 32 ===== */
+/* handbook page: a bar with the chosen file, then two cards (summary / extract tasks); the two
+   options come back only with "Change file" */
+.hb-options[hidden],.hbv-bar[hidden],.hbv-actions[hidden],.hbv-head[hidden]{display:none!important}
+.hbv-bar,.hbv-actions,.hbv-head,#hbChooseHead{max-width:1520px;margin-inline:auto}
+.hbv-bar{display:flex;align-items:center;gap:14px;margin-bottom:22px;padding:16px 20px;background:#fff;border:1px solid #e3edf2;border-radius:16px}
+.hbv-bar__img{width:46px;height:46px;object-fit:contain;flex:none}
+.hbv-bar__text{flex:1;min-width:0;display:grid;gap:1px}
+.hbv-bar__label{color:#7d909b;font-size:12px;font-weight:600}
+.hbv-bar__text strong{color:#183c55;font-size:15.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbv-bar__text small{color:#7d909b;font-size:12.5px}
+.hbv-bar__actions{display:flex;gap:10px;flex-wrap:wrap}
+.hbv-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border:1px solid #cfe3ec;border-radius:10px;background:#fff;color:#14789d;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;transition:background .15s ease}
+.hbv-btn:hover{background:#f1f8fb}
+.hbv-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hbv-head{margin:0 auto 14px}
+.hbv-head h2{margin:0;color:#183c55;font-size:20.5px;font-weight:800}
+.hbv-head p{margin:3px 0 0;color:#7d909b;font-size:13px}
+#hbChooseHead+.hb-options{margin-top:0}
+.hbv-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.hbv-card{display:flex;flex-direction:column;gap:8px;padding:22px;background:#fff;border:1px solid #e3edf2;border-radius:16px}
+.hbv-card__top{display:flex;align-items:center;gap:10px}
+.hbv-card__icon{display:inline-grid;place-items:center;color:#008bbf}
+.hbv-card__icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hbv-card h3{margin:0;color:#183c55;font-size:16.5px;font-weight:800}
+.hbv-card p{margin:0;color:#6c8290;font-size:13px}
+.hbv-card__foot{margin-top:14px}
+/* the summary / tasks tabs sit apart from the bar, and each panel starts with a bold title and one line */
+.hb-ai{margin-top:0}
+.hb-tabs{border-bottom:0!important;margin-bottom:16px!important;gap:9px!important}
+.hbv-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px}
+.hbv-panel-head h2{margin:0;color:#183c55;font-size:18px;font-weight:800}
+.hbv-panel-head p{margin:3px 0 0;color:#7d909b;font-size:13px}
+.hb-stage{min-width:140px}
+@media(max-width:900px){.hbv-cards{grid-template-columns:1fr}.hbv-bar{flex-wrap:wrap}.hbv-bar__actions{width:100%}}
+/* "My projects" and the project stages sit in one white box with their title, like the project files */
+.projects-card,.stages-card{max-width:1520px;margin:4px auto 0;padding:22px 24px;background:#fff;border:1px solid #e6edf0;border-radius:16px}
+.projects-card .projects-section-head{margin:0 0 16px}
+.projects-card .projects-list{margin:0;max-width:none}
+.stages-card .stages-toolbar{margin:0 0 14px}
+.stages-card .stages-table{margin-top:0}
+@media(max-width:600px){.projects-card,.stages-card{padding:16px}}
+/* project wizard: one academic supervisor, so the e-mail box is full width without an "Add" button */
+.wz [data-add-invite="supervisor"]{display:none!important}
+/* AR / EN on the public pages: a white box with a light frame, visible on white pages too */
+html body .lang-toggle.lang-toggle--short{min-width:46px;height:36px;padding:0 12px;border:1px solid #dbe6eb!important;border-radius:10px!important;background:#fff!important;box-shadow:0 6px 18px rgba(0,40,70,.10)!important}
+/* the summary / tasks content sits in one white box under its tabs */
+.hb-ai .hb-panel{padding:22px 24px;background:#fff;border:1px solid #e3edf2;border-radius:16px}
+.hb-ai .hb-panel .hb-start{padding:0;border:0;background:none;box-shadow:none}
+.hb-ai .hb-panel .hb-error{margin:0}

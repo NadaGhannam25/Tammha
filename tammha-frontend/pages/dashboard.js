@@ -29,7 +29,7 @@
       if (!items.length) {
         // a white box, like the empty meetings box
         box.innerHTML = '<div class="dash-projects-empty"></div>';
-        UI.state(box.firstChild, 'empty', { image: 'assets/empty-files.webp', title: T('لا توجد مشاريع بعد', 'No projects yet'), text: T('أنشئ مشروعًا جديدًا بصفتك قائد الفريق، أو انضم إلى مشروع زميلك برمز الدعوة.', 'Create a new project as Team Leader, or join a classmate’s project with an invitation code.')});
+        UI.state(box.firstChild, 'empty', { image: 'assets/empty-files.webp', title: T('لا توجد مشاريع بعد', 'No projects yet'), text: T('أنشئ مشروعًا أو انضم إلى مشروع برمز دعوة.', 'Create a project or join one with an invitation code.')});
         return;
       }
       box.innerHTML = items.slice(0, 2).map((w) => {

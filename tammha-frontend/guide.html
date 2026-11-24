@@ -7,17 +7,17 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="دليل مشروع التخرج في منصة تممها" name="description"/>
 <title data-en="Graduation Project Handbook">دليل مشروع التخرج</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
-<link href="style.css?v=qa31" rel="stylesheet"/>
-<link href="ltr.css?v=qa31" rel="stylesheet"/>
-<link href="loader.css?v=qa31" rel="stylesheet"/>
-<script src="i18n-en.js?v=qa31"></script>
-<script src="i18n.js?v=qa31"></script>
-<script src="loader.js?v=qa31"></script>
-<script src="config.js?v=qa31"></script>
-<script src="api.js?v=qa31"></script>
-<script src="session.js?v=qa31"></script>
-<script src="domain.js?v=qa31"></script>
-<link href="app.css?v=qa31" rel="stylesheet"/>
+<link href="style.css?v=qa32" rel="stylesheet"/>
+<link href="ltr.css?v=qa32" rel="stylesheet"/>
+<link href="loader.css?v=qa32" rel="stylesheet"/>
+<script src="i18n-en.js?v=qa32"></script>
+<script src="i18n.js?v=qa32"></script>
+<script src="loader.js?v=qa32"></script>
+<script src="config.js?v=qa32"></script>
+<script src="api.js?v=qa32"></script>
+<script src="session.js?v=qa32"></script>
+<script src="domain.js?v=qa32"></script>
+<link href="app.css?v=qa32" rel="stylesheet"/>
 </head>
 <body class="guide-page" data-app-role="STUDENT">
 <div class="app-shell">
@@ -117,6 +117,10 @@
 <div id="hbSelectedBody"></div>
 </section>
 
+<!-- The project's handbook: one bar with the file, "View file" and "Change file" -->
+<section aria-label="الدليل المعتمد للمشروع" class="hbv-bar" data-en-aria-label="Project handbook" hidden id="hbBar"></section>
+<!-- shown while a new handbook is being chosen in place of the current one -->
+<div class="hbv-head" hidden id="hbChooseHead"><h2 data-en="Choose the new handbook">اختر الدليل الجديد</h2><p data-en="Pick a university handbook or upload a PDF; the summary and suggested tasks are then created from the new file.">اختر دليل جامعة أو ارفع ملف PDF، وبعدها يُنشأ الملخص والمهام المقترحة من الملف الجديد.</p></div>
 <!-- Two ways to choose the handbook -->
 <div class="hb-options">
 <section aria-labelledby="hbUniTitle" class="hb-option">
@@ -141,6 +145,14 @@
 </section>
 </div>
 
+<!-- What to do with the handbook: two cards, shown once a handbook is ready -->
+<section aria-labelledby="hbActionsTitle" class="hbv-actions" hidden id="hbActions">
+<div class="hbv-head"><h2 data-en="What do you need from the handbook?" id="hbActionsTitle">ماذا تحتاج من الدليل؟</h2><p data-en="Choose one now; you can come back to the other at any time.">اختر ما يفيدك الآن، ويمكنك الرجوع للخيار الآخر في أي وقت.</p></div>
+<div class="hbv-cards">
+<article class="hbv-card"><div class="hbv-card__top"><span class="hbv-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2.5"></rect><path d="M8 8h8M8 12h8M8 16h4"></path><path d="M15.5 15.2l.6 1.3 1.3.6-1.3.6-.6 1.3-.6-1.3-1.3-.6 1.3-.6z" fill="currentColor" stroke="none"></path></svg></span><h3 data-en="Handbook Summary">ملخص الدليل</h3></div><p data-en="The key points of the handbook in seven topics, with page numbers.">أهم ما في الدليل في سبعة محاور، مع أرقام الصفحات.</p><div class="hbv-card__foot"><button class="hb-btn" data-open-ai="summary" type="button" data-en="Create summary">إنشاء الملخص</button></div></article>
+<article class="hbv-card"><div class="hbv-card__top"><span class="hbv-card__icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 7 2 2 4-4"></path><path d="M13 7h7"></path><path d="m4 15 2 2 4-4"></path><path d="M13 15h7"></path></svg></span><h3 data-en="Extract Tasks">استخراج المهام</h3></div><p data-en="Suggested tasks from the handbook, to review before adding them.">مهام مقترحة من الدليل، تراجعها قبل إضافتها.</p><div class="hbv-card__foot"><button class="hb-btn" data-open-ai="tasks" type="button" data-en="Extract tasks">استخراج المهام</button></div></article>
+</div>
+</section>
 <!-- AI actions on the selected handbook -->
 <section aria-labelledby="hbAiTitle" class="hb-ai" hidden="" id="hbAi">
 <h2 class="visually-hidden" data-en="Handbook AI" id="hbAiTitle">الذكاء الاصطناعي للدليل</h2>
@@ -157,7 +169,7 @@
 <footer class="footer projects-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
 </main>
 </div>
-<script src="guide.js?v=qa31"></script>
-<script src="script.js?v=qa31"></script>
+<script src="guide.js?v=qa32"></script>
+<script src="script.js?v=qa32"></script>
 </body>
 </html>
