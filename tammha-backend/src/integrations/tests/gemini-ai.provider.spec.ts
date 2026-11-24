@@ -128,6 +128,45 @@ describe('GeminiAiTextProvider (mocked fetch)', () => {
     expect(logs.join(' ')).toContain('HTTP 503 UNAVAILABLE');
   });
 
+  it('a main model that stays busy (503) hands the request to the fallback model once', async () => {
+    const busy = {
+      ok: false,
+      status: 503,
+      json: async () => ({ error: { status: 'UNAVAILABLE' } }),
+    };
+    const fine = {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [
+          { content: { parts: [{ text: 'from fallback' }] }, finishReason: 'STOP' },
+        ],
+      }),
+    };
+    const answers = [busy, busy, busy, fine];
+    const fetchFn = jest.fn(async () => answers.shift()!) as unknown as FetchLike;
+    const provider = new GeminiAiTextProvider(
+      { ...config, fallbackModel: 'gemini-2.5-flash' },
+      fetchFn,
+    );
+    const result = await provider.generateText({ prompt: 'x', lightThinking: true });
+    expect(result.text).toBe('from fallback');
+    expect(result.model).toBe('gemini-2.5-flash');
+    const calls = (fetchFn as unknown as jest.Mock).mock.calls;
+    expect(calls).toHaveLength(4);
+    expect(String(calls[3][0])).toContain('/models/gemini-2.5-flash:generateContent');
+    // the fallback (not a Gemini 3 model) gets no thinking level
+    expect(JSON.parse(calls[3][1].body).generationConfig.thinkingConfig).toBeUndefined();
+  }, 15000);
+
+  it('without a fallback model the busy answer is the error', async () => {
+    const provider = new GeminiAiTextProvider(
+      { ...config, fallbackModel: null },
+      reply(503, {}),
+    );
+    expect(await codeOf(provider.generateText({ prompt: 'x' }))).toBe('AI_PROVIDER_UNAVAILABLE');
+  }, 15000);
+
   it('a rejected request (404) is not retried', async () => {
     const fetchFn = reply(404, { error: { status: 'NOT_FOUND' } });
     const provider = new GeminiAiTextProvider(config, fetchFn);

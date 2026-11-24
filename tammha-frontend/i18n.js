@@ -25,6 +25,25 @@
   // English uses the mirrored stylesheet (style-ltr.css, generated from style.css). This file is
   // loaded in <head> right after the stylesheet links, so the swap happens before the page draws.
   if (isEn) document.querySelectorAll('link[rel="stylesheet"][href^="style.css"]').forEach((l) => { l.href = l.getAttribute('href').replace(/^style\.css/, 'style-ltr.css'); });
+  // Every page stays invisible until its stylesheets have loaded (and, in English, until its
+  // Arabic text has been replaced), so a page never shows squeezed, unstyled parts for a moment
+  // or Arabic before English. The English stylesheet is swapped in by this script, so the browser
+  // does not wait for it on its own.
+  root.classList.add('page-pending');
+  { const st = document.createElement('style'); st.textContent = 'html.page-pending body{visibility:hidden!important}'; document.head.append(st); }
+  const ready = { css: false, text: !isEn };
+  const reveal = () => { if (ready.css && ready.text) root.classList.remove('page-pending'); };
+  setTimeout(() => { ready.css = true; ready.text = true; reveal(); }, 2500); // never stay hidden
+  const waitForCss = () => {
+    const links = [...document.querySelectorAll('link[rel="stylesheet"]')];
+    const pending = links.filter((l) => { try { return !l.sheet; } catch (e) { return false; } });
+    let left = pending.length;
+    const done = () => { left -= 1; if (left <= 0) { ready.css = true; reveal(); } };
+    if (!left) { ready.css = true; reveal(); return; }
+    pending.forEach((l) => { l.addEventListener('load', done, { once: true }); l.addEventListener('error', done, { once: true }); });
+  };
+  // the stylesheet links after this script (app.css) are only known once the page is parsed
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', waitForCss, { once: true }); else waitForCss();
 
   function setLanguage(next) {
     if (next !== 'en' && next !== 'ar') return;
@@ -121,8 +140,8 @@
   // ---------- language button ----------
   function addButton() {
     if (document.querySelector('[data-lang-toggle], #langToggle')) return; // landing has its own
-    // the meeting room has no language switch (the language is chosen in Settings)
-    if (document.body && document.body.classList.contains('meeting-room-page')) return;
+    // the meeting pages (waiting room and meeting) have no language switch (the language is chosen in Settings)
+    if (document.body && (document.body.classList.contains('meeting-room-page') || document.body.classList.contains('prejoin-v43-page'))) return;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'lang-toggle';
@@ -150,6 +169,7 @@
     const t0 = document.title && translateString(document.title);
     if (t0) document.title = t0;
     translateNode(document.body);
+    ready.text = true; reveal();
     // content added or changed later by the page scripts
     let queue = new Set();
     let scheduled = false;

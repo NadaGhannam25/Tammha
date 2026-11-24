@@ -73,10 +73,32 @@ export class GeminiAiTextProvider implements AiTextProvider {
   private thinkingRejected = false;
 
   async generateText(request: AiTextRequest): Promise<AiTextResult> {
+    try {
+      return await this.generateWith(this.model, request);
+    } catch (error) {
+      // the main model stayed busy or over its quota: ask the fallback model once
+      const fallback = this.config.fallbackModel;
+      if (
+        fallback &&
+        error instanceof AiProviderError &&
+        (error.code === 'AI_PROVIDER_UNAVAILABLE' ||
+          error.code === 'AI_PROVIDER_RATE_LIMITED')
+      ) {
+        this.logger.warn(`${error.code} from the main model; asking ${fallback}`);
+        return this.generateWith(fallback, request);
+      }
+      throw error;
+    }
+  }
+
+  private async generateWith(
+    model: string,
+    request: AiTextRequest,
+  ): Promise<AiTextResult> {
     const light =
       !!request.lightThinking &&
       !this.thinkingRejected &&
-      /^gemini-[3-9]/.test(this.model);
+      /^gemini-[3-9]/.test(model);
     const body = {
       ...(request.system && {
         systemInstruction: { parts: [{ text: request.system }] },
@@ -99,7 +121,7 @@ export class GeminiAiTextProvider implements AiTextProvider {
     let payload: GeminiResponse | undefined;
     for (let attempt = 1; ; attempt++) {
       try {
-        payload = await this.callOnce(body, request.timeoutMs);
+        payload = await this.callOnce(body, request.timeoutMs, model);
         break;
       } catch (error) {
         // a model that does not accept the thinking level: ask again without it (once)
@@ -147,7 +169,7 @@ export class GeminiAiTextProvider implements AiTextProvider {
     return {
       text,
       provider: 'gemini',
-      model: this.model,
+      model,
       finishReason,
       usage: {
         inputTokens: payload.usageMetadata?.promptTokenCount,
@@ -160,6 +182,7 @@ export class GeminiAiTextProvider implements AiTextProvider {
   private async callOnce(
     body: unknown,
     timeoutMs: number | undefined,
+    model: string = this.model,
   ): Promise<GeminiResponse> {
     const controller = new AbortController();
     const timeout = setTimeout(
@@ -169,7 +192,7 @@ export class GeminiAiTextProvider implements AiTextProvider {
     let status = 0;
     try {
       const res = await this.fetchFn(
-        `${GEMINI_API_BASE}/models/${encodeURIComponent(this.model)}:generateContent`,
+        `${GEMINI_API_BASE}/models/${encodeURIComponent(model)}:generateContent`,
         {
           method: 'POST',
           headers: {

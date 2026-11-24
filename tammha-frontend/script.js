@@ -96,7 +96,7 @@ function applyProjectFilter(target) {
       };
       if (projectsEmptyTitle) projectsEmptyTitle.textContent = message.title;
       if (projectsEmptyText) projectsEmptyText.textContent = message.text;
-      if (projectsEmptyIcon) projectsEmptyIcon.innerHTML = emptyStateIcons[message.icon] || emptyStateIcons.default;
+      if (projectsEmptyIcon) projectsEmptyIcon.innerHTML = '<img alt="" src="assets/empty-files.webp">';
     }
   }
 }

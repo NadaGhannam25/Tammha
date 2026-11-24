@@ -5,18 +5,18 @@
 <script>/* Interface language (Arabic RTL / English LTR), set before the page draws. */try{if(localStorage.getItem('tammha-settings-language')==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title data-en="Meetings">الاجتماعات</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
-<link href="style.css?v=qa25" rel="stylesheet"/>
-<link href="supervisor.css?v=qa25" rel="stylesheet"/>
-<link href="ltr.css?v=qa25" rel="stylesheet"/>
-<link href="loader.css?v=qa25" rel="stylesheet"/>
-<script src="i18n-en.js?v=qa25"></script>
-<script src="i18n.js?v=qa25"></script>
-<script src="loader.js?v=qa25"></script>
-<script src="config.js?v=qa25"></script>
-<script src="api.js?v=qa25"></script>
-<script src="session.js?v=qa25"></script>
-<script src="domain.js?v=qa25"></script>
-<link href="app.css?v=qa25" rel="stylesheet"/>
+<link href="style.css?v=qa31" rel="stylesheet"/>
+<link href="supervisor.css?v=qa31" rel="stylesheet"/>
+<link href="ltr.css?v=qa31" rel="stylesheet"/>
+<link href="loader.css?v=qa31" rel="stylesheet"/>
+<script src="i18n-en.js?v=qa31"></script>
+<script src="i18n.js?v=qa31"></script>
+<script src="loader.js?v=qa31"></script>
+<script src="config.js?v=qa31"></script>
+<script src="api.js?v=qa31"></script>
+<script src="session.js?v=qa31"></script>
+<script src="domain.js?v=qa31"></script>
+<link href="app.css?v=qa31" rel="stylesheet"/>
 </head>
 <body class="sv-page" data-sv-page="meetings" data-app-role="SUPERVISOR">
 <div class="app-shell">
@@ -142,7 +142,7 @@
 <div class="meeting-modal" hidden id="svMeetingModal">
 <div aria-labelledby="mHeading" aria-modal="true" class="meeting-modal__dialog" role="dialog">
 <button aria-label="إغلاق" class="meeting-modal__close" data-close-meeting data-en-aria-label="Close" type="button">×</button>
-<div class="meeting-modal__heading"><h2 data-en="Schedule a meeting" id="mHeading">جدولة اجتماع</h2><p data-en="Participants receive an invitation and a notification.">يتلقى المشاركون دعوة وإشعارًا بالاجتماع.</p></div>
+<div class="meeting-modal__heading"><h2 data-en="Schedule a meeting" id="mHeading">جدولة اجتماع</h2><p data-en="Invitees receive an invitation and a notification.">يتلقى المدعوون دعوة وإشعارًا بالاجتماع.</p></div>
 <form class="meeting-modal__form" id="mForm" novalidate>
 <div class="meeting-create-grid">
 <label class="meeting-create-wide"><span data-en="Meeting title">عنوان الاجتماع</span><input id="mTitle" type="text"/><small class="field-error" data-en="Enter a title" hidden id="mTitleError">اكتب عنوان الاجتماع</small></label>
@@ -150,7 +150,7 @@
 <label><span data-en="Date">التاريخ</span><input id="mDate" type="date"/><small class="field-error" data-en="Choose a date" hidden id="mDateError">اختر التاريخ</small></label>
 <label><span data-en="Start time">وقت البدء</span><input id="mTime" type="time"/><small class="field-error" data-en="Choose a time" hidden id="mTimeError">اختر الوقت</small></label>
 <label><span data-en="Duration">المدة</span><select id="mDuration"><option data-en="30 minutes" value="30">30 دقيقة</option><option data-en="45 minutes" value="45">45 دقيقة</option><option data-en="1 hour" value="60">ساعة</option><option data-en="1.5 hours" value="90">ساعة ونصف</option></select></label>
-<fieldset class="meeting-create-full sv-people"><legend data-en="Participants">المشاركون</legend><div id="mPeople"></div><small class="field-error" data-en="Choose at least one participant" hidden id="mPeopleError">اختر مشاركًا واحدًا على الأقل</small></fieldset>
+<fieldset class="meeting-create-full sv-people"><legend data-en="Invitees">المدعوون</legend><div id="mPeople"></div><small class="field-error" data-en="Choose at least one invitee" hidden id="mPeopleError">اختر مدعوًا واحدًا على الأقل</small></fieldset>
 <label class="meeting-create-full"><span data-en="Agenda">جدول الأعمال</span><textarea id="mAgenda" rows="2"></textarea></label>
 </div>
 <p aria-live="polite" class="app-field-error" id="mFormError" role="alert"></p>
@@ -158,8 +158,8 @@
 </form>
 </div>
 </div>
-<script src="script.js?v=qa25"></script>
-<script src="pages/documents.js?v=qa25"></script>
-<script src="supervisor.js?v=qa25"></script>
+<script src="script.js?v=qa31"></script>
+<script src="pages/documents.js?v=qa31"></script>
+<script src="supervisor.js?v=qa31"></script>
 </body>
 </html>

@@ -190,7 +190,7 @@ describe('Integrations (P10) — enabled and configured', () => {
     expect(error).toBeInstanceOf(Error);
     const text = `${error.message} ${JSON.stringify(error)}`;
     for (const v of Object.values(SECRETS)) expect(text).not.toContain(v);
-  });
+  }, 20000);
 });
 
 describe('Integrations (P10) — invalid enabled configuration', () => {

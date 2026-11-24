@@ -30,7 +30,7 @@
     const missing = (w.setupReadiness && w.setupReadiness.missingRequirements) || [];
     const setup = p.setup && !p.setup.completed && missing.length ? `<span class="project-setup-note">${esc(T('الإعداد غير مكتمل', 'Setup incomplete'))}</span>` : '';
     return `<article class="projects-list-card" data-status="${esc(p.status)}">
-      <div class="project-identity">${UI.projectImageSlot(p, !!(w.viewer?.canManage ?? w.viewer?.isLeader), 'project-identity__image')}
+      <div class="project-identity">${UI.projectImageSlot(p, false, 'project-identity__image')}
         <div class="project-identity__text"><h2>${esc(p.name)}</h2><p>${esc(meta)}</p></div>
         <span class="project-status project-status--${STATUS_CLASS[p.status] || 'progress'}">${esc(L(D.PROJECT_STATUSES[p.status]?.label || [p.status, p.status]))}</span></div>
       <div class="project-progress"><div class="project-progress__label"><span>${esc(T('نسبة الإنجاز', 'Completion'))}</span><strong>${pct}%</strong></div>
@@ -332,7 +332,12 @@
       await run(T('تفاصيل المشروع', 'Project details'), () => Api.patch(`/projects/${pid}`, details));
       // stages, in the chosen order (the backend makes the first one the current stage)
       const names = chosenStages();
-      const t0 = new Date(`${start}T00:00:00`).getTime(); const t1 = new Date(`${end}T00:00:00`).getTime();
+      // stage deadlines are spread between the start and the end date; without an end date the
+      // project is planned over about four months (the dates can be edited on the stages page)
+      const t0Raw = new Date(`${start || UI.isoDay(new Date())}T00:00:00`).getTime();
+      const t0 = Number.isFinite(t0Raw) ? t0Raw : Date.now();
+      const t1Raw = end ? new Date(`${end}T00:00:00`).getTime() : NaN;
+      const t1 = Number.isFinite(t1Raw) && t1Raw > t0 ? t1Raw : t0 + 120 * 86400000;
       for (const [i, title] of names.entries()) {
         const due = UI.isoDay(new Date(t0 + ((t1 - t0) * (i + 1)) / names.length));
         await run(T(`المرحلة "${title}"`, `Stage "${title}"`), () => Api.post('/milestones', { projectId: pid, title, dueDate: due, order: i + 1 }));
@@ -352,7 +357,8 @@
       let setupDone = false;
       try { await Api.post(`/projects/${pid}/setup/complete`, {}); setupDone = true; } catch (err) {
         const missing = (err.details?.missingRequirements || err.details?.missing || []);
-        if (missing.includes('HANDBOOK_PROCESSING')) problems.push(T('الدليل المرفوع قيد المعالجة؛ أكمل الإعداد من صفحة المشروع بعد انتهائها.', 'The uploaded handbook is still being processed; finish the setup on the project page once it is ready.'));
+        if (missing.length === 1 && missing[0] === 'HANDBOOK_REQUIRED') problems.push(T('لم يُضف دليل المشروع بعد؛ ارفعه من صفحة دليل المشروع لإكمال إعداد المشروع.', 'The project handbook has not been added yet; upload it from the Project Handbook page to finish the project setup.'));
+        else if (missing.includes('HANDBOOK_PROCESSING')) problems.push(T('الدليل المرفوع قيد المعالجة؛ أكمل الإعداد من صفحة المشروع بعد انتهائها.', 'The uploaded handbook is still being processed; finish the setup on the project page once it is ready.'));
         else problems.push(`${T('إكمال الإعداد', 'Setup completion')}: ${missing.length ? missing.map(UI.setupRequirement).join(T('، ', ', ')) : Api.message(err)}`);
       }
       createdProjectId = pid;

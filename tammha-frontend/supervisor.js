@@ -171,13 +171,15 @@
   const pic = (name) => `<img class="sv-empty__img" src="assets/${name}.webp" alt="">`;
   const emptyIcon = (title) => {
     const t = String(title);
+    // notes first: "No notes on this project" also contains the word "project"
+    if (/ملاحظات|ملاحظة|feedback|notes?\b/i.test(t)) return pic('sv-empty-notes');
     if (/مشاريع|مشروع|project/i.test(t)) return pic('sv-empty-folder');
     if (/ملف|مراجع|file|review/i.test(t)) return pic('sv-empty-folder');
     if (/مواعيد|dates/i.test(t)) return pic('sv-empty-meetings');
     if (/اجتماع|meeting/i.test(t)) return pic('sv-empty-meetings');
     if (/مراحل|stage/i.test(t)) return pic('sv-empty-tasks');
     if (/مهام|task/i.test(t)) return pic('sv-empty-tasks');
-    if (/ملاحظات|feedback/i.test(t)) return ICONS.note;
+    if (/ملاحظات|feedback/i.test(t)) return pic('sv-empty-notes');
     if (/إشعار|notification/i.test(t)) return EMPTY_ICONS.bell;
     if (/طلب|request/i.test(t)) return ICONS.request;
     return EMPTY_ICONS.inbox;
@@ -398,7 +400,7 @@
         <div><dt>${T('المرحلة الحالية', 'Current stage')}</dt><dd>${esc(stageText)}</dd></div>
       </dl>`}
       <div class="progress-row"><div aria-label="${esc(T(`نسبة إنجاز المشروع ${p.progress} بالمئة`, `Project completion ${p.progress} percent`))}" class="progress-track${done ? ' is-done' : ''}"><span style="width: ${p.progress}%"></span></div><strong>${p.progress}%</strong></div>
-      ${onDashboard ? `<p class="project-card__date">${esc(T('قائد الفريق:', 'Team leader:'))} ${esc(person(p.leader))} · ${esc(stageText)}</p>` : ''}
+
     </div></article>`;
   }
 
@@ -597,8 +599,7 @@
       tasks() {
         const stage = stageFilter && p.stages.find((x) => x.id === stageFilter);
         const rows = p.tasks.map((t, i) => ({ t, i })).filter(({ t }) => !stage || t.stageId === stage.id || (!t.stageId && t.stageName === stage.name)).sort((a, b) => Number(isOverdue(b.t)) - Number(isOverdue(a.t)) || String(a.t.due).localeCompare(String(b.t.due)));
-        return `<p class="sv-readonly">${ICONS.lock}<span>${T('عرض للمتابعة فقط. إنشاء المهام وإسنادها من صلاحيات قائد الفريق.', 'Read-only view. Creating and assigning tasks is done by the Team Leader.')}</span></p>
-          ${stage ? `<div class="sv-stage-filter"><span>${T('مهام مرحلة', 'Tasks of the stage')} <b>${esc(L(stage.name))}</b></span><button class="sv-stage-filter__all" type="button" data-all-tasks>${T('عرض كل المهام', 'Show all tasks')}</button></div>` : ''}
+        return `${stage ? `<div class="sv-stage-filter"><span>${T('مهام مرحلة', 'Tasks of the stage')} <b>${esc(L(stage.name))}</b></span><button class="sv-stage-filter__all" type="button" data-all-tasks>${T('عرض كل المهام', 'Show all tasks')}</button></div>` : ''}
           ${rows.length ? `<div class="tasks-table sv-tasks" role="table" aria-label="${T('مهام المشروع', 'Project tasks')}">
           <div class="tasks-row tasks-row--head sv-task-row" role="row"><span role="columnheader">${T('المهمة', 'Task')}</span><span role="columnheader">${T('المسؤول', 'Assigned to')}</span><span role="columnheader">${T('الأولوية', 'Priority')}</span><span role="columnheader">${T('الحالة', 'Status')}</span><span role="columnheader">${T('تاريخ التسليم', 'Due date')}</span><span role="columnheader"><span class="visually-hidden">${T('عرض', 'View')}</span></span></div>
           ${rows.map(({ t, i }) => { const s = TASK_STATUS(t); return `<div class="tasks-row sv-task-row" role="row"><div class="tasks-row__main" role="cell"><strong>${esc(L(t.title))}</strong><small>${esc(t.stageName || '—')}</small></div><span role="cell">${esc(person(t.who))}</span><span role="cell">${esc(PRIORITY[t.priority] ? L(PRIORITY[t.priority]) : '—')}</span><span role="cell">${pill(s.cls, s.label)}</span><span class="${isOverdue(t) ? 'tasks-row__due--late' : ''}" role="cell">${fmtDate(t.due)}</span><span role="cell"><button class="tasks-row__open" data-open-task="${i}" type="button">${T('عرض', 'View')}${ICONS.arrow}</button></span></div>`; }).join('')}
@@ -665,7 +666,7 @@
         t.querySelector('[data-count]').textContent = base.filter((f) => inReviewTab(f, k)).length;
       });
       const list = base.filter((f) => inReviewTab(f, filter)).sort((a, b) => b.date.localeCompare(a.date));
-      qs('#svReviewTable').innerHTML = list.length ? fileTable(list, true) : empty(filter === 'pending' ? T('لا توجد ملفات بانتظار مراجعتك', 'Nothing is waiting for your review') : T('لا توجد ملفات هنا', 'No files here'));
+      qs('#svReviewTable').innerHTML = list.length ? fileTable(list, true) : empty(filter === 'pending' ? T('لا توجد ملفات بانتظار مراجعتك', 'Nothing is waiting for your review') : T('لا توجد ملفات هنا', 'No files here'), filter === 'pending' ? T('تظهر هنا الملفات التي يرفعها الطلاب لمراجعتك واعتمادها.', 'Files the students upload for you to review and approve appear here.') : T('تظهر هنا ملفات المشاريع التي تشرف عليها حسب حالتها.', 'Files of the projects you supervise appear here by their status.'));
       qsa('[data-file]', qs('#svReviewTable')).forEach((b) => b.addEventListener('click', () => openFile(b.dataset.file, draw)));
     };
     tabs.forEach((t) => t.addEventListener('click', () => { filter = t.dataset.reviewFilter; draw(); }));
@@ -697,7 +698,7 @@
     qsa('[data-edit-meeting]', root).forEach((b) => b.addEventListener('click', () => openMeeting(db.meetings.find((m) => m.id === b.dataset.editMeeting), null, redraw)));
     qsa('[data-cancel-meeting]', root).forEach((b) => b.addEventListener('click', () => {
       const m = db.meetings.find((x) => x.id === b.dataset.cancelMeeting);
-      confirmBox(T(`إلغاء "${m.title}"؟`, `Cancel "${m.title}"?`), T('سيصل إشعار بالإلغاء إلى المشاركين.', 'Participants will be notified of the cancellation.'), T('إلغاء الاجتماع', 'Cancel meeting'), (reason) => {
+      confirmBox(T(`إلغاء "${m.title}"؟`, `Cancel "${m.title}"?`), T('سيصل إشعار بالإلغاء إلى المدعوين.', 'Invitees will be notified of the cancellation.'), T('إلغاء الاجتماع', 'Cancel meeting'), (reason) => {
         act(null, () => Api.post(`/meetings/${encodeURIComponent(m.id)}/cancel`, reason ? { reason } : {}), () => {
           redraw(); toast(T('أُلغي الاجتماع وأُبلغ الفريق.', 'Meeting cancelled and the team was notified.'));
         });
@@ -712,7 +713,7 @@
     const pr = project(m.project);
     openDrawer(pr ? L(pr.name) : '', L(m.title), `<dl class="task-drawer__facts"><div><dt>${T('التاريخ', 'Date')}</dt><dd>${fmtDate(m.date)}</dd></div><div><dt>${T('الوقت', 'Time')}</dt><dd>${fmtTime(m.time)}</dd></div></dl>${m.agenda ? `<section class="task-drawer__block"><h3>${T('جدول الأعمال', 'Agenda')}</h3><p>${esc(m.agenda)}</p></section>` : ''}<section class="task-drawer__block"><h3>${T('ملاحظاتي على الاجتماع', 'My meeting notes')}</h3><p class="sv-muted sv-notes-hint">${T('تظهر ملاحظاتك لطلاب الفريق للقراءة فقط، وملاحظات الطلاب خاصة بهم.', 'The team students can read your notes (read-only); their own notes stay private.')}</p><p id="svNotesText" style="white-space:pre-line">${T('جارٍ التحميل…', 'Loading…')}</p><small class="sv-muted" id="svNotesMeta"></small>
       <form class="sv-inline-form" id="svNotesForm" hidden><label class="visually-hidden" for="svNotesInput">${T('ملاحظات الاجتماع', 'Meeting notes')}</label><textarea id="svNotesInput" maxlength="20000" rows="5"></textarea><small class="field-error" hidden>${T('اكتب الملاحظات أولًا', 'Write the notes first')}</small><div class="sv-review-actions"><button class="sv-btn" type="submit">${T('حفظ', 'Save')}</button><button class="sv-btn sv-btn--text" data-notes-cancel type="button">${T('إلغاء', 'Cancel')}</button></div></form>
-      <button class="sv-btn sv-btn--ghost" id="svNotesEdit" type="button" hidden>${T('تعديل الملاحظات', 'Edit notes')}</button></section><section class="task-drawer__block"><h3>${T('المشاركون', 'Participants')}</h3><p>${m.people.map(person).map(esc).join(T('، ', ', ')) || '—'}</p></section>`);
+      <button class="sv-btn sv-btn--ghost" id="svNotesEdit" type="button" hidden>${T('تعديل الملاحظات', 'Edit notes')}</button></section><section class="task-drawer__block"><h3>${T('المدعوون', 'Invitees')}</h3><p>${m.people.map(person).map(esc).join(T('، ', ', ')) || '—'}</p></section>`);
     const form = qs('#svNotesForm'), input = qs('#svNotesInput'), editBtn = qs('#svNotesEdit'), text = qs('#svNotesText'), meta = qs('#svNotesMeta');
     let current = '';
     try {
@@ -788,7 +789,7 @@
         mModal.hidden = true;
         try { await load(); } catch (e) { /* the list keeps the old copy */ }
         renderShell(); redraw && redraw();
-        toast(editing ? T('حُدّث الاجتماع وأُبلغ المشاركون.', 'Meeting updated and participants were notified.') : T('جُدول الاجتماع وأُرسلت الدعوات.', 'Meeting scheduled and invitations were sent.'));
+        toast(editing ? T('حُدّث الاجتماع وأُبلغ المدعوون.', 'Meeting updated and invitees were notified.') : T('جُدول الاجتماع وأُرسلت الدعوات.', 'Meeting scheduled and invitations were sent.'));
       });
     };
   }

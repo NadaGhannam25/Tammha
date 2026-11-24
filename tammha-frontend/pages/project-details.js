@@ -23,7 +23,7 @@
   }
   function render() {
     const isLeader = !!(w.viewer?.canManage ?? w.viewer?.isLeader); // every student of the team manages the stages
-    if (!stages.length) { UI.state(body, 'empty', { title: T('لا توجد مراحل بعد', 'No stages yet'), text: isLeader ? T('أضف مراحل المشروع من زر "إضافة مرحلة".', 'Add the project stages with "Add stage".') : T('يضيف قائد الفريق مراحل المشروع.', 'The Team Leader adds the project stages.') }); return; }
+    if (!stages.length) { UI.state(body, 'empty', { image: 'assets/empty-stages.webp', title: T('لا توجد مراحل بعد', 'No stages yet'), text: isLeader ? T('قسّم المشروع إلى مراحل واضحة، مثل التحليل والتصميم والتطوير والاختبار، وحدّد موعد انتهاء كل مرحلة من زر "إضافة مرحلة" لتتابع تقدّم الفريق خطوة بخطوة.', 'Divide the project into clear stages, such as analysis, design, development and testing, and set the end date of each one with "Add stage" to follow the team’s progress step by step.') : T('يضيف قائد الفريق مراحل المشروع، وتظهر هنا مع مواعيدها ونسبة إنجاز كل مرحلة.', 'The Team Leader adds the project stages; they appear here with their dates and the progress of each stage.') }); return; }
     // the current stage = the first one in order that is in progress (the backend starts the
     // first stage automatically when the stages are created)
     const current = stages.find((s) => s.status === 'IN_PROGRESS');

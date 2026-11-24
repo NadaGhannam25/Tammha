@@ -286,7 +286,7 @@
     const root = document.createElement('div');
     root.id = 'onbTour'; root.className = 'onb-tour';
     root.innerHTML = `<div class="onb-tour__spot" aria-hidden="true"></div>
-      <div class="onb-tour__hello"><img src="assets/tammha-blue-logo.png" alt=""><div><b>${esc(u.firstName ? T(`أهلًا ${u.firstName} في تمّمها`, `Welcome to Tammha, ${u.firstName}`) : T('أهلًا بك في تمّمها', 'Welcome to Tammha'))}</b><span>${esc(T('نعرّفك على أهم الأقسام في أقل من دقيقة.', 'A one-minute look at the main sections.'))}</span></div></div>
+      <div class="onb-tour__hello"><img src="assets/tammha-login-logo.png" alt=""><div><b>${esc(u.firstName ? T(`أهلًا ${u.firstName} في تمّمها`, `Welcome to Tammha, ${u.firstName}`) : T('أهلًا بك في تمّمها', 'Welcome to Tammha'))}</b><span>${esc(T('نعرّفك على أهم الأقسام في أقل من دقيقة.', 'A one-minute look at the main sections.'))}</span></div></div>
       <div class="onb-tour__tip" role="dialog" aria-modal="true" aria-labelledby="onbTourTitle">
         <div class="onb-tour__head"><span id="onbTourCount"></span><ol class="onb-tour__dots" aria-hidden="true">${STEPS.map(() => '<li></li>').join('')}</ol></div>
         <h2 id="onbTourTitle"></h2><p id="onbTourText"></p>

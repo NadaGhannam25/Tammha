@@ -74,19 +74,19 @@
   // under the university: its available editions ("Edition 2024" = the year the handbook was released)
   const editionField = $('hbEditionField'); const editionSelect = $('hbEdition');
   const editionName = (h) => (h.releaseYear ? T(`إصدار ${h.releaseYear}`, `${h.releaseYear} edition`) : T('الإصدار الحالي', 'Current edition'));
+  // both lists are shown from the start as "Select ..."; the edition list opens once a university
+  // with a handbook is chosen, and the handbook file appears after an edition is chosen
   function fillEditions(uni) {
     const h = uni && uni.handbook;
-    editionField.hidden = !h;
-    editionSelect.innerHTML = h ? `<option value="${esc(h.versionId)}">${esc(editionName(h))}</option>` : '';
+    editionField.hidden = false;
+    editionSelect.disabled = !h;
+    editionSelect.innerHTML = `<option value="">${esc(T('اختر الإصدار', 'Select an edition'))}</option>` + (h ? `<option value="${esc(h.versionId)}">${esc(editionName(h))}</option>` : '');
+    const sel = selected();
+    if (h && sel && sel.kind === 'UNIVERSITY' && sel.key === uni.key) editionSelect.value = h.versionId;
   }
-  function renderUniversity() {
+  function renderFile() {
     const box = $('hbUniversityFile'); const uni = universities.find((u) => u.key === uniSelect.value);
-    fillEditions(uni);
-    if (!uni) { box.innerHTML = ''; return; }
-    if (!uni.handbook) {
-      box.innerHTML = `<div class="hb-unavailable"><strong>${esc(T('الدليل غير متاح حاليًا', 'Handbook not available'))}</strong><p>${esc(T(`لم يُضف الدليل الرسمي لـ${uName(uni)} إلى المنصة بعد. يمكن رفعه من خيار "رفع دليل مخصص (PDF)".`, `The official handbook of ${uName(uni)} has not been added to the platform yet. You can upload it with "Upload a custom handbook (PDF)".`))}</p></div>`;
-      return;
-    }
+    if (!uni || !uni.handbook || !editionSelect.value) { if (!uni || uni.handbook) box.innerHTML = ''; return; }
     const h = uni.handbook; const sel = selected();
     const inUse = sel && sel.kind === 'UNIVERSITY' && sel.key === uni.key;
     box.innerHTML = `<div class="hb-file hb-file--option"><img alt="" src="assets/file-pdf.png"/>
@@ -95,6 +95,16 @@
       ${inUse ? '' : `<button class="hb-btn" data-use-university ${isLeader() ? '' : 'disabled'} type="button">${esc(T('اعتماد الدليل للمشروع', 'Use for the project'))}</button>`}</div>
       ${isLeader() ? '' : `<p class="hb-note">${esc(T('يعتمد دليل المشروع قائد الفريق.', 'The Team Leader sets the project handbook.'))}</p>`}`;
   }
+  function renderUniversity() {
+    const box = $('hbUniversityFile'); const uni = universities.find((u) => u.key === uniSelect.value);
+    fillEditions(uni);
+    if (uni && !uni.handbook) {
+      box.innerHTML = `<div class="hb-unavailable"><strong>${esc(T('الدليل غير متاح حاليًا', 'Handbook not available'))}</strong><p>${esc(T(`لم يُضف الدليل الرسمي لـ${uName(uni)} إلى المنصة بعد. يمكن رفعه من خيار "رفع دليل مخصص (PDF)".`, `The official handbook of ${uName(uni)} has not been added to the platform yet. You can upload it with "Upload a custom handbook (PDF)".`))}</p></div>`;
+      return;
+    }
+    renderFile();
+  }
+  editionSelect.addEventListener('change', renderFile);
   uniSelect.addEventListener('change', renderUniversity);
   $('hbUniversityFile').addEventListener('click', async (e) => {
     const uni = universities.find((u) => u.key === uniSelect.value); if (!uni) return;
@@ -315,7 +325,7 @@
   S.ready.then(async () => {
     try {
       [projects, universities] = await Promise.all([S.projects(), Api.get('/handbooks/universities')]);
-      fillUniversities();
+      fillUniversities(); fillEditions(null);
       if (!projects.length) {
         // no project yet: the handbook box is not shown at all
         $('hbSelected').hidden = true;

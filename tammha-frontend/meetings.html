@@ -7,17 +7,17 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="اجتماعات المشروع - منصة تممها" name="description"/>
 <title data-en="Meetings">الاجتماعات</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
-<link href="style.css?v=qa25" rel="stylesheet"/>
-<link href="ltr.css?v=qa25" rel="stylesheet"/>
-<link href="loader.css?v=qa25" rel="stylesheet"/>
-<script src="i18n-en.js?v=qa25"></script>
-<script src="i18n.js?v=qa25"></script>
-<script src="loader.js?v=qa25"></script>
-<script src="config.js?v=qa25"></script>
-<script src="api.js?v=qa25"></script>
-<script src="session.js?v=qa25"></script>
-<script src="domain.js?v=qa25"></script>
-<link href="app.css?v=qa25" rel="stylesheet"/>
+<link href="style.css?v=qa31" rel="stylesheet"/>
+<link href="ltr.css?v=qa31" rel="stylesheet"/>
+<link href="loader.css?v=qa31" rel="stylesheet"/>
+<script src="i18n-en.js?v=qa31"></script>
+<script src="i18n.js?v=qa31"></script>
+<script src="loader.js?v=qa31"></script>
+<script src="config.js?v=qa31"></script>
+<script src="api.js?v=qa31"></script>
+<script src="session.js?v=qa31"></script>
+<script src="domain.js?v=qa31"></script>
+<link href="app.css?v=qa31" rel="stylesheet"/>
 </head>
 <body class="meetings-page" data-app-role="STUDENT">
 <div class="app-shell">
@@ -135,10 +135,11 @@
 <div class="meeting-ended-dialog" hidden="" id="meetingEndedPanel">
 <div aria-labelledby="meetingEndedTitle" aria-modal="true" class="meeting-ended-dialog__box" role="dialog">
 <div class="meeting-ended-dialog__head">
-<div><h2 id="meetingEndedTitle">ملاحظاتي على الاجتماع</h2><p id="meetingEndedName"></p></div>
+<div><h2 data-en="My notes on the meeting" id="meetingEndedTitle">ملاحظاتي على الاجتماع</h2><p id="meetingEndedName"></p></div>
 <button aria-label="إغلاق" class="meeting-ended-dialog__close" id="meetingEndedClose" type="button">×</button>
 </div>
 <form id="meetingEndedForm">
+<section class="meeting-goals" hidden id="meetingEndedGoals"><h3 data-en="Objective">هدف الاجتماع</h3><p dir="auto" id="meetingEndedGoalsText"></p></section>
 <label class="meeting-ended-dialog__label" for="meetingEndedNotes" data-en="My notes">ملاحظاتي</label>
 <textarea id="meetingEndedNotes" placeholder="اكتب ما تمت مناقشته والقرارات" data-en-placeholder="What was discussed and decided" rows="4"></textarea>
 <label class="meeting-ended-dialog__label" for="meetingEndedImprovements" data-en="Improvement and follow-up points">نقاط التحسين والمتابعة</label>
@@ -151,13 +152,13 @@
 <div class="meeting-modal" hidden="" id="meetingModal">
 <div aria-labelledby="meetingModalTitle" aria-modal="true" class="meeting-modal__dialog" role="dialog">
 <button aria-label="إغلاق" class="meeting-modal__close" id="closeMeetingModal" type="button">×</button>
-<div class="meeting-modal__heading"><h2 id="meetingModalTitle">إنشاء اجتماع</h2><p>يُحدَّد عنوان الاجتماع والمدعوون والأهداف والتاريخ والوقت.</p></div>
+<div class="meeting-modal__heading"><h2 id="meetingModalTitle">إنشاء اجتماع</h2><p>يُحدَّد عنوان الاجتماع والمدعوون والهدف والتاريخ والوقت.</p></div>
 <form class="meeting-modal__form" id="meetingForm" onsubmit="return false;">
 <div class="meeting-create-grid">
 <label class="meeting-create-wide"><span>عنوان الاجتماع</span><input id="meetingCreateTitle" placeholder="مثال: مراجعة التقدم" required=""/></label>
 <label><span>المشروع</span><select id="meetingCreateProject"></select></label>
 <fieldset class="meeting-create-full meeting-participants"><legend>المدعوون</legend><div id="meetingCreateParticipants" class="meeting-participants__list"></div></fieldset>
-<label class="meeting-create-full"><span>أهداف الاجتماع</span><textarea id="meetingCreateGoals" placeholder="أهداف الاجتماع والنقاط المطلوب مناقشتها" rows="3"></textarea></label>
+<label class="meeting-create-full"><span data-en="Objective">هدف الاجتماع</span><textarea id="meetingCreateGoals" placeholder="هدف الاجتماع والنقاط المطلوب مناقشتها" data-en-placeholder="The objective of the meeting and the points to discuss" rows="3"></textarea></label>
 <label><span>التاريخ</span><input id="meetingCreateDate" required="" type="date"/></label>
 <label><span>الوقت</span><input id="meetingCreateTime" required="" type="time"/></label> <label><span>المدة</span><select id="meetingCreateDuration"><option value="30">30 دقيقة</option><option value="45">45 دقيقة</option><option selected value="60">60 دقيقة</option><option value="90">90 دقيقة</option><option value="120">120 دقيقة</option></select></label>
 </div>
@@ -176,7 +177,7 @@
 </main>
 </div>
 
-<script src="script.js?v=qa25"></script>
-<script src="pages/meetings.js?v=qa25"></script>
+<script src="script.js?v=qa31"></script>
+<script src="pages/meetings.js?v=qa31"></script>
 </body>
 </html>

@@ -7,17 +7,17 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="مشاريع الطالبة - منصة تممها" name="description"/>
 <title data-en="Projects">المشاريع</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
-<link href="style.css?v=qa25" rel="stylesheet"/>
-<link href="ltr.css?v=qa25" rel="stylesheet"/>
-<link href="loader.css?v=qa25" rel="stylesheet"/>
-<script src="i18n-en.js?v=qa25"></script>
-<script src="i18n.js?v=qa25"></script>
-<script src="loader.js?v=qa25"></script>
-<script src="config.js?v=qa25"></script>
-<script src="api.js?v=qa25"></script>
-<script src="session.js?v=qa25"></script>
-<script src="domain.js?v=qa25"></script>
-<link href="app.css?v=qa25" rel="stylesheet"/>
+<link href="style.css?v=qa31" rel="stylesheet"/>
+<link href="ltr.css?v=qa31" rel="stylesheet"/>
+<link href="loader.css?v=qa31" rel="stylesheet"/>
+<script src="i18n-en.js?v=qa31"></script>
+<script src="i18n.js?v=qa31"></script>
+<script src="loader.js?v=qa31"></script>
+<script src="config.js?v=qa31"></script>
+<script src="api.js?v=qa31"></script>
+<script src="session.js?v=qa31"></script>
+<script src="domain.js?v=qa31"></script>
+<link href="app.css?v=qa31" rel="stylesheet"/>
 </head>
 <body class="projects-page" data-app-role="STUDENT">
 <div class="app-shell">
@@ -108,13 +108,14 @@
 </section>
 <section aria-label="أدوات المشاريع" class="projects-toolbar">
 <div aria-label="تصفية المشاريع" class="project-filters" role="tablist">
-<button aria-selected="true" class="project-filter is-active" data-filter="all" role="tab" type="button">كل المشاريع <span data-project-count="all"></span></button>
-<button aria-selected="false" class="project-filter" data-filter="IN_PROGRESS" role="tab" type="button">قيد التنفيذ <span data-project-count="IN_PROGRESS"></span></button>
-<button aria-selected="false" class="project-filter" data-filter="COMPLETED" role="tab" type="button">مكتملة <span data-project-count="COMPLETED"></span></button>
-<button aria-selected="false" class="project-filter" data-filter="ARCHIVED" role="tab" type="button">مؤرشفة <span data-project-count="ARCHIVED"></span></button>
+<button aria-selected="true" class="project-filter is-active" data-filter="all" role="tab" type="button">كل المشاريع</button>
+<button aria-selected="false" class="project-filter" data-filter="IN_PROGRESS" role="tab" type="button">قيد التنفيذ</button>
+<button aria-selected="false" class="project-filter" data-filter="COMPLETED" role="tab" type="button">مكتملة</button>
+<button aria-selected="false" class="project-filter" data-filter="ARCHIVED" role="tab" type="button">مؤرشفة</button>
 </div>
 <div class="app-inline-form"><a class="app-btn" href="join.html">الانضمام برمز دعوة</a><button class="add-project-button" id="openProjectWizard" type="button">+ إضافة مشروع</button></div>
 </section>
+<div class="section-head projects-section-head"><h2 data-en="My projects">مشاريعي</h2><p data-en="The graduation projects you lead or take part in, with the progress of each one and quick access to its stages, tasks and files.">مشاريع التخرج التي تقودها أو تشارك فيها، مع نسبة إنجاز كل مشروع والوصول السريع إلى مراحله ومهامه وملفاته.</p></div>
 <section aria-labelledby="invitationsTitle" class="app-panel" hidden id="invitations"><h2 id="invitationsTitle">دعوات الانضمام إلى فرق</h2><ul class="app-list"></ul></section>
 <section aria-label="قائمة المشاريع" class="projects-list">
 <div aria-live="polite" class="projects-empty-state" hidden="" id="projectsEmptyState">
@@ -155,7 +156,7 @@
 <div class="wz-field"><label for="teamInviteInput"><strong>أعضاء الفريق <em class="wz-optional">(اختياري)</em></strong><small>أضف الرقم الجامعي أو البريد الجامعي لكل عضو، وتُرسل الدعوات عند إنشاء المشروع.</small></label><div class="invite-row"><input id="teamInviteInput" autocomplete="off" placeholder="الرقم الجامعي أو البريد الجامعي"/><button data-add-invite="team" type="button">إضافة</button></div><small class="field-error" hidden data-error-for="teamInviteInput"></small><div class="invite-chips" id="teamInviteChips"></div></div>
 <div class="wz-field"><label for="supervisorInviteInput"><strong>المشرف الأكاديمي <em class="wz-optional">(اختياري)</em></strong><small>يمكن إرسال طلب الإشراف الآن أو لاحقًا من صفحة المشروع؛ إكمال الإعداد لا يتطلب مشرفًا.</small></label><div class="invite-row"><input id="supervisorInviteInput" autocomplete="off" placeholder="البريد الجامعي للمشرف"/><button data-add-invite="supervisor" type="button">إضافة</button></div><small class="field-error" hidden data-error-for="supervisorInviteInput"></small><div class="invite-chips" id="supervisorInviteChips"></div></div>
 </section>
-<section class="wizard-panel" data-wizard-panel="3" hidden=""><div class="wizard-handbook"><div><strong>الدليل الذي يتبعه المشروع <em class="wz-optional">(اختياري)</em></strong><small>اختر دليل إحدى الجامعات أو ارفع دليلًا خاصًا بالمشروع، ويُعتمد عليه في ملخص الدليل واستخراج المهام. يمكنك إضافته لاحقًا من صفحة دليل المشروع.</small></div>
+<section class="wizard-panel" data-wizard-panel="3" hidden=""><div class="wizard-handbook"><div><strong>الدليل الذي يتبعه المشروع <em class="wz-optional">(اختياري)</em></strong><small data-en="Upload your graduation project handbook to enable AI-powered analysis and task generation based on its requirements. You can also upload it later from the Project Handbook page.">ارفع دليل مشروع التخرج لتفعيل التحليل بالذكاء الاصطناعي واستخراج المهام بناءً على متطلباته. يمكنك أيضًا رفعه لاحقًا من صفحة دليل المشروع.</small></div>
 <label class="wizard-choice"><input checked name="wizardHandbookSource" type="radio" value="UNIVERSITY"/><span>دليل جامعة</span></label>
 <div class="wizard-handbook__field" data-handbook-source="UNIVERSITY"><label class="visually-hidden" for="wizardHandbookUniversity">الجامعة</label><select id="wizardHandbookUniversity"><option value="">اختر الجامعة</option></select></div>
 <label class="wizard-choice"><input name="wizardHandbookSource" type="radio" value="UPLOAD"/><span>رفع دليل خاص (PDF)</span></label>
@@ -183,7 +184,7 @@
 <footer class="footer projects-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
 </main>
 </div>
-<script src="script.js?v=qa25"></script>
-<script src="pages/projects.js?v=qa25"></script>
+<script src="script.js?v=qa31"></script>
+<script src="pages/projects.js?v=qa31"></script>
 </body>
 </html>

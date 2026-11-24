@@ -34,7 +34,7 @@
     const visible = meetings.filter((m) => filter === 'all' || (filter === 'invitations' ? statusOf(m) === 'invitation' : filter === 'upcoming' ? !isPast(m) : isPast(m)));
     header.insertAdjacentHTML('afterend', visible.map((m) => `<article class="meeting-list-card meeting-list-card--table" data-meeting-status="${statusOf(m)}">
       <div class="meeting-list-card__kind"><span class="meeting-kind-line"></span><span class="meeting-kind-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"></rect><path d="m16 10 5-3v10l-5-3"></path></svg></span></div>
-      <div class="meeting-list-card__name">${esc(m.title)}${m.description ? `<small class="app-muted"> · ${esc(m.description)}</small>` : ''}</div>
+      <div class="meeting-list-card__name">${esc(m.title)}</div>
       <div class="meeting-list-card__supervisor">${esc(projectName(m.projectId))}</div>
       <div class="meeting-list-card__date">${esc(UI.fmtDate(m.scheduledAt))}</div>
       <div class="meeting-list-card__time">${esc(UI.fmtTime(m.scheduledAt))} - ${esc(UI.fmtTime(m.endsAt))}</div>
@@ -87,9 +87,12 @@
     try {
       const w = await projectPeople(pid);
       if ($('meetingCreateProject').value !== pid) return;
-      const people = [S.user, ...(w.team?.members || []).map((m) => m.user || m), ...(w.supervisors || []).map((x) => x.user || x)];
+      // the supervisor always comes first (not chosen by default), then you and the team members (chosen)
+      const sup = (w.supervisors || []).map((x) => x.user || x);
+      const people = [...sup, S.user, ...(w.team?.members || []).map((m) => m.user || m)];
+      const supIds = new Set(sup.map((u) => u && (u.id || u.userId)));
       const unique = [...new Map(people.filter((u) => u && (u.id || u.userId)).map((u) => [u.id || u.userId, u])).values()];
-      box.innerHTML = unique.map((u) => `<label class="meeting-participants__item"><input type="checkbox" value="${esc(u.id)}" checked ${u.id === S.user.id ? 'disabled' : ''}/><span>${esc(UI.personName(u))}${u.role === 'SUPERVISOR' ? ` (${esc(T('المشرف', 'Supervisor'))})` : ''}</span></label>`).join('');
+      box.innerHTML = unique.map((u) => { const id = u.id || u.userId; const isSup = supIds.has(id) && id !== S.user.id; return `<label class="meeting-participants__item"><input type="checkbox" value="${esc(id)}" ${isSup ? '' : 'checked'} ${id === S.user.id ? 'disabled' : ''}/><span>${esc(UI.personName(u))}</span></label>`; }).join('');
     } catch (err) { box.textContent = Api.message(err); }
   }
   const showModal = () => { modal.hidden = false; $('meetingCreateError').textContent = ''; fillParticipants(); };
@@ -150,14 +153,16 @@
       <h3>${esc(T('الحاضرون', 'Attendees'))}</h3>${people ? `<ul class="meeting-details__people">${people}</ul>` : `<p class="meeting-details__empty">${esc(T('لا يوجد مدعوون.', 'No one was invited.'))}</p>`}</section>`;
     // the supervisor's notes: shared with the team, read-only for students
     const shared = (notesData?.shared || []).map((n) => `<section class="meeting-notes-field meeting-notes-field--shared"><h3>${esc(T('ملاحظات المشرف', 'Supervisor notes'))}<small>${esc(UI.personName(n.author))} · ${esc(UI.fmtDateTime(n.updatedAt))}</small></h3><div class="meeting-notes-box"><p>${esc(n.content)}</p></div></section>`).join('');
+    // the objective written when the meeting was scheduled (no longer shown beside the name in the list)
+    const goals = m.description ? `<section class="meeting-notes-field meeting-notes-field--goals"><h3>${esc(T('هدف الاجتماع', 'Objective'))}</h3><div class="meeting-notes-box"><p dir="auto">${esc(m.description)}</p></div></section>` : '';
     const privacy = `<p class="meeting-notes-privacy">${esc(T('ملاحظاتك خاصة بك، لا يراها أعضاء الفريق ولا المشرف.', 'Your notes are private: neither the team nor the supervisor can see them.'))}</p>`;
     if (!editing) {
-      sections.innerHTML = `${details}${shared}<section class="meeting-notes-field"><h3>${esc(T('ملاحظاتي', 'My notes'))}</h3><div class="meeting-notes-box"><p></p></div></section><section class="meeting-notes-field meeting-notes-field--improvements"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3><div class="meeting-notes-box"><p></p></div></section>`;
-      const own = sections.querySelectorAll('.meeting-notes-field:not(.meeting-notes-field--shared) p');
+      sections.innerHTML = `${details}${goals}${shared}<section class="meeting-notes-field"><h3>${esc(T('ملاحظاتي', 'My notes'))}</h3><div class="meeting-notes-box"><p></p></div></section><section class="meeting-notes-field meeting-notes-field--improvements"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3><div class="meeting-notes-box"><p></p></div></section>`;
+      const own = sections.querySelectorAll('.meeting-notes-field:not(.meeting-notes-field--shared):not(.meeting-notes-field--goals) p');
       own[0].textContent = parts.notes || T('لم تكتب ملاحظات بعد.', 'You have not written notes yet.'); own[1].textContent = parts.improvements || T('لا توجد نقاط تحسين إضافية.', 'No additional improvement points.');
       $('meetingNotesEdit').hidden = cancelled; $('meetingNotesSave').hidden = true; return;
     }
-    sections.innerHTML = `${shared}<section class="meeting-notes-field"><label for="meetingNotesInput"><h3>${esc(T('ملاحظاتي', 'My notes'))}</h3></label><textarea class="meeting-notes-input" id="meetingNotesInput" maxlength="20000" rows="5"></textarea><small class="field-error" hidden id="meetingNotesError">${esc(T('اكتب ملاحظات الاجتماع أولًا', 'Write the meeting notes first'))}</small></section><section class="meeting-notes-field meeting-notes-field--improvements"><label for="meetingImprovementsInput"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3></label><textarea class="meeting-notes-input" id="meetingImprovementsInput" maxlength="10000" rows="3"></textarea></section>${privacy}`;
+    sections.innerHTML = `${goals}${shared}<section class="meeting-notes-field"><label for="meetingNotesInput"><h3>${esc(T('ملاحظاتي', 'My notes'))}</h3></label><textarea class="meeting-notes-input" id="meetingNotesInput" maxlength="20000" rows="5"></textarea><small class="field-error" hidden id="meetingNotesError">${esc(T('اكتب ملاحظات الاجتماع أولًا', 'Write the meeting notes first'))}</small></section><section class="meeting-notes-field meeting-notes-field--improvements"><label for="meetingImprovementsInput"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3></label><textarea class="meeting-notes-input" id="meetingImprovementsInput" maxlength="10000" rows="3"></textarea></section>${privacy}`;
     $('meetingNotesInput').value = parts.notes; $('meetingImprovementsInput').value = parts.improvements;
     $('meetingNotesEdit').hidden = true; $('meetingNotesSave').hidden = false; $('meetingNotesInput').focus();
   }
@@ -180,6 +185,8 @@
     const m = meetings.find((x) => x.id === id); const dialog = $('meetingEndedPanel'); if (!m || !dialog) return;
     window.history.replaceState(null, '', window.location.pathname);
     $('meetingEndedName').textContent = m.title; dialog.hidden = false;
+    // the objective written when the meeting was scheduled, as a reminder while writing the notes
+    $('meetingEndedGoalsText').textContent = m.description || ''; $('meetingEndedGoals').hidden = !m.description;
     Api.get(`/meetings/${m.id}/notes`, { loader: false }).then((n) => { const parts = split(n.content); $('meetingEndedNotes').value = parts.notes; $('meetingEndedImprovements').value = parts.improvements; }).catch(() => {});
     const close = () => { dialog.hidden = true; };
     $('meetingEndedClose').onclick = close; $('meetingEndedLater').onclick = close;

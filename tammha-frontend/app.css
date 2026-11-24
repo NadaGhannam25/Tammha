@@ -1209,3 +1209,70 @@ body.has-onb-tour{overflow:hidden}
 .sv-dash--v2 #svDashProjects>article .project-card__body{flex:1 1 auto;min-width:0}
 .sv-dash--v2 #svDashProjects>article:only-child .project-card__visual{flex-basis:300px!important;width:300px!important;max-width:300px!important}
 }
+/* the stage bar above the stage's tasks in the supervisor sky blue */
+.sv-stage-filter{border:0!important;background:#7fb6ca!important;color:#fff!important}
+.sv-stage-filter b{color:#fff}
+.sv-stage-filter__all{color:#fff!important;text-decoration:underline;text-underline-offset:3px}
+.sv-page .sv-stage-filter,.sv-page .sv-stage-filter span,.sv-page .sv-stage-filter b,.sv-page .sv-stage-filter__all{color:#fff!important}
+/* ===== QA 26 ===== */
+/* supervisor send button: the paper plane points up and to the right, in both languages */
+html[dir="rtl"] .sv-page .sv-ai__send svg,.sv-page .sv-ai__send svg{transform:none!important}
+/* supervisor: "View all" / "All files" turn sky blue on hover */
+.sv-page .link-button:hover,.sv-page .link-button:focus-visible,.sv-page .section-heading a:hover{color:#7fb6ca!important}
+/* supervisor dashboard: the project arrow at the top-left corner of the white card */
+.sv-dash--v2 #svDashProjects>article{position:relative}
+.sv-dash--v2 #svDashProjects>article .round-arrow{position:absolute;top:16px;inset-inline-end:16px;margin:0}
+.sv-dash--v2 #svDashProjects>article .project-card__topline{padding-inline-end:44px}
+/* "View all" sits exactly above the project arrow; sky blue on hover */
+.sv-dash--v2 .sv-dash__projects .section-heading .link-button{margin-inline-end:8px}
+/* ===== QA 27 ===== */
+/* tour greeting: the Tammha symbol */
+.onb-tour__hello img{width:46px;height:46px;object-fit:contain}
+/* dashboard: smaller picture in the empty projects box (no button there) */
+#dashProjects .app-state__img{width:64px;height:64px;margin-bottom:6px}
+/* projects page: the files picture instead of the icon box and its shadow */
+.projects-empty-state__icon{width:84px;height:84px;background:none!important;box-shadow:none!important;border-radius:0}
+.projects-empty-state__icon img{width:84px;height:84px;object-fit:contain}
+/* section titles: a large title with a lighter line under it (projects, files) */
+.projects-section-head{max-width:1520px;margin:4px auto 14px}
+.project-files-title h2{font-size:20.5px;font-weight:800;color:#183c55}
+.project-files-title p{margin:3px 0 0;color:#7d909b;font-size:13px;line-height:1.7}
+/* tasks and projects: the same filter bar as the meetings page (rounded buttons, no counters) */
+.tasks-toolbar,.projects-toolbar{border-bottom:0;align-items:center}
+.tasks-filters,.project-filters{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:0}
+.tasks-filter,.project-filter{min-width:88px;height:38px;padding:0 17px;border:1px solid transparent!important;border-radius:12px;background:transparent;color:#6c8290;font-size:14px;font-weight:600;transition:.18s ease}
+.tasks-filter:hover,.project-filter:hover{background:#eef7fa;color:#14789d}
+.tasks-filter.is-active,.project-filter.is-active{color:#fff;background:#008bbf;border-bottom-color:transparent!important}
+.tasks-filter span,.project-filter span{display:none}
+.add-project-button{margin-bottom:0}
+.tasks-toolbar__end{margin-bottom:0}
+@media(max-width:600px){.tasks-filters,.project-filters{flex-wrap:nowrap;overflow-x:auto}}
+/* project creation notes: orange text only, no orange box */
+.wz-alert--warning{border-color:#e9eef1;background:#fff;color:#c2410c;box-shadow:none}
+/* header: the name initial in blue, like the photo in Settings */
+.profile__avatar.app-avatar:not(.has-photo){background:linear-gradient(145deg,#7bc7da 0%,#1298c6 100%);color:#fff;box-shadow:none}
+/* settings tabs in English: the underline starts from the left like its position */
+html[dir="ltr"] .settings-v43-tabs__ink{left:0;right:auto}
+/* university handbook: the edition list waits for the university */
+#hbEdition:disabled{background:#f5f8fa;color:#9aabb5;cursor:not-allowed}
+/* meeting waiting room: the back link is a plain arrow (no text, no circle): right in English, left in Arabic */
+.prejoin-v43-back{width:36px;height:36px;justify-content:center;background:none;box-shadow:none}
+.prejoin-v43-back svg{width:22px;height:22px;stroke-width:2}
+html[dir="rtl"] .prejoin-v43-back svg{transform:scaleX(-1)}
+/* meeting objective: a plain white box in the notes windows after the meeting, not beside the name in the list */
+.meeting-goals{margin:2px 0 12px;padding:12px 14px;border-radius:12px;background:#fff;border:1px solid #e3e9ee}
+.meeting-goals h3{margin:0 0 4px;color:#183c55;font-size:13px;font-weight:800}
+.meeting-goals p{margin:0;color:#56707d;font-size:13px;line-height:1.8;white-space:pre-line}
+.meeting-notes-field--goals .meeting-notes-box{background:#fff;border:1px solid #e3e9ee;box-shadow:none}
+.meeting-notes-field--goals .meeting-notes-box p{white-space:pre-line}
+/* meeting invitees: a chosen person is filled with the project blue (student) or the supervisor sky
+   blue; the tick is a small white circle with the tick in that colour, and an empty ring when not chosen */
+.meeting-participants__item input[type="checkbox"],.sv-check input[type="checkbox"]{-webkit-appearance:none;appearance:none;width:16px!important;height:16px!important;margin:0;padding:0;flex:none;border:1.5px solid #c3d2d9;border-radius:50%;background:#fff center/100% 100% no-repeat;cursor:pointer;transition:border-color .15s ease}
+.meeting-participants__item:has(input:checked){border-color:#008bbf!important;background:#008bbf!important;color:#fff}
+.meeting-participants__item:has(input:checked) span{color:#fff}
+.meeting-participants__item input:checked{border-color:transparent;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%23fff'/%3E%3Cpath d='M4.8 8.3 7 10.4 11.2 5.9' fill='none' stroke='%23008bbf' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.sv-page .sv-check:has(input:checked),.sv-check:has(input:checked){border-color:#7fb6ca!important;background:#7fb6ca!important;color:#fff}
+.sv-check:has(input:checked) span{color:#fff}
+.sv-check input:checked{border-color:transparent;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='%23fff'/%3E%3Cpath d='M4.8 8.3 7 10.4 11.2 5.9' fill='none' stroke='%237fb6ca' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.meeting-participants__item:has(input:disabled){opacity:1}
+.meeting-participants__item input:disabled{cursor:default}

@@ -110,6 +110,7 @@ describe('Integrations configuration (P10)', () => {
         provider: 'gemini',
         apiKey: 'AIza-test',
         model: 'models/some-gemini-id',
+        fallbackModel: 'gemini-2.5-flash',
         timeoutMs: 15000,
       });
       expect(

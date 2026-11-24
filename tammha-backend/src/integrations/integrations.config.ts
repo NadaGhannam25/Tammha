@@ -44,6 +44,8 @@ export type AiConfig =
       provider: AiProviderName;
       apiKey: string;
       model: string;
+      /** Asked once when the main model stays busy (503) or over its quota (429). */
+      fallbackModel?: string | null;
       timeoutMs: number;
     };
 
@@ -200,6 +202,14 @@ export function readIntegrationsConfig(env: Env): {
       provider: 'gemini',
       apiKey,
       model,
+      fallbackModel: (() => {
+        const f = str('GEMINI_FALLBACK_MODEL') || 'gemini-2.5-flash';
+        if (!MODEL_ID.test(f)) {
+          errors.push('GEMINI_FALLBACK_MODEL must be a model ID from Google AI Studio');
+          return null;
+        }
+        return f.replace(/^models\//, '') === model.replace(/^models\//, '') ? null : f.replace(/^models\//, '');
+      })(),
       timeoutMs: intInRange(
         'AI_REQUEST_TIMEOUT_MS',
         1000,
