@@ -188,6 +188,34 @@ describe('GeminiAiTextProvider (mocked fetch)', () => {
     expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 
+  it('a main model that does not answer in time hands the request to the fallback model', async () => {
+    let call = 0;
+    const fetchFn = jest.fn((url: string, init: { signal: AbortSignal }) => {
+      call += 1;
+      if (call === 1)
+        return new Promise((_resolve, reject) => {
+          init.signal.addEventListener('abort', () =>
+            reject(Object.assign(new Error('aborted'), { name: 'AbortError' })),
+          );
+        });
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: 'from fallback' }] }, finishReason: 'STOP' }],
+        }),
+      });
+    }) as unknown as FetchLike;
+    const provider = new GeminiAiTextProvider(
+      { ...config, fallbackModel: 'gemini-3.5-flash-lite' },
+      fetchFn,
+    );
+    const result = await provider.generateText({ prompt: 'x', timeoutMs: 50 });
+    expect(result.model).toBe('gemini-3.5-flash-lite');
+    expect(result.text).toBe('from fallback');
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+  });
+
   it('a wrong key (403) does not go to the fallback model', async () => {
     const fetchFn = reply(403, { error: { status: 'PERMISSION_DENIED' } });
     const provider = new GeminiAiTextProvider(

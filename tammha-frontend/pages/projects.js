@@ -188,8 +188,8 @@
       need('wizardProjectAbout', T('نبذة المشروع مطلوبة', 'Project overview is required'));
     }
     if (n === 2) {
-      need('wizardTeamName', T('اسم الفريق مطلوب', 'Team name is required'));
-      if (!blank('wizardTeamName') && $('wizardTeamName').value.trim().length < 2) mark('wizardTeamName', T('اسم الفريق حرفان على الأقل', 'The team name needs at least 2 characters'));
+      need('wizardTeamName', T('اسم قائد الفريق مطلوب', 'Team leader name is required'));
+      if (!blank('wizardTeamName') && $('wizardTeamName').value.trim().length < 2) mark('wizardTeamName', T('اسم قائد الفريق حرفان على الأقل', 'The team leader name needs at least 2 characters'));
       // the academic supervisor is optional: an e-mail typed but not added is only checked for its form
       const typed = $('supervisorInviteInput').value.trim();
       if (typed && !/^\S+@\S+\.\S+$/.test(typed)) mark('supervisorInviteInput', T('بريد المشرف غير صحيح، أو اترك الحقل فارغًا', "The supervisor's e-mail is not valid, or leave the field empty"));

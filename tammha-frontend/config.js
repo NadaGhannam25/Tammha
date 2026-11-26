@@ -27,7 +27,7 @@
     apiBaseUrl: base,
     requestTimeoutMs: 30000,
     // AI calls send a whole handbook to the model: the server allows up to ~95 s.
-    aiTimeoutMs: 100000,
+    aiTimeoutMs: 160000,
     uploadTimeoutMs: 180000
   });
 })();

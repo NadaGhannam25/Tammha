@@ -326,6 +326,8 @@ window.TAMMHA_EN = {
  "نبذة عن المشروع": "Project overview",
  "اكتب نبذة مختصرة وواضحة": "Write a short, clear overview",
  "اسم الفريق": "Team name",
+ "اسم قائد الفريق": "Team leader name",
+ "اكتب اسم قائد الفريق": "Write the team leader name",
  "أنت قائد الفريق في هذا المشروع. يمكنك المشاركة في أكثر من مشروع، ولكل مشروع فريقه ومهامه وملفاته.": "You are the Team Leader of this project. You can take part in more than one project; each project has its own team, tasks and files.",
  "مثال: فريق تممها": "Example: Tammha team",
  "أرسل دعوة باستخدام الرقم الجامعي أو البريد.": "Send an invitation with the student ID or email.",

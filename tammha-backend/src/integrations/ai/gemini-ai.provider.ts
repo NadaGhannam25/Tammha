@@ -52,6 +52,9 @@ interface GeminiResponse {
 const RETRY_DELAYS_MS = [800, 2000];
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Time limit for the fallback model when the main model did not answer in time. */
+const FALLBACK_AFTER_TIMEOUT_MS = 60_000;
+
 export class GeminiAiTextProvider implements AiTextProvider {
   readonly name = 'gemini' as const;
   readonly model: string;
@@ -76,8 +79,8 @@ export class GeminiAiTextProvider implements AiTextProvider {
     try {
       return await this.generateWith(this.model, request);
     } catch (error) {
-      // the main model stayed busy or over its quota, or Google does not know it (404: a
-      // retired or mistyped model name): ask the fallback model once
+      // the main model stayed busy or over its quota, did not answer in time, or Google does
+      // not know it (404: a retired or mistyped model name): ask the fallback model once
       const fallback = this.config.fallbackModel;
       if (
         fallback &&
@@ -85,10 +88,23 @@ export class GeminiAiTextProvider implements AiTextProvider {
         error instanceof AiProviderError &&
         (error.code === 'AI_PROVIDER_UNAVAILABLE' ||
           error.code === 'AI_PROVIDER_RATE_LIMITED' ||
+          error.code === 'AI_PROVIDER_TIMEOUT' ||
           (error.code === 'AI_PROVIDER_REJECTED' && error.providerStatus === 404))
       ) {
         this.logger.warn(`${error.code} from the main model; asking ${fallback}`);
-        return this.generateWith(fallback, request);
+        // after a timeout the time is mostly used up: the (lighter) fallback model gets a
+        // shorter limit, so the whole answer still arrives before the page stops waiting
+        const next =
+          error.code === 'AI_PROVIDER_TIMEOUT'
+            ? {
+                ...request,
+                timeoutMs: Math.min(
+                  request.timeoutMs ?? this.config.timeoutMs,
+                  FALLBACK_AFTER_TIMEOUT_MS,
+                ),
+              }
+            : request;
+        return this.generateWith(fallback, next);
       }
       throw error;
     }

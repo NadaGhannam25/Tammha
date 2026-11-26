@@ -203,7 +203,7 @@ export function readIntegrationsConfig(env: Env): {
       apiKey,
       model,
       fallbackModel: (() => {
-        const f = str('GEMINI_FALLBACK_MODEL') || 'gemini-2.5-flash';
+        const f = str('GEMINI_FALLBACK_MODEL') || 'gemini-3.5-flash-lite';
         if (!MODEL_ID.test(f)) {
           errors.push('GEMINI_FALLBACK_MODEL must be a model ID from Google AI Studio');
           return null;

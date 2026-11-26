@@ -289,10 +289,9 @@
   function confirmDeleteProject() {
     const d = Dlg().open({
       image: 'assets/project-warning.png', tone: 'danger',
-      title: T('حذف المشروع نهائيًا؟', 'Delete the project permanently?'),
-      body: `<p>${esc(T(`سيُحذف مشروع "${w.project.name}" نهائيًا مع جميع مراحله ومهامه وملفاته واجتماعاته وملاحظات المشرف عليه، ولا يمكن استرجاعه.`, `The project "${w.project.name}" is deleted permanently with all of its stages, tasks, files, meetings and supervisor feedback, and cannot be restored.`))}</p>` +
-        `<p>${esc(T('يخرج جميع أعضاء الفريق من المشروع، وتصلهم رسالة على بريدهم الإلكتروني بحذفه. للتأكيد نرسل رمزًا إلى بريدك الإلكتروني.', 'Every team member leaves the project and receives an email about it. To confirm, we send a code to your email.'))}</p>`,
-      actions: btnRow(T('إلغاء', 'Cancel'), 'ovDeleteSend', T('إرسال رمز التأكيد', 'Send confirmation code')),
+      title: T('تأكيد حذف المشروع', 'Confirm project deletion'),
+      body: `<p>${esc(T(`سيُحذف مشروع "${w.project.name}" نهائيًا بجميع مراحله ومهامه وملفاته واجتماعاته وملاحظات المشرف، ولا يمكن التراجع عن هذا الإجراء. وسيُبلَّغ أعضاء الفريق بالحذف عبر البريد الإلكتروني.`, `The project "${w.project.name}" will be deleted permanently with all of its stages, tasks, files, meetings and supervisor feedback, and this action cannot be undone. The team members will be informed of the deletion by email.`))}</p>`,
+      actions: btnRow(T('إلغاء', 'Cancel'), 'ovDeleteSend', T('متابعة الحذف', 'Continue')),
     });
     d.querySelector('#ovDeleteSend').addEventListener('click', (ev) => UI.busy(ev.currentTarget, async () => {
       try { await Api.post(`/projects/${w.id}/deletion/request`, {}); }
@@ -321,8 +320,8 @@
         catch (err) { errEl.textContent = err.code === 'DELETION_CODE_INVALID' ? T('الرمز غير صحيح أو انتهت صلاحيته.', 'The code is incorrect or has expired.') : Api.message(err); return; }
         S.invalidateProjects();
         Dlg().open({
-          locked: true, image: 'assets/account-goodbye.png', title: T('تم حذف المشروع', 'The project has been deleted'),
-          body: `<p>${esc(T(`تم حذف مشروع "${w.project.name}" وجميع بياناته نهائيًا، وأُبلغ أعضاء الفريق بذلك عبر البريد الإلكتروني.`, `The project "${w.project.name}" and all of its data have been deleted permanently, and the team members were told by email.`))}</p>`,
+          locked: true, image: 'assets/account-goodbye.png', title: T('تم حذف المشروع بنجاح', 'Project deleted successfully'),
+          body: `<p>${esc(T(`حُذف مشروع "${w.project.name}" وجميع بياناته نهائيًا، وأُشعر أعضاء الفريق بذلك عبر البريد الإلكتروني.`, `The project "${w.project.name}" and all of its data have been deleted permanently, and the team members have been notified by email.`))}</p>`,
           actions: `<a class="tm-dialog__btn tm-dialog__btn--primary" href="projects.html">${esc(T('العودة إلى المشاريع', 'Back to projects'))}</a>`,
         });
       });
