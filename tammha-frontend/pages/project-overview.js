@@ -77,7 +77,7 @@
     const box = $('ovInviteCode'); if (!box) return;
     try {
       const inv = await Api.get(`/teams/${w.team.id}/invitation`);
-      box.innerHTML = `<span class="team-tool__label">${esc(T('شارك الرمز أو الرابط مع زميلك', 'Share the code or the link with your classmate'))}</span>
+      box.innerHTML = `<span class="team-tool__label">${esc(T('شارك الرمز أو الرابط مع فريقك', 'Share the code or the link with your team'))}</span>
         <div class="team-code"><code class="team-code__value" dir="ltr">${esc(inv.code)}</code>
           <button class="team-icon-btn" type="button" data-copy="${esc(inv.link)}" title="${esc(T('نسخ رابط الدعوة', 'Copy the invitation link'))}" aria-label="${esc(T('نسخ رابط الدعوة', 'Copy the invitation link'))}"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"></path></svg></button><button class="team-icon-btn" type="button" data-regenerate title="${esc(T('إنشاء رمز جديد', 'Create a new code'))}" aria-label="${esc(T('إنشاء رمز جديد', 'Create a new code'))}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.6-4.5L4 8"></path><path d="M4 3v5h5"></path><path d="M4 13a8 8 0 0 0 14.6 4.5L20 16"></path><path d="M20 21v-5h-5"></path></svg></button></div>
         <small class="app-muted">${esc(T('الرمز الجديد يُبطل الرمز والرابط السابقين.', 'A new code makes the previous code and link stop working.'))}</small>`;

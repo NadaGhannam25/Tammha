@@ -1342,10 +1342,13 @@ html body .lang-toggle.lang-toggle--short{min-width:46px;height:36px;padding:0 1
 .wz__steps .wizard-tab.is-active b{background:#008bbf;color:#fff}
 /* project tabs (Overview / Stages / Files): the open tab is solid blue with white text, no tint
    or shadow; on the supervisor pages it is the supervisor sky blue */
-.project-tab.is-active,.project-tab.is-active:hover{color:#fff!important;background:#008bbf!important;box-shadow:none!important;font-weight:800}
-.sv-page .project-tab.is-active,.sv-page .project-tab.is-active:hover{color:#fff!important;background:#7fb6ca!important;box-shadow:none!important}
+/* the open tab: light tint as before and a straight line under it, kept away from the box's
+   rounded corners so it never bends (project blue for students, sky blue for supervisors) */
+.project-tab.is-active,.project-tab.is-active:hover{color:#048fbe;background:#e9f6fb linear-gradient(#008bbf,#008bbf) no-repeat center bottom/calc(100% - 28px) 3px;box-shadow:none;font-weight:800}
+.sv-page .project-tab.is-active,.sv-page .project-tab.is-active:hover{color:var(--sv-on);background:var(--sv-tint) linear-gradient(#7fb6ca,#7fb6ca) no-repeat center bottom/calc(100% - 28px) 3px;box-shadow:none}
 /* project stages: the current stage is a blue bar */
-.stages-card .stages-current,.stages-current{margin:0 0 14px;padding:11px 16px;border:0;border-radius:11px;background:#008bbf;color:#fff;font-size:13.5px}
+.stages-card .stages-current,.stages-current{margin:0;padding:11px 18px;border:0;border-radius:0;background:#008bbf;color:#fff;font-size:13.5px}
+.stages-card .stages-table{overflow:hidden}
 .stages-current strong{color:#fff}
 /* tasks page with nothing to show: a title and a lighter line under it, like projects and meetings */
 #tasksEmpty strong{color:#173d57;font-size:15px}
@@ -1354,3 +1357,18 @@ html body .lang-toggle.lang-toggle--short{min-width:46px;height:36px;padding:0 1
 .hbv-btn{justify-content:center;gap:6px;white-space:nowrap;min-width:0}
 .hbv-btn span{word-spacing:normal;letter-spacing:normal}
 #ovDetails[hidden]{display:none!important}
+
+/* add task: every field is required (red star), each error under its own field */
+#taskForm .meeting-create-grid label > span:first-child::after{content:" *";color:#c0392b;font-weight:700}
+#taskForm .is-invalid{border-color:#e26b6b!important}
+/* project wizard: a problem shows under its field; the box (stages step only) is flat, no heading */
+.wz-alert,.wz-alert--error{box-shadow:none!important}
+#wizardAlertTitle[hidden]{display:none}
+.wz-alert--error ul{margin:0;padding-inline-start:18px}
+/* invitation code: in the middle of its box */
+#ovInviteCode{text-align:center;justify-items:center}
+#ovInviteCode .team-code{justify-content:center}
+/* my projects: wider cards so the name and the footer fit (they start at the reading side) */
+.projects-card .projects-list,.projects-list{grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),460px))}
+.hb-card li .hb-unverified{color:#7f939e}
+#projectWizard label:has(#wizardStartDate) > span:first-child::after{content:" *";color:#c0392b;font-weight:700}

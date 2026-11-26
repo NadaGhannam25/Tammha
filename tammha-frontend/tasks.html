@@ -7,17 +7,17 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="مهام المشروع في منصة تممها" name="description"/>
 <title data-en="Tasks">المهام</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
-<link href="style.css?v=qa34" rel="stylesheet"/>
-<link href="ltr.css?v=qa34" rel="stylesheet"/>
-<link href="loader.css?v=qa34" rel="stylesheet"/>
-<script src="i18n-en.js?v=qa34"></script>
-<script src="i18n.js?v=qa34"></script>
-<script src="loader.js?v=qa34"></script>
-<script src="config.js?v=qa34"></script>
-<script src="api.js?v=qa34"></script>
-<script src="session.js?v=qa34"></script>
-<script src="domain.js?v=qa34"></script>
-<link href="app.css?v=qa34" rel="stylesheet"/>
+<link href="style.css?v=qa35" rel="stylesheet"/>
+<link href="ltr.css?v=qa35" rel="stylesheet"/>
+<link href="loader.css?v=qa35" rel="stylesheet"/>
+<script src="i18n-en.js?v=qa35"></script>
+<script src="i18n.js?v=qa35"></script>
+<script src="loader.js?v=qa35"></script>
+<script src="config.js?v=qa35"></script>
+<script src="api.js?v=qa35"></script>
+<script src="session.js?v=qa35"></script>
+<script src="domain.js?v=qa35"></script>
+<link href="app.css?v=qa35" rel="stylesheet"/>
 </head>
 <body class="tasks-page" data-app-role="STUDENT">
 <div class="app-shell">
@@ -173,10 +173,10 @@
 <form class="meeting-modal__form" id="taskForm" novalidate>
 <div class="meeting-create-grid">
 <label class="meeting-create-wide"><span>اسم المهمة</span><input id="taskName" placeholder="مثال: مراجعة واجهة الإعدادات" required/><small class="field-error" hidden id="taskNameError">اسم المهمة مطلوب (3 أحرف على الأقل)</small></label>
-<label><span>المسؤول</span><select id="taskAssignee"></select></label> <label><span>المرحلة</span><select id="taskStage"></select></label>
-<label class="meeting-create-full"><span>الوصف</span><textarea id="taskDescription" placeholder="ما المطلوب في هذه المهمة؟" rows="3"></textarea></label>
+<label><span>المسؤول</span><select id="taskAssignee"></select><small class="field-error" hidden id="taskAssigneeError">اختر المسؤول عن المهمة</small></label> <label><span>المرحلة</span><select id="taskStage"></select><small class="field-error" hidden id="taskStageError">اختر مرحلة المهمة</small></label>
+<label class="meeting-create-full"><span>الوصف</span><textarea id="taskDescription" placeholder="ما المطلوب في هذه المهمة؟" rows="3"></textarea><small class="field-error" hidden id="taskDescriptionError">اكتب وصف المهمة</small></label>
 <label><span>الحالة</span><select id="taskStatus"><option value="TODO">لم تبدأ</option><option value="IN_PROGRESS">قيد التنفيذ</option></select></label> <label><span>الأولوية</span><select id="taskPriority"><option value="MEDIUM">متوسطة</option><option value="LOW">منخفضة</option><option value="HIGH">عالية</option><option value="CRITICAL">حرجة</option></select></label>
-<label><span>تاريخ التسليم</span><input id="taskDue" type="date"/></label>
+<label><span>تاريخ التسليم</span><input id="taskDue" type="date"/><small class="field-error" hidden id="taskDueError">حدد تاريخ التسليم</small></label>
 </div>
 <div class="meeting-modal__actions"><button class="meeting-modal__cancel" id="cancelTaskModal" type="button">إلغاء</button><button class="meeting-modal__submit" type="submit">إضافة المهمة</button></div>
 </form>
@@ -185,7 +185,7 @@
 <footer class="footer projects-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
 </main>
 </div>
-<script src="tasks.js?v=qa34"></script>
-<script src="script.js?v=qa34"></script>
+<script src="tasks.js?v=qa35"></script>
+<script src="script.js?v=qa35"></script>
 </body>
 </html>

@@ -252,6 +252,7 @@
     AI_INVALID_RESPONSE: ['أعادت خدمة الذكاء الاصطناعي إجابة غير صالحة، ولم يُعرض أي محتوى.', 'The AI service returned an invalid answer; nothing was shown.'],
     AI_PROVIDER_ERROR: ['تعذّر الاتصال بخدمة الذكاء الاصطناعي بسبب إعداداتها. أعد المحاولة لاحقًا، وإذا تكرر أبلغ مسؤول المنصة.', 'The AI service could not be reached because of its settings. Try again later, and tell the platform administrator if it happens again.'],
     AI_RESPONSE_BLOCKED: ['رُفضت الإجابة من خدمة الذكاء الاصطناعي.', 'The AI answer was blocked.'],
+    AI_REQUEST_IN_PROGRESS: ['يوجد طلب مماثل قيد التنفيذ. انتظر حتى ينتهي ثم أعد المحاولة.', 'A similar request is still running. Wait for it to finish, then try again.'],
     AI_RATE_LIMITED: ['بلغت الحد المسموح من طلبات الذكاء الاصطناعي. أعد المحاولة لاحقًا.', 'You reached the AI request limit. Please try later.'],
     AI_FEATURE_NOT_FOR_SUPERVISOR: ['هذه الميزة غير متاحة للمشرف.', 'This feature is not available to supervisors.'],
     HANDBOOK_NOT_FOUND: ['لا يوجد دليل جاهز لهذا المشروع.', 'This project has no ready handbook.'],

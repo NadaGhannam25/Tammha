@@ -537,8 +537,11 @@ export class AISupportService {
       const now = Date.now();
       const [inFlight, hourRows, dayCount, projectCount] = await Promise.all([
         tx.aISupport.count({
+          // one request of each kind at a time: the handbook summary and the task extraction
+          // can run together, a second summary waits for the first one
           where: {
             userId: user.id,
+            kind: feature.kind,
             status: {
               in: [AISupportStatus.PENDING, AISupportStatus.IN_PROGRESS],
             },

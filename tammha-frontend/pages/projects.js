@@ -104,7 +104,7 @@
   const alertBox = $('wizardAlert');
   function showAlert(kind, title, items) {
     alertBox.className = `wz-alert wz-alert--${kind}`;
-    $('wizardAlertTitle').textContent = title;
+    $('wizardAlertTitle').textContent = title; $('wizardAlertTitle').hidden = !title;
     $('wizardAlertList').innerHTML = (items || []).map((t) => `<li>${esc(t)}</li>`).join('');
     alertBox.hidden = false;
     $('wizardBody').scrollTop = 0;
@@ -210,9 +210,11 @@
     }
     if (bad.length) {
       // a short list stays readable; many empty fields are summarised (each field shows its own message)
-      if (msgs.length > 3) showAlert('error', T(`أكمل الحقول المطلوبة المعلّمة باللون الأحمر (${msgs.length}).`, `Complete the required fields marked in red (${msgs.length}).`), []);
-      else showAlert('error', T('راجع ما يلي قبل المتابعة:', 'Please review the following before continuing:'), msgs);
-      const first = $(bad[0]); if (first && first.focus) first.focus({ preventScroll: true });
+      // each field shows its own message under it; only the stages step (no single field) lists
+      // its problems, in a plain line without a heading
+      if (n === 4) showAlert('error', '', msgs); else hideAlert();
+      const first = $(bad[0]);
+      if (first) { first.scrollIntoView({ block: 'center', behavior: 'smooth' }); if (first.focus) first.focus({ preventScroll: true }); }
     } else hideAlert();
     return bad.length === 0;
   }

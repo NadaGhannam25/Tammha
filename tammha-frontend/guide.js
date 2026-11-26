@@ -251,7 +251,7 @@
       <article class="hb-card${t.found ? '' : ' is-empty'}" aria-labelledby="hbTopic${i}">
         <h3 id="hbTopic${i}"><span class="hb-card__num">${i + 1}</span>${esc(L([t.title.ar, t.title.en]))}</h3>
         ${t.found ? `${t.summary ? `<p dir="auto">${esc(t.summary)}</p>` : ''}
-          ${t.points.length ? `<ul>${t.points.map((pt) => `<li><span dir="auto">${esc(pt.text)}</span>${pt.pages && pt.pages.length ? `<span class="hb-refs">${pageChips(pt.pages)}</span>` : ''}${pt.verified === false ? `<em class="hb-unverified">${esc(T('لم يُعثر على النص في الدليل، يُرجى التحقق منه.', 'Not found in the handbook text; please check it.'))}</em>` : ''}</li>`).join('')}</ul>` : ''}
+          ${t.points.length ? `<ul>${t.points.map((pt) => `<li><span dir="auto">${esc(pt.text)}</span>${pt.pages && pt.pages.length ? `<span class="hb-refs">${pageChips(pt.pages)}</span>` : ''}${pt.verified === false ? `<em class="hb-unverified">${esc(T('صياغة مختصرة، راجع الدليل للتفاصيل.', 'Summarised wording; check the handbook for the details.'))}</em>` : ''}</li>`).join('')}</ul>` : ''}
           ${t.id === 'GRADING' ? `<p class="hb-card__note">${esc(T('للاطلاع فقط؛ لا تحتسب تممها الدرجات ولا تقيّم الطلاب.', 'For reference only; Tammha does not calculate marks or evaluate students.'))}</p>` : ''}`
         : `<p class="hb-card__none">${esc(T('لا يوجد في الدليل نص واضح حول هذا القسم.', 'The handbook has no clear text on this section.'))}</p>`}
       </article>`).join('')}</div>`;

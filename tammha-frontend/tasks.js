@@ -269,11 +269,24 @@
   const modal = $('taskModal'); const form = $('taskForm'); const nameInput = $('taskName'); const nameError = $('taskNameError');
   const showModal = async () => {
     members = await S.assignees(w); // fresh: a member who just joined can be chosen
-    $('taskAssignee').innerHTML = `<option value="">${esc(T('غير مُسنَدة', 'Unassigned'))}</option>` + members.map((m) => `<option value="${esc(m.userId)}">${esc(m.label)}</option>`).join('');
-    $('taskStage').innerHTML = `<option value="">${esc(T('بدون مرحلة', 'No stage'))}</option>` + stages.map((s) => `<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('');
+    $('taskAssignee').innerHTML = `<option value="">${esc(T('اختر المسؤول', 'Choose the owner'))}</option>` + members.map((m) => `<option value="${esc(m.userId)}">${esc(m.label)}</option>`).join('');
+    $('taskStage').innerHTML = `<option value="">${esc(stages.length ? T('اختر المرحلة', 'Choose the stage') : T('لا توجد مراحل بعد', 'No stages yet'))}</option>` + stages.map((s) => `<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('');
     modal.hidden = false; nameInput.focus();
   };
-  const hideModal = () => { modal.hidden = true; form.reset(); setNameError(false); };
+  // every field is required: each problem shows under its own field (no summary box)
+  const REQ = [
+    ['taskAssignee', 'taskAssigneeError', () => !!$('taskAssignee').value, ['اختر المسؤول عن المهمة', 'Choose who owns the task']],
+    ['taskStage', 'taskStageError', () => !stages.length || !!$('taskStage').value, ['اختر مرحلة المهمة', 'Choose the task stage']],
+    ['taskDescription', 'taskDescriptionError', () => !!$('taskDescription').value.trim(), ['اكتب وصف المهمة', 'Write the task description']],
+    ['taskDue', 'taskDueError', () => !!($('taskDue').dataset.iso || $('taskDue').value), ['حدد تاريخ التسليم', 'Choose the due date']]
+  ];
+  function setFieldError(id, errId, on, msg) {
+    const el = $(id); const er = $(errId); if (!el || !er) return;
+    el.classList.toggle('is-invalid', on); el.setAttribute('aria-invalid', String(on));
+    if (msg) er.textContent = T(...msg); er.hidden = !on;
+  }
+  REQ.forEach(([id, errId, ok]) => ['input', 'change'].forEach((ev) => $(id).addEventListener(ev, () => { if (ok()) setFieldError(id, errId, false); })));
+  const hideModal = () => { modal.hidden = true; form.reset(); setNameError(false); REQ.forEach(([id, errId]) => setFieldError(id, errId, false)); };
   function setNameError(on) { nameInput.classList.toggle('is-invalid', on); nameInput.setAttribute('aria-invalid', String(on)); nameError.hidden = !on; }
   $('openTaskModal').addEventListener('click', showModal);
   $('closeTaskModal').addEventListener('click', hideModal);
@@ -283,7 +296,10 @@
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const name = nameInput.value.trim();
-    if (name.length < 3) { setNameError(true); nameInput.focus(); return; }
+    let first = null;
+    if (name.length < 3) { setNameError(true); first = nameInput; }
+    for (const [id, errId, ok, msg] of REQ) { const bad = !ok(); setFieldError(id, errId, bad, msg); if (bad && !first) first = $(id); }
+    if (first) { first.focus(); return; }
     const due = $('taskDue').dataset.iso || $('taskDue').value || undefined;
     UI.busy(form.querySelector('[type="submit"]'), async () => {
       const t = await Api.post('/tasks', {
