@@ -1326,3 +1326,31 @@ html body .lang-toggle.lang-toggle--short{min-width:46px;height:36px;padding:0 1
 .hb-ai .hb-panel{padding:22px 24px;background:#fff;border:1px solid #e3edf2;border-radius:16px}
 .hb-ai .hb-panel .hb-start{padding:0;border:0;background:none;box-shadow:none}
 .hb-ai .hb-panel .hb-error{margin:0}
+/* ===== QA 33 ===== */
+/* project overview: the project details (category and type) with a pencil like the idea and objectives */
+.overview-panel--details{position:relative}
+.overview-panel--details h2{padding-inline-end:40px}
+.ov-details-editor label{display:grid;gap:5px;font-size:13px;font-weight:700;color:#173d57}
+.ov-details-editor select{height:40px;border:1px solid #dbe7ed;border-radius:10px;padding:0 12px;font:inherit;font-size:13.5px;color:#183c55;background:#fff;max-width:360px}
+/* handbook page without any project: one empty box instead of the handbook options */
+.hb-no-project{max-width:1520px;margin:4px auto 0;padding:34px 24px;background:#fff;border:1px solid #e6edf0;border-radius:16px}
+.hb-no-project .app-state__img{width:84px;height:84px}
+/* project wizard steps: only the current step is blue (border and number); the other steps,
+   done or not, stay neutral without the light blue */
+.wz__steps .wizard-tab.is-done b,.wz__steps .wizard-tab b{background:#f1f4f6;color:#6f8793}
+.wz__steps .wizard-tab.is-active{border-color:#008bbf!important;color:#0b5f86}
+.wz__steps .wizard-tab.is-active b{background:#008bbf;color:#fff}
+/* project tabs (Overview / Stages / Files): the open tab is solid blue with white text, no tint
+   or shadow; on the supervisor pages it is the supervisor sky blue */
+.project-tab.is-active,.project-tab.is-active:hover{color:#fff!important;background:#008bbf!important;box-shadow:none!important;font-weight:800}
+.sv-page .project-tab.is-active,.sv-page .project-tab.is-active:hover{color:#fff!important;background:#7fb6ca!important;box-shadow:none!important}
+/* project stages: the current stage is a blue bar */
+.stages-card .stages-current,.stages-current{margin:0 0 14px;padding:11px 16px;border:0;border-radius:11px;background:#008bbf;color:#fff;font-size:13.5px}
+.stages-current strong{color:#fff}
+/* tasks page with nothing to show: a title and a lighter line under it, like projects and meetings */
+#tasksEmpty strong{color:#173d57;font-size:15px}
+#tasksEmpty p{margin:0;color:#91a0aa;font-size:13.5px}
+/* handbook bar buttons: the icon right next to its words */
+.hbv-btn{justify-content:center;gap:6px;white-space:nowrap;min-width:0}
+.hbv-btn span{word-spacing:normal;letter-spacing:normal}
+#ovDetails[hidden]{display:none!important}

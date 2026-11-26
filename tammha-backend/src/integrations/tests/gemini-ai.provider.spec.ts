@@ -167,6 +167,37 @@ describe('GeminiAiTextProvider (mocked fetch)', () => {
     expect(await codeOf(provider.generateText({ prompt: 'x' }))).toBe('AI_PROVIDER_UNAVAILABLE');
   }, 15000);
 
+  it('an unknown main model (404) hands the request to the fallback model once', async () => {
+    const answers = [
+      { ok: false, status: 404, json: async () => ({ error: { status: 'NOT_FOUND' } }) },
+      {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: 'from fallback' }] }, finishReason: 'STOP' }],
+        }),
+      },
+    ];
+    const fetchFn = jest.fn(async () => answers.shift()!) as unknown as FetchLike;
+    const provider = new GeminiAiTextProvider(
+      { ...config, fallbackModel: 'gemini-2.5-flash' },
+      fetchFn,
+    );
+    const result = await provider.generateText({ prompt: 'x' });
+    expect(result.model).toBe('gemini-2.5-flash');
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+  });
+
+  it('a wrong key (403) does not go to the fallback model', async () => {
+    const fetchFn = reply(403, { error: { status: 'PERMISSION_DENIED' } });
+    const provider = new GeminiAiTextProvider(
+      { ...config, fallbackModel: 'gemini-2.5-flash' },
+      fetchFn,
+    );
+    expect(await codeOf(provider.generateText({ prompt: 'x' }))).toBe('AI_PROVIDER_REJECTED');
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
   it('a rejected request (404) is not retried', async () => {
     const fetchFn = reply(404, { error: { status: 'NOT_FOUND' } });
     const provider = new GeminiAiTextProvider(config, fetchFn);

@@ -70,13 +70,19 @@
   }
   // ---------- the bar with the project's handbook, and which parts of the page are shown ----------
   function barMeta(sel) {
-    const pages = sel.pageCount ? `${sel.pageCount} ${T('صفحة', 'pages')}` : '';
     if (sel.kind === 'UNIVERSITY') {
       const uni = universities.find((u) => u.key === sel.key); const h = uni && uni.handbook;
-      return [T(`دليل ${uni ? uName(uni) : sel.universityName || ''}`, `${uni ? uName(uni) : sel.universityName || ''} handbook`), h ? editionName(h) : '', pages].filter(Boolean).join(' · ');
+      return h ? editionName(h) : T('الإصدار الحالي', 'Current edition');
     }
     if (!sel.ready && !sel.failed) return T('جارٍ استخراج نص الدليل…', 'Extracting the handbook text…');
-    return [T('دليل مرفوع للمشروع', 'Uploaded handbook'), sel.fileSize ? UI.fmtSize(sel.fileSize) : '', pages].filter(Boolean).join(' · ');
+    return T('دليل مرفوع للمشروع', 'Uploaded handbook');
+  }
+  function shownFileName(sel) {
+    if (sel.kind === 'UNIVERSITY') {
+      const uni = universities.find((u) => u.key === sel.key);
+      if (uni && uni.name && uni.name.en) return `${uni.name.en}.pdf`;
+    }
+    return sel.fileName || sel.title || '';
   }
   const EYE = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const SWAP = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h13l-3-3"/><path d="M20 17H7l3 3"/></svg>';
@@ -87,9 +93,9 @@
     if (has) {
       bar.innerHTML = `<img alt="" class="hbv-bar__img" src="assets/file-pdf.png"/>
         <div class="hbv-bar__text"><span class="hbv-bar__label">${esc(changing ? T('الدليل الحالي (يُستبدل بعد اختيار دليل جديد)', 'Current handbook (replaced once you choose a new one)') : T('دليل المشروع', 'Project handbook'))}</span>
-        <strong><bdi>${esc(sel.fileName || sel.title || '')}</bdi></strong><small>${esc(barMeta(sel))}</small></div>
+        <strong><bdi>${esc(shownFileName(sel))}</bdi></strong><small>${esc(barMeta(sel))}</small></div>
         <div class="hbv-bar__actions">${changing ? `<button class="hbv-btn" data-cancel-change type="button">${esc(T('إلغاء', 'Cancel'))}</button>`
-          : `<button class="hbv-btn" data-view-selected type="button">${EYE}${esc(T('عرض الملف', 'View file'))}</button>${isLeader() ? `<button class="hbv-btn" data-change-file type="button">${SWAP}${esc(T('تغيير الملف', 'Change file'))}</button>` : ''}`}</div>`;
+          : `<button class="hbv-btn" data-view-selected type="button">${EYE}<span>${esc(T('عرض الملف', 'View file'))}</span></button>${isLeader() ? `<button class="hbv-btn" data-change-file type="button">${SWAP}<span>${esc(T('تغيير الملف', 'Change file'))}</span></button>` : ''}`}</div>`;
     }
     $('hbChooseHead').hidden = !(has && changing);
     document.querySelector('.hb-options').hidden = !choosing;
@@ -402,9 +408,14 @@
       [projects, universities] = await Promise.all([S.projects(), Api.get('/handbooks/universities')]);
       fillUniversities(); fillEditions(null);
       if (!projects.length) {
-        // no project yet: the handbook box is not shown at all
-        $('hbSelected').hidden = true;
-        $('hbProject').disabled = true; return;
+        // no project yet: nothing to choose a handbook for, so the page says so (no handbook options)
+        $('hbSelected').hidden = true; $('hbProject').disabled = true;
+        document.querySelector('.hb-options').hidden = true;
+        const box = document.createElement('section'); box.className = 'hb-no-project';
+        document.querySelector('.projects-hero').after(box);
+        UI.state(box, 'empty', { image: 'assets/empty-files.webp', title: T('لا توجد مشاريع حتى الآن', 'No projects yet'),
+          text: T('أنشئ مشروعًا أو انضم إلى مشروع، ثم اختر دليله من هنا.', 'Create a project or join one, then choose its handbook here.') });
+        return;
       }
       $('hbProject').innerHTML = projects.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
       const id = S.currentProjectId(projects); $('hbProject').value = id;

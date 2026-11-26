@@ -76,13 +76,16 @@ export class GeminiAiTextProvider implements AiTextProvider {
     try {
       return await this.generateWith(this.model, request);
     } catch (error) {
-      // the main model stayed busy or over its quota: ask the fallback model once
+      // the main model stayed busy or over its quota, or Google does not know it (404: a
+      // retired or mistyped model name): ask the fallback model once
       const fallback = this.config.fallbackModel;
       if (
         fallback &&
+        fallback !== this.model &&
         error instanceof AiProviderError &&
         (error.code === 'AI_PROVIDER_UNAVAILABLE' ||
-          error.code === 'AI_PROVIDER_RATE_LIMITED')
+          error.code === 'AI_PROVIDER_RATE_LIMITED' ||
+          (error.code === 'AI_PROVIDER_REJECTED' && error.providerStatus === 404))
       ) {
         this.logger.warn(`${error.code} from the main model; asking ${fallback}`);
         return this.generateWith(fallback, request);

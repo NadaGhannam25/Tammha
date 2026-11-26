@@ -250,6 +250,7 @@
     AI_PROVIDER_UNAVAILABLE: ['خدمة الذكاء الاصطناعي غير متاحة حاليًا. أعد المحاولة لاحقًا.', 'The AI service is unavailable right now. Please try again later.'],
     AI_PROVIDER_TIMEOUT: ['استغرقت خدمة الذكاء الاصطناعي وقتًا أطول من المسموح. أعد المحاولة.', 'The AI service took too long. Please try again.'],
     AI_INVALID_RESPONSE: ['أعادت خدمة الذكاء الاصطناعي إجابة غير صالحة، ولم يُعرض أي محتوى.', 'The AI service returned an invalid answer; nothing was shown.'],
+    AI_PROVIDER_ERROR: ['تعذّر الاتصال بخدمة الذكاء الاصطناعي بسبب إعداداتها. أعد المحاولة لاحقًا، وإذا تكرر أبلغ مسؤول المنصة.', 'The AI service could not be reached because of its settings. Try again later, and tell the platform administrator if it happens again.'],
     AI_RESPONSE_BLOCKED: ['رُفضت الإجابة من خدمة الذكاء الاصطناعي.', 'The AI answer was blocked.'],
     AI_RATE_LIMITED: ['بلغت الحد المسموح من طلبات الذكاء الاصطناعي. أعد المحاولة لاحقًا.', 'You reached the AI request limit. Please try later.'],
     AI_FEATURE_NOT_FOR_SUPERVISOR: ['هذه الميزة غير متاحة للمشرف.', 'This feature is not available to supervisors.'],

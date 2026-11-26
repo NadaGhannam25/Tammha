@@ -25,6 +25,12 @@
     S.projectHeroProgress(w); // the completion, once, in the title bar
     // nothing written yet: the section stays empty (renderSetup shows what is missing)
     $('ovOverview').textContent = p.overview || p.description || '';
+    // project details: the category and the type, each with its label (edited with the pencil)
+    const D = window.TammhaDomain || {}; const lbl = (o) => (o ? T(o[0], o[1]) : '');
+    const cat = lbl((D.PROJECT_CATEGORIES || {})[p.category]); const org = lbl((D.PROJECT_ORIGINS || {})[p.origin]);
+    $('ovDetails').hidden = !(cat || org);
+    $('ovDetails').innerHTML = `<div class="ov-sup__col"><span class="ov-sup__label">${esc(T('تصنيف المشروع', 'Project category'))}</span><b>${esc(cat || '—')}</b></div>
+      <div class="ov-sup__col"><span class="ov-sup__label">${esc(T('نوع المشروع', 'Project type'))}</span><b>${esc(org || '—')}</b></div>`;
     const goals = (p.objectives || []).filter(Boolean);
     $('ovGoals').innerHTML = goals.length ? goals.map((g) => `<li>${esc(g)}</li>`).join('') : '';
     // a pencil (top-left) edits the idea and the objectives, for every student of the team
@@ -93,8 +99,9 @@
     SUPERVISOR_REQUEST_REQUIRED: 'supervisor', SUPERVISOR_APPROVAL_REQUIRED: 'supervisor',
     TEAM_LEADER_REQUIRED: 'team', EMAIL_NOT_VERIFIED: 'team', UNIVERSITY_IDENTITY_REQUIRED: 'team', TEAM_NAME_REQUIRED: 'team',
     HANDBOOK_REQUIRED: 'handbook', HANDBOOK_PROCESSING: 'handbook', HANDBOOK_FAILED: 'handbook',
+    PROJECT_CATEGORY_REQUIRED: 'details', PROJECT_ORIGIN_REQUIRED: 'details',
   };
-  const SECTION_EL = { idea: '.overview-panel--idea', goals: '.overview-panel--goals', supervisor: '#ovSupervision', team: '.overview-team' };
+  const SECTION_EL = { idea: '.overview-panel--idea', goals: '.overview-panel--goals', details: '.overview-panel--details', supervisor: '#ovSupervision', team: '.overview-team' };
   async function renderSetup() {
     const box = $('ovSetup'); box.innerHTML = '';
     document.querySelectorAll('.ov-empty').forEach((x) => x.remove());
@@ -113,6 +120,7 @@
     const ADD = {
       idea: [T('أضف فكرة المشروع ليتعرّف عليها الفريق والمشرف.', 'Add the project idea for the team and the supervisor.'), 'idea'],
       goals: [T('أضف أهداف المشروع، هدفًا في كل سطر.', 'Add the project objectives, one per line.'), 'goals'],
+      details: [T('اختر تصنيف المشروع ونوعه.', 'Choose the project category and type.'), 'details'],
       supervisor: [T('أرسل طلب إشراف إلى مشرفك الأكاديمي من الحقل أدناه.', 'Send a supervision request to your academic supervisor below.')],
       handbook: [T('اختر دليل المشروع من المكتبة أو ارفع دليل جامعتك.', "Choose the project handbook from the library or upload your university's.")],
     };
@@ -129,6 +137,7 @@
       if (h) {
         if (k === 'idea') $('ovOverview').hidden = true;
         if (k === 'goals') $('ovGoals').hidden = true;
+        if (k === 'details') $('ovDetails').hidden = true;
         h.insertAdjacentHTML('afterend', card(k, codes)); return;
       }
       // sections that are not on this page: the handbook and the project details
@@ -208,6 +217,17 @@
     const panel = btn.closest('.overview-panel'); btn.hidden = true;
     panel.querySelector('.ov-empty')?.remove(); const pen = panel.querySelector('.overview-edit'); if (pen) pen.hidden = true;
     const p = w.project;
+    if (kind === 'details') {
+      const D = window.TammhaDomain || {};
+      const opts = (map, cur) => `<option value="">${esc(T('اختر', 'Choose'))}</option>` + Object.entries(map || {}).map(([k, l]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${esc(T(l[0], l[1]))}</option>`).join('');
+      $('ovDetails').hidden = true; panel.querySelector('.overview-editor')?.remove();
+      panel.insertAdjacentHTML('beforeend', `<div class="overview-editor ov-details-editor">
+        <label><span>${esc(T('تصنيف المشروع', 'Project category'))}</span><select id="ovEdit_category">${opts(D.PROJECT_CATEGORIES, p.category)}</select></label>
+        <label><span>${esc(T('نوع المشروع', 'Project type'))}</span><select id="ovEdit_origin">${opts(D.PROJECT_ORIGINS, p.origin)}</select></label>
+        <div class="overview-editor__actions"><button class="app-btn app-btn--primary" type="button" data-panel-save="details">${esc(T('حفظ', 'Save'))}</button><button class="app-btn" type="button" data-panel-cancel="1">${esc(T('إلغاء', 'Cancel'))}</button></div></div>`);
+      $('ovEdit_category').focus();
+      return;
+    }
     const value = kind === 'idea' ? (p.overview || p.description || '') : (p.objectives || []).filter(Boolean).join('\n');
     const target = kind === 'idea' ? $('ovOverview') : $('ovGoals');
     target.hidden = true;
@@ -219,9 +239,15 @@
     const ta = panel.querySelector('textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
   }
   function savePanel(kind, btn) {
-    const text = $(`ovEdit_${kind}`).value.trim();
     let body;
-    if (kind === 'idea') {
+    if (kind === 'details') {
+      const category = $('ovEdit_category').value; const origin = $('ovEdit_origin').value;
+      if (!category || !origin) { UI.toast(T('اختر تصنيف المشروع ونوعه.', 'Choose the project category and type.'), 'error'); return; }
+      body = { category, origin };
+    }
+    const text = kind === 'details' ? '' : $(`ovEdit_${kind}`).value.trim();
+    if (kind === 'details') { /* body is ready */ }
+    else if (kind === 'idea') {
       if (!text) { UI.toast(T('اكتب فكرة المشروع.', 'Write the project idea.'), 'error'); return; }
       body = { overview: text };
     } else {

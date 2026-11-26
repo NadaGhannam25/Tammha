@@ -54,7 +54,10 @@
       </div>`).join('');
     body.closest('.tasks-table')?.classList.toggle('is-empty', visible.length === 0);
     $('tasksEmpty').hidden = visible.length !== 0;
-    $('tasksEmpty').innerHTML = `<img class="app-state__img" src="assets/empty-tasks.webp" alt="" aria-hidden="true"><span>${esc(tasks.length ? T('لا توجد مهام في هذا القسم.', 'No tasks in this section.') : T('لا توجد مهام لهذا المشروع بعد.', 'This project has no tasks yet.'))}</span>`;
+    const [et, ex] = tasks.length
+      ? [T('لا توجد مهام في هذا القسم حتى الآن', 'No tasks in this section yet'), T('تُعرض المهام في هذا القسم عند توفرها.', 'Tasks are shown in this section when there are any.')]
+      : [T('لا توجد مهام حتى الآن', 'No tasks yet'), T('تُعرض مهام المشروع هنا عند إضافتها.', 'The project tasks are shown here once they are added.')];
+    $('tasksEmpty').innerHTML = `<img class="app-state__img" src="assets/empty-tasks.webp" alt="" aria-hidden="true"><strong>${esc(et)}</strong><p>${esc(ex)}</p>`;
     document.querySelectorAll('[data-count]').forEach((el) => { el.textContent = tasks.filter(FILTERS[el.dataset.count] || FILTERS.all).length; });
   }
 
@@ -318,7 +321,7 @@
         if (list.length) { pickProject(list); return; }
       }
       w = await S.currentWorkspace();
-      if (!w) { UI.state(body, 'empty', { image: 'assets/empty-tasks.webp', title: T('لا توجد مشاريع بعد', 'No projects yet'), text: T('تظهر المهام بعد إنشاء مشروع أو الانضمام إليه.', 'Tasks appear once you create or join a project.'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } }); $('openTaskModal').hidden = true; return; }
+      if (!w) { UI.state(body, 'empty', { image: 'assets/empty-tasks.webp', title: T('لا توجد مشاريع حتى الآن', 'No projects yet'), text: T('تُعرض المهام هنا بعد إنشاء مشروع أو الانضمام إليه.', 'Tasks are shown here once you create or join a project.'), action: { href: 'projects.html?new=1', label: T('إنشاء مشروع', 'Create a project') } }); $('openTaskModal').hidden = true; return; }
       // every student of the team manages the tasks alike (the owner has no extra rights here)
       isLeader = !!(w.viewer?.canManage ?? w.viewer?.isLeader);
       $('openTaskModal').hidden = !isLeader;

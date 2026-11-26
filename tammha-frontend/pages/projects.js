@@ -183,6 +183,8 @@
       need('wizardStartDate', T('تاريخ البدء مطلوب', 'Start date is required'));
       if (!blank('wizardStartDate') && !blank('wizardEndDate') && iso('wizardEndDate') <= iso('wizardStartDate')) mark('wizardEndDate', T('تاريخ الإنجاز يجب أن يكون بعد تاريخ البدء', 'The completion date must be after the start date'));
       need('wizardProjectGoal', T('هدف المشروع مطلوب', 'Project objective is required'));
+      // the server keeps an objective up to 300 characters (a longer one used to reject all the details)
+      if ($('wizardProjectGoal').value.trim().length > 300) mark('wizardProjectGoal', T('هدف المشروع 300 حرف بحد أقصى', 'The project objective is up to 300 characters'));
       need('wizardProjectAbout', T('نبذة المشروع مطلوبة', 'Project overview is required'));
     }
     if (n === 2) {
@@ -329,7 +331,21 @@
       const run = async (label, fn) => { try { await fn(); return true; } catch (err) { problems.push(`${label}: ${Api.message(err)}`); return false; } };
       const details = { overview: $('wizardProjectAbout').value.trim(), objectives: [$('wizardProjectGoal').value.trim()], category: $('wizardCategory').value, origin: $('wizardOrigin').value, expectedCompletionDate: end || undefined };
       if (wizardImage) details.thumbnail = wizardImage;
-      await run(T('تفاصيل المشروع', 'Project details'), () => Api.patch(`/projects/${pid}`, details));
+      // the details are saved together; if the server refuses them, each one is saved on its own so
+      // one value it does not accept (a long objective, an image) never loses the others
+      try { await Api.patch(`/projects/${pid}`, details); }
+      catch (err) {
+        if (err.status !== 400 && err.status !== 422) problems.push(`${T('تفاصيل المشروع', 'Project details')}: ${Api.message(err)}`);
+        else {
+          const NAMES = { overview: T('نبذة المشروع', 'project overview'), objectives: T('هدف المشروع', 'project objective'), category: T('تصنيف المشروع', 'project category'), origin: T('نوع المشروع', 'project type'), expectedCompletionDate: T('تاريخ الإنجاز', 'completion date'), thumbnail: T('صورة المشروع', 'project image') };
+          const failed = [];
+          for (const [k, v] of Object.entries(details)) {
+            if (v === undefined) continue;
+            try { await Api.patch(`/projects/${pid}`, { [k]: v }); } catch (e) { failed.push(NAMES[k] || k); }
+          }
+          if (failed.length) problems.push(`${T('لم يُحفظ', 'Not saved')}: ${failed.join(T('، ', ', '))}`);
+        }
+      }
       // stages, in the chosen order (the backend makes the first one the current stage)
       const names = chosenStages();
       // stage deadlines are spread between the start and the end date; without an end date the

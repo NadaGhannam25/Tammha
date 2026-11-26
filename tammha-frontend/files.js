@@ -92,7 +92,7 @@
       names = Object.fromEntries(projects.map((p) => [p.id, p.name]));
       files = (Array.isArray(list) ? list : list.items || []).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
       if (!files.length) {
-        const emptyFiles = { image: 'assets/empty-files.webp', title: T('لا توجد ملفات بعد', 'No files yet'), text: T('تظهر هنا ملفات جميع مشاريعك.', 'The files of all your projects appear here.') };
+        const emptyFiles = { image: 'assets/empty-files.webp', title: T('لا توجد ملفات حتى الآن', 'No files yet'), text: T('تُعرض ملفات جميع مشاريعك هنا عند رفعها.', 'The files of all your projects are shown here once they are uploaded.') };
         UI.state(tableBody, 'empty', emptyFiles);
         UI.state(cardsGrid, 'empty', emptyFiles);
         return;

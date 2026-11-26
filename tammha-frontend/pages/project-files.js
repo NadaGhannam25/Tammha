@@ -45,7 +45,7 @@
       const list = await Api.get('/documents', { query: { projectId: w.id } });
       docs = Array.isArray(list) ? list : list.items || [];
       body.innerHTML = docs.map(row).join('');
-      if (!docs.length) UI.state(body, 'empty', { image: 'assets/empty-files.webp', title: T('لا توجد ملفات بعد', 'No files yet'), text: T('ارفع ملفات المشروع من زر "إضافة ملف".', 'Upload the project files with "Add file".') });
+      if (!docs.length) UI.state(body, 'empty', { image: 'assets/empty-files.webp', title: T('لا توجد ملفات حتى الآن', 'No files yet'), text: T('تُعرض ملفات المشروع هنا عند رفعها.', 'The project files are shown here once they are uploaded.') });
       filter();
     } catch (e) { UI.state(body, 'error', { error: e, retry: load }); }
   }
