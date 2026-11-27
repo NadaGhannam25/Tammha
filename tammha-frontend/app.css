@@ -1397,6 +1397,43 @@ html body .lang-toggle.lang-toggle--short{min-width:46px;height:36px;padding:0 1
 .ep-panel label > span:first-child::after{content:" *";color:#c0392b;font-weight:700}
 .ep-panel label:has(#epEnd) > span:first-child::after{content:none}
 .ep-panel .is-invalid{border-color:#e26b6b!important}
-.ep-sup{display:grid;gap:4px;padding:12px;border:1px solid #e6eef3;border-radius:10px;background:#fbfdfe}
+.ep-sup{display:grid;gap:4px;padding:12px;border:1px solid #e6eef3;border-radius:10px;background:#fff}
 .ep-sup__label{font-size:13px;font-weight:700;color:#274b61}
 .ep-sup small{display:block;color:#7f939e}
+/* ===== QA 37 ===== */
+/* create meeting (student and supervisor): a red star on every required field */
+#meetingForm label:has(:is(#meetingCreateTitle,#meetingCreateProject,#meetingCreateDate,#meetingCreateTime,#meetingCreateDuration)) > span:first-child::after,
+#mForm label:has(:is(#mTitle,#mProject,#mDate,#mTime,#mDuration)) > span:first-child::after,
+#mForm .sv-people > legend::after{content:" *";color:#c0392b;font-weight:700}
+/* before joining: microphone and camera — off = red tile with a crossed white icon, on = blue tile,
+   no shadow anywhere */
+.prejoin-v43-toggle,.prejoin-v43-toggle:hover,.prejoin-v43-toggle-icon,.prejoin-v43-switch{box-shadow:none!important}
+.prejoin-v43-toggle .prejoin-v43-toggle-icon{width:34px;height:34px;border-radius:10px;background:#d64545;color:#fff}
+.prejoin-v43-toggle.is-on .prejoin-v43-toggle-icon{background:#008bbf;color:#fff}
+.prejoin-v43-toggle-icon svg{width:18px;height:18px}
+.prejoin-v43-toggle .pj-slash{display:inline}
+.prejoin-v43-toggle.is-on .pj-slash{display:none}
+.prejoin-v43-toggle{grid-template-columns:34px 1fr 34px}
+/* handbook bar buttons: the icon touches its words (its drawing has empty edges, so they are trimmed) */
+.hbv-btn{gap:3px!important}
+.hbv-btn svg{margin-inline:-2px}
+/* create project tasks: picker and button together at the start of the line; "Create again" has a
+   blue border only; each stage heading is solid blue with white words */
+.hb-start .hb-pick{justify-content:flex-start}
+.hb-start:has(.hb-pick){text-align:start}
+.hb-start:has(.hb-pick) .hb-pick__error{text-align:start}
+#hbTasksPanel .hb-btn--ghost{background:#fff;color:#008bbf;border:1.5px solid #008bbf;box-shadow:none}
+#hbTasksPanel .hb-btn--ghost:hover{background:#f1f9fc}
+.hb-stage-group__title{background:#008bbf;color:#fff}
+.hb-added-bar{position:fixed;inset-inline:0;bottom:22px;margin:auto;width:max-content;max-width:min(560px,92vw);padding:12px 26px;border-radius:12px;background:#1f9d55;color:#fff;font-size:14px;font-weight:700;text-align:center;opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:2000}
+.hb-added-bar.is-on{opacity:1;transform:none}
+/* every message at the bottom: its words in the middle (Arabic and English) */
+.app-toast,.sv-toast,.toast,.tm-toast{text-align:center!important}
+/* file cards: "View" and "Download" in project blue (sky blue on supervisor pages) */
+.file-card__button{background:#008bbf!important;color:#fff!important}
+.file-card__button:hover{background:#0079a8!important}
+.sv-page .file-card__button{background:#7fb6ca!important}
+.sv-page .file-card__button:hover{background:#6aa6bc!important}
+/* project tasks list: more room between the task and its owner column */
+@media(min-width:901px){.tasks-row{grid-template-columns:minmax(0,2.4fr) minmax(110px,1fr) 110px 130px 76px}.tasks-row>:first-child{padding-inline-end:44px}}
+.ep-panel .ep-image span::after{content:none}

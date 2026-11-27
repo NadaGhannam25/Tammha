@@ -230,6 +230,22 @@
     el.classList.toggle('is-invalid', !!msg); if (er) { er.textContent = msg || ''; er.hidden = !msg; }
     return !msg;
   }
+  // project image (optional): kept, changed or removed with the other details
+  let epImage; // undefined = unchanged, null = removed, string = new image
+  function showEpImage(data) {
+    const box = $('epImagePreview'); box.style.backgroundImage = data ? `url('${data}')` : ''; box.classList.toggle('has-image', !!data);
+    $('epImageRemove').hidden = !data;
+    $('epImagePickLabel').textContent = data ? T('تغيير الصورة', 'Change image') : T('رفع صورة', 'Upload image');
+  }
+  $('epImageFile').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0]; e.target.value = '';
+    const err = $('epImageError'); err.hidden = true;
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { err.textContent = T('الصورة أكبر من 5MB.', 'The image is larger than 5 MB.'); err.hidden = false; return; }
+    try { epImage = await UI.imageDataUrl(file); showEpImage(epImage); }
+    catch (x) { err.textContent = T('اختر صورة PNG أو JPG أو WebP.', 'Choose a PNG, JPG or WebP image.'); err.hidden = false; }
+  });
+  $('epImageRemove').addEventListener('click', () => { epImage = null; showEpImage(null); });
   function openEditProject() {
     const p = w.project; const Dm = window.TammhaDomain || {};
     const opts = (map, cur, ph) => `<option value="">${esc(ph)}</option>` + Object.entries(map || {}).map(([k, v]) => `<option value="${esc(k)}"${k === cur ? ' selected' : ''}>${esc(T(v[0], v[1]))}</option>`).join('');
@@ -239,6 +255,7 @@
     setDate('epStart', p.startDate); setDate('epEnd', p.expectedCompletionDate || p.endDate);
     $('epGoals').value = (p.objectives || []).filter(Boolean).join('\n'); $('epAbout').value = p.overview || '';
     $('epTeam').value = w.team?.name || '';
+    epImage = undefined; showEpImage(p.thumbnail || null); $('epImageError').hidden = true;
     const sup = ((w.supervisors || [])[0] || {}).user || (w.supervisors || [])[0];
     $('epSupervisor').innerHTML = sup
       ? `<b>${esc(UI.personName(sup))}</b>${sup.email ? `<small dir="ltr">${esc(sup.email)}</small>` : ''}`
@@ -271,7 +288,9 @@
     if (!ok1 || !ok2) { epStep(ok1 ? 2 : 1); return; }
     UI.busy(e.submitter || $('editProjectForm').querySelector('[type="submit"]'), async () => {
       try {
-        await Api.patch(`/projects/${w.id}`, { name: v('epName'), description: v('epDescription'), category: v('epCategory'), origin: v('epOrigin'), startDate: start, expectedCompletionDate: end || null, objectives: goals, overview: v('epAbout') });
+        const body = { name: v('epName'), description: v('epDescription'), category: v('epCategory'), origin: v('epOrigin'), startDate: start, expectedCompletionDate: end || null, objectives: goals, overview: v('epAbout') };
+        if (epImage !== undefined) body.thumbnail = epImage;
+        await Api.patch(`/projects/${w.id}`, body);
         if (w.team?.id && v('epTeam') !== (w.team.name || '')) await Api.patch(`/teams/${w.team.id}`, { name: v('epTeam') });
       } catch (err) { UI.toast(Api.message(err), 'error'); return; }
       closeEditProject(); UI.toast(T('حُفظت التعديلات.', 'Changes saved.'), 'success');

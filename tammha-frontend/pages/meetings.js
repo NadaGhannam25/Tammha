@@ -43,6 +43,8 @@
     list.hidden = visible.length === 0;
     $('meetingsEmptyState').hidden = visible.length !== 0;
   }
+  // upcoming first (soonest first), then past ones (latest first)
+  const byWhen = (a, b) => { const pa = isPast(a); const pb = isPast(b); return pa !== pb ? (pa ? 1 : -1) : pa ? String(b.scheduledAt).localeCompare(a.scheduledAt) : String(a.scheduledAt).localeCompare(b.scheduledAt); };
   async function load() {
     const first = !meetings.length;
     let holder = document.querySelector('.meetings-state');
@@ -53,7 +55,7 @@
     }
     try {
       const r = await Api.get('/meetings', { query: { includeCancelled: true, limit: 100 } });
-      meetings = (r.items || r || []).sort((a, b) => { const pa = isPast(a); const pb = isPast(b); return pa !== pb ? (pa ? 1 : -1) : pa ? String(b.scheduledAt).localeCompare(a.scheduledAt) : String(a.scheduledAt).localeCompare(b.scheduledAt); });
+      meetings = (r.items || r || []).sort(byWhen);
       if (holder) holder.remove(); render();
     } catch (e) {
       list.hidden = true; $('meetingsEmptyState').hidden = true;
@@ -119,8 +121,11 @@
       try {
         const payload = { projectId: $('meetingCreateProject').value, title, description: $('meetingCreateGoals').value.trim() || undefined, scheduledAt: when.toISOString(), durationMinutes: Number($('meetingCreateDuration').value) };
         if (ids.length) payload.participantIds = ids;
-        await Api.post('/meetings', payload);
-        hideModal(); UI.toast(T('جُدول الاجتماع وأُبلغ المدعوون.', 'The meeting is scheduled and the participants were notified.'), 'success'); load();
+        const created = await Api.post('/meetings', payload);
+        hideModal(); UI.toast(T('جُدول الاجتماع وأُبلغ المدعوون.', 'The meeting is scheduled and the participants were notified.'), 'success');
+        // the new meeting shows in the list at once; the full list refreshes quietly behind
+        if (created && created.id) { meetings = [created, ...meetings.filter((x) => x.id !== created.id)].sort(byWhen); render(); }
+        load();
       } catch (er) { err.textContent = Api.message(er); }
     });
   });
@@ -134,9 +139,14 @@
     $('meetingNotesTitle').textContent = m.title;
     $('meetingNotesSubtitle').textContent = projectName(m.projectId);
     const sections = notesModal.querySelector('.meeting-notes-sections');
-    UI.state(sections, 'loading');
-    try { notesData = await Api.get(`/meetings/${m.id}/notes`); renderNotes(false); } catch (e) { UI.state(sections, 'error', { error: e }); }
+    // the details show at once (from the list and the last notes seen); the notes refresh behind
+    notesData = notesCache.get(m.id) || null; renderNotes(false);
+    try {
+      const fresh = await Api.get(`/meetings/${m.id}/notes`); notesCache.set(m.id, fresh);
+      if (notesMeeting && notesMeeting.id === m.id && $('meetingNotesSave').hidden) { notesData = fresh; renderNotes(false); }
+    } catch (e) { if (!notesData) UI.state(sections, 'error', { error: e }); }
   }
+  const notesCache = new Map();
   function renderNotes(editing) {
     const sections = notesModal.querySelector('.meeting-notes-sections'); const parts = split(notesData?.content);
     const meta = $('meetingNotesMeta');
@@ -155,12 +165,14 @@
     const shared = (notesData?.shared || []).map((n) => `<section class="meeting-notes-field meeting-notes-field--shared"><h3>${esc(T('ملاحظات المشرف', 'Supervisor notes'))}<small>${esc(UI.personName(n.author))} · ${esc(UI.fmtDateTime(n.updatedAt))}</small></h3><div class="meeting-notes-box"><p>${esc(n.content)}</p></div></section>`).join('');
     // the objective written when the meeting was scheduled (no longer shown beside the name in the list)
     const goals = m.description ? `<section class="meeting-notes-field meeting-notes-field--goals"><h3>${esc(T('هدف الاجتماع', 'Objective'))}</h3><div class="meeting-notes-box"><p dir="auto">${esc(m.description)}</p></div></section>` : '';
-    const privacy = `<p class="meeting-notes-privacy">${esc(T('ملاحظاتك خاصة بك، لا يراها أعضاء الفريق ولا المشرف.', 'Your notes are private: neither the team nor the supervisor can see them.'))}</p>`;
+    const privacy = ''; // the notes stay private, without a sentence saying so
     if (!editing) {
       sections.innerHTML = `${details}${goals}${shared}<section class="meeting-notes-field"><h3>${esc(T('ملاحظاتي', 'My notes'))}</h3><div class="meeting-notes-box"><p></p></div></section><section class="meeting-notes-field meeting-notes-field--improvements"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3><div class="meeting-notes-box"><p></p></div></section>`;
       const own = sections.querySelectorAll('.meeting-notes-field:not(.meeting-notes-field--shared):not(.meeting-notes-field--goals) p');
-      own[0].textContent = parts.notes || T('لم تكتب ملاحظات بعد.', 'You have not written notes yet.'); own[1].textContent = parts.improvements || T('لا توجد نقاط تحسين إضافية.', 'No additional improvement points.');
-      $('meetingNotesEdit').hidden = cancelled; $('meetingNotesSave').hidden = true; return;
+      // saved notes still on their way: a short placeholder, and no editing until they arrive
+      const waiting = !notesData;
+      own[0].textContent = parts.notes || (waiting ? '…' : T('لم تكتب ملاحظات بعد.', 'You have not written notes yet.')); own[1].textContent = parts.improvements || (waiting ? '…' : T('لا توجد نقاط تحسين إضافية.', 'No additional improvement points.'));
+      $('meetingNotesEdit').hidden = cancelled || waiting; $('meetingNotesSave').hidden = true; return;
     }
     sections.innerHTML = `${goals}${shared}<section class="meeting-notes-field"><label for="meetingNotesInput"><h3>${esc(T('ملاحظاتي', 'My notes'))}</h3></label><textarea class="meeting-notes-input" id="meetingNotesInput" maxlength="20000" rows="5"></textarea><small class="field-error" hidden id="meetingNotesError">${esc(T('اكتب ملاحظات الاجتماع أولًا', 'Write the meeting notes first'))}</small></section><section class="meeting-notes-field meeting-notes-field--improvements"><label for="meetingImprovementsInput"><h3>${esc(T('نقاط التحسين والمتابعة', 'Improvement and follow-up points'))}</h3></label><textarea class="meeting-notes-input" id="meetingImprovementsInput" maxlength="10000" rows="3"></textarea></section>${privacy}`;
     $('meetingNotesInput').value = parts.notes; $('meetingImprovementsInput').value = parts.improvements;
@@ -172,7 +184,7 @@
     const notes = $('meetingNotesInput').value.trim(); const improvements = $('meetingImprovementsInput').value.trim();
     if (!notes) { $('meetingNotesInput').classList.add('is-invalid'); $('meetingNotesError').hidden = false; return; }
     UI.busy($('meetingNotesSave'), async () => {
-      notesData = await Api.put(`/meetings/${notesMeeting.id}/notes`, { content: join(notes, improvements) });
+      notesData = await Api.put(`/meetings/${notesMeeting.id}/notes`, { content: join(notes, improvements) }); notesCache.set(notesMeeting.id, notesData);
       notesMeeting.hasNotes = true; renderNotes(false); render(); UI.toast(T('حُفظت الملاحظات.', 'Notes saved.'), 'success');
     });
   });

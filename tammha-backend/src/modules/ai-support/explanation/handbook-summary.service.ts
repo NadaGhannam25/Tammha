@@ -62,12 +62,18 @@ const TASKS_MAX_CHARS = 60_000;
 const TASKS_TIMEOUT_MS = 140_000;
 /** The summary of seven topics needs room: thinking tokens count against this limit. */
 const SUMMARY_MIN_OUTPUT_TOKENS = 16_384;
-/** Answers worth asking for once more: cut off, empty or not usable JSON. */
+/** Answers worth asking for once more: cut off, empty or not usable JSON, or both models
+ *  answered at once that they are busy (a short wait often clears it). A timeout is not repeated:
+ *  it already used most of the time the page waits. */
 const RETRY_CODES = new Set([
   'AI_RESPONSE_TRUNCATED',
   'AI_EMPTY_RESPONSE',
   'AI_INVALID_RESPONSE',
+  'AI_PROVIDER_UNAVAILABLE',
+  'AI_PROVIDER_RATE_LIMITED',
 ]);
+const BUSY_CODES = new Set(['AI_PROVIDER_UNAVAILABLE', 'AI_PROVIDER_RATE_LIMITED']);
+const BUSY_WAIT_MS = 4_000;
 
 const SUMMARY_FEATURE = {
   // stored under the existing enum value (no migration): the record is the summary request
@@ -348,6 +354,9 @@ export class HandbookSummaryService {
    * is asked for once more (with twice the output room) before the request fails, so a
    * single bad answer never reaches the student as an error.
    */
+  /** Pause before asking again after a busy answer (tests set it to 0). */
+  busyWaitMs = process.env.NODE_ENV === 'test' ? 0 : BUSY_WAIT_MS;
+
   private async generate<T>(
     request: AiTextRequest,
     parse: (raw: string) => T,
@@ -372,6 +381,8 @@ export class HandbookSummaryService {
               : '';
         if (attempt >= 2 || !RETRY_CODES.has(code)) throw error;
         this.logger.warn(`handbook AI answer unusable (${code}); asking again`);
+        if (BUSY_CODES.has(code))
+          await new Promise((r) => setTimeout(r, this.busyWaitMs));
       }
     }
   }

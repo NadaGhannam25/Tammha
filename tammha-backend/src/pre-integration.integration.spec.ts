@@ -1028,6 +1028,9 @@ describe('Pre-integration features (AppModule integration)', () => {
         .send({})
         .expect(502);
       expect(bad.body.code).toBe('AI_INVALID_RESPONSE');
+      // a busy answer is asked again once; busy twice is an error
+      const asked = ai.requests.length;
+      ai.nextError(new AiProviderError('AI_PROVIDER_UNAVAILABLE'));
       ai.nextError(new AiProviderError('AI_PROVIDER_UNAVAILABLE'));
       const down = await http()
         .post(extractUrl())
@@ -1035,6 +1038,7 @@ describe('Pre-integration features (AppModule integration)', () => {
         .send({})
         .expect(503);
       expect(down.body.code).toBe('AI_PROVIDER_UNAVAILABLE');
+      expect(ai.requests.length - asked).toBe(2);
     });
   });
 

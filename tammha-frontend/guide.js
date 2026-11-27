@@ -330,7 +330,6 @@
           <label class="handbook-check"><input data-sugg="${esc(s.id)}" type="checkbox"${done || !canApply ? ' disabled' : ''}${done ? ' checked' : ''} aria-label="${esc(T('تحديد', 'Select'))}: ${esc(s.title)}"/></label>
           <div class="handbook-item__text"><strong dir="auto">${esc(s.title)}</strong><small dir="auto">${esc(s.description || '')}</small>${s.quote ? `<small class="hb-quote" dir="auto">"${esc(s.quote)}"</small>` : ''}</div>
           <div class="handbook-item__meta">${pageChips(s.pages)}${canApply && !done ? `<select class="hb-owner" data-owner="${esc(s.id)}" aria-label="${esc(T('المسؤول', 'Owner'))}">${owners}</select>` : ''}</div>
-          ${done ? `<a class="handbook-item__done" href="tasks.html?project=${encodeURIComponent(projectId)}">${esc(T('مضافة إلى المهام', 'In tasks'))}</a>` : ''}
         </li>`;
       }).join('')}</ul></section>`).join('')}
       <p aria-live="polite" class="handbook-status" id="hbTaskStatus"></p>`;
@@ -386,13 +385,22 @@
       (r.alreadyApplied || []).forEach((a) => suggestions.applied.add(a.suggestionId));
       renderTasks();
       const count = created.length; const skipped = (r.skipped || []).length;
-      $('hbTaskStatus').innerHTML = `${esc(T(count === 1 ? 'أُضيفت مهمة واحدة إلى المهام.' : count === 2 ? 'أُضيفت مهمتان إلى المهام.' : `أُضيفت ${count} مهام إلى المهام.`, count === 1 ? '1 task was added.' : `${count} tasks were added.`))}${skipped ? ` ${esc(T(`تُجوهلت ${skipped} لوجود مهمة بالعنوان نفسه.`, `${skipped} skipped because a task with the same title exists.`))}` : ''} <a href="tasks.html?project=${encodeURIComponent(projectId)}">${esc(T('عرض المهام', 'View tasks'))}</a>`;
+      // a green bar at the bottom for 5 seconds (no link beside each task)
+      $('hbTaskStatus').textContent = '';
+      if (count) addedBar(T('تمت إضافة المهام بنجاح.', 'The tasks were added successfully.'));
+      else if (skipped) addedBar(T('المهام المحددة موجودة في المهام من قبل.', 'The selected tasks are already in the tasks.'));
     });
   }
   $('hbTasksPanel').addEventListener('click', (e) => {
     if (e.target.closest('[data-extract]')) createTasks();
     const add = e.target.closest('#hbAddSelected'); if (add) addSelected(add);
   });
+  function addedBar(text) {
+    let bar = document.querySelector('.hb-added-bar');
+    if (!bar) { bar = document.createElement('div'); bar.className = 'hb-added-bar'; bar.setAttribute('role', 'status'); document.body.appendChild(bar); }
+    bar.textContent = text; bar.classList.add('is-on');
+    clearTimeout(addedBar.t); addedBar.t = setTimeout(() => bar.classList.remove('is-on'), 5000);
+  }
   async function createTasks() {
     const pick = $('hbTaskProject');
     if (pick) {
