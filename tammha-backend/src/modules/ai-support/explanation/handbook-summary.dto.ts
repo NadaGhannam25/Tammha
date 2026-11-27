@@ -126,9 +126,19 @@ export class HandbookTaskSuggestionDto {
   @ApiProperty() description!: string;
   @ApiProperty({ enum: ['HIGH', 'MEDIUM', 'LOW'] }) priority!: string;
   @ApiProperty({ nullable: true, type: Number }) estimatedDays!: number | null;
+  @ApiProperty({
+    nullable: true,
+    description: 'The project stage the task belongs to (null when the project has no stages)',
+  })
+  milestoneId!: string | null;
+  @ApiProperty({ nullable: true, type: String }) milestoneTitle!: string | null;
   @ApiProperty({ type: [Number] }) pages!: number[];
-  @ApiProperty({ description: 'Handbook text that requires this task' })
-  quote!: string;
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    description: 'Handbook text behind this task; null when the handbook does not describe it',
+  })
+  quote!: string | null;
 }
 
 export class HandbookTasksResultDto {

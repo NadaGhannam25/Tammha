@@ -11,6 +11,7 @@ import {
   AiRequestKind,
   HandbookStatus,
   Prisma,
+  MilestoneStatus,
   TaskStatus,
   TeamRole,
 } from '@prisma/client';
@@ -233,6 +234,18 @@ export class HandbookSummaryService {
         take: 300,
       })
     ).map((t) => t.title);
+    // the project stages in their order: the tasks are planned stage by stage
+    const stages = (
+      await this.prisma.milestone.findMany({
+        where: { projectId: project.id, status: { not: MilestoneStatus.CANCELLED } },
+        select: { id: true, title: true, sortOrder: true, dueDate: true },
+      })
+    ).sort(
+      (a, b) =>
+        (a.sortOrder ?? Number.MAX_SAFE_INTEGER) -
+          (b.sortOrder ?? Number.MAX_SAFE_INTEGER) ||
+        a.dueDate.getTime() - b.dueDate.getTime(),
+    );
 
     const record = await this.aiSupport.reserve(
       user,
@@ -262,6 +275,7 @@ export class HandbookSummaryService {
             pages,
             truncated,
             existingTasks: existing,
+            stages,
           }),
           maxOutputTokens: Math.max(
             this.aiSupport.settings.explainMaxOutputTokens,
@@ -274,7 +288,7 @@ export class HandbookSummaryService {
           timeoutMs: Math.max(this.aiSupport.timeoutMs, TASKS_TIMEOUT_MS),
           lightThinking: true,
         },
-        (raw) => parseHandbookTasks(raw, pages, existing),
+        (raw) => parseHandbookTasks(raw, pages, existing, stages),
       );
       // Stored in the guidance shape the apply endpoint reads (taskSuggestions with ids).
       const guidance: Guidance = {
@@ -288,7 +302,7 @@ export class HandbookSummaryService {
           description: s.description,
           priority: s.priority,
           estimatedDays: s.estimatedDays,
-          milestone: null,
+          milestone: s.milestoneTitle,
         })),
         milestoneSuggestions: [],
         handbookReferences: [],

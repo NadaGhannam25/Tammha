@@ -8,7 +8,7 @@
 //      The state is GET /projects/:id/handbook. DELETE …/university-selection goes back to the own upload.
 //   2. two separate AI actions on the selected handbook (through the backend; Gemini key on the server):
 //      "ملخص الدليل" — GET/POST /projects/:id/handbook/summary (seven fixed topics; cached per language)
-//      "استخراج المهام" — POST /projects/:id/handbook/task-suggestions, then the Team Leader adds only the
+//      "إنشاء مهام المشروع" — POST /projects/:id/handbook/task-suggestions, then the Team Leader adds only the
 //      ticked ones with POST /projects/:id/ai-task-suggestions/apply (idempotent; duplicates skipped).
 // Layout (QA 32): until a handbook is chosen the two options are shown; once chosen, one bar shows the
 // file with "View file" and "Change file", and under it two cards (summary / extract tasks). Choosing an
@@ -221,14 +221,14 @@
       stages_ = (r.items || r || []).slice().sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || String(a.dueDate).localeCompare(String(b.dueDate)));
     } catch (e) { /* keep the last list */ }
     if (stages_.length) return true;
-    UI.toast(T('أضف مراحل المشروع أولًا، ثم استخرج المهام.', 'Add the project stages first, then extract the tasks.'), 'error');
+    UI.toast(T('أضف مراحل المشروع أولًا، ثم أنشئ المهام.', 'Add the project stages first, then create the tasks.'), 'error');
     return false;
   }
   const currentStage = () => (stages_.find((m) => m.status !== 'COMPLETED' && m.status !== 'CANCELLED') || stages_[0] || {}).id || '';
   async function openAi(which) {
     if (which === 'tasks' && !(await hasStages())) return;
+    // the tasks open on their start box (choose the project, then create); the summary is created at once
     tab = which; aiOpen = true; autoCreate = which === 'summary'; renderView();
-    if (which === 'tasks' && (!suggestions || suggestions.projectId !== projectId)) extractTasks();
   }
   $('hbActions').addEventListener('click', (e) => { const b = e.target.closest('[data-open-ai]'); if (b) openAi(b.dataset.openAi); });
   document.querySelectorAll('[data-hb-tab]').forEach((b) => b.addEventListener('click', async () => {
@@ -258,7 +258,13 @@
   }
   const panelHead = (title, text, end) => `<div class="hbv-panel-head"><div><h2>${esc(title)}</h2><p>${esc(text)}</p></div>${end || ''}</div>`;
   const SUMMARY_HEAD = () => panelHead(T('ملخص الدليل', 'Handbook Summary'), T('أهم ما في الدليل في سبعة محاور، مع أرقام الصفحات.', 'The key points of the handbook in seven topics, with page numbers.'));
-  const TASKS_HEAD = (end) => panelHead(T('استخراج المهام', 'Extract Tasks'), T('مهام مقترحة من الدليل، تراجعها قبل إضافتها.', 'Suggested tasks from the handbook, to review before adding them.'), end);
+  const TASKS_HEAD = (end) => panelHead(T('إنشاء مهام المشروع', 'Create project tasks'), T('مهام لكل مرحلة من مراحل مشروعك، من الدليل المعتمد. راجعها قبل إضافتها.', 'Tasks for every stage of your project, from the selected handbook. Review them before adding them.'), end);
+  // "Create project tasks": the project is chosen first (nothing chosen = a clear message)
+  let taskPick = '';
+  const projectPicker = () => `<div class="hb-pick"><label class="visually-hidden" for="hbTaskProject">${esc(T('المشروع', 'Project'))}</label>
+      <select class="hb-pick__select" id="hbTaskProject"><option value="">${esc(T('اختر المشروع', 'Choose the project'))}</option>${projects.map((p) => `<option value="${esc(p.id)}"${p.id === taskPick ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
+      <button class="hb-btn" data-extract type="button">${esc(T('إنشاء مهام المشروع', 'Create project tasks'))}</button></div>
+      <p class="hb-pick__error" hidden id="hbTaskProjectError">${esc(T('يجب اختيار المشروع لإنشاء مهامه.', 'Choose the project to create its tasks.'))}</p>`;
   function summaryStart(text) { return SUMMARY_HEAD() + `<div class="hb-start"><p>${esc(text || T('يستخرج الملخص من الدليل المعتمد المعلومات المتعلقة بسبعة محاور ثابتة، مع الإشارة إلى أرقام الصفحات حيثما أمكن.', 'The summary extracts the information on seven fixed topics from the selected handbook, with page references where available.'))}</p><button class="hb-btn" data-summary type="button">${esc(T('إنشاء الملخص', 'Create summary'))}</button></div>`; }
   function showSummary(result) {
     const meta = result.coverage && result.coverage.truncated ? `<p class="hb-note">${esc(T(`شمل الملخص ${result.coverage.pagesIncluded} من ${result.coverage.pageCount} صفحة لطول الدليل.`, `The summary covered ${result.coverage.pagesIncluded} of ${result.coverage.pageCount} pages because the handbook is long.`))}</p>` : '';
@@ -298,39 +304,48 @@
   function renderTasks(errorText) {
     const panel = $('hbTasksPanel');
     if (errorText) {
-      panel.innerHTML = TASKS_HEAD() + `<div class="hb-error" role="alert"><strong>${esc(T('تعذّر استخراج المهام', 'Tasks could not be extracted'))}</strong><p>${esc(errorText)}</p><p>${esc(T('لم تُضف أي مهام.', 'No task was added.'))}</p><button class="hb-btn" data-extract type="button">${esc(T('إعادة المحاولة', 'Try again'))}</button></div>`;
+      panel.innerHTML = TASKS_HEAD() + `<div class="hb-error" role="alert"><strong>${esc(T('تعذّر إنشاء المهام', 'The tasks could not be created'))}</strong><p>${esc(errorText)}</p><p>${esc(T('لم تُضف أي مهام.', 'No task was added.'))}</p><button class="hb-btn" data-extract type="button">${esc(T('إعادة المحاولة', 'Try again'))}</button></div>`;
       return;
     }
     if (!suggestions || suggestions.projectId !== projectId) {
-      panel.innerHTML = TASKS_HEAD() + `<div class="hb-start"><p>${esc(T('تُستخرج من الدليل المعتمد مهام مقترحة، ثم يراجعها الفريق ويحدد ما يُضاف منها إلى مهام المشروع.', 'Suggested tasks are extracted from the selected handbook; the team reviews them and selects which ones to add to the project tasks.'))}</p><button class="hb-btn" data-extract type="button">${esc(T('استخراج المهام', 'Extract tasks'))}</button></div>`;
+      panel.innerHTML = TASKS_HEAD() + `<div class="hb-start"><p>${esc(T('اختر المشروع، وتُنشأ مهام مقترحة لكل مرحلة من مراحله من الأولى إلى الأخيرة، ثم يراجعها الفريق ويحدد ما يُضاف منها.', 'Choose the project: suggested tasks are created for each of its stages, from the first to the last, and the team reviews them and selects which ones to add.'))}</p>${projectPicker()}</div>`;
       return;
     }
     const dropped = suggestions.dropped || {};
-    const droppedNote = dropped.unverified || dropped.duplicates ? `<p class="hb-note">${esc(T(`استُبعدت ${dropped.unverified || 0} مقترحات لم يُعثر على نصها في الدليل، و${dropped.duplicates || 0} مكررة مع مهام موجودة.`, `${dropped.unverified || 0} suggestions not found in the handbook text and ${dropped.duplicates || 0} duplicates of existing tasks were left out.`))}</p>` : '';
-    if (!suggestions.list.length) { panel.innerHTML = TASKS_HEAD() + `<div class="hb-start"><p>${esc(T('لم يتضمن الدليل مهامًا جديدة يمكن اقتراحها.', 'The handbook contains no new tasks to suggest.'))}</p>${droppedNote}<button class="hb-btn hb-btn--ghost" data-extract type="button">${esc(T('استخراج المهام مجددًا', 'Extract again'))}</button></div>`; return; }
+    const droppedNote = dropped.duplicates ? `<p class="hb-note">${esc(T(`استُبعدت ${dropped.duplicates} مقترحات مكررة مع مهام موجودة.`, `${dropped.duplicates} suggestions that repeat existing tasks were left out.`))}</p>` : '';
+    if (!suggestions.list.length) { panel.innerHTML = TASKS_HEAD() + `<div class="hb-start"><p>${esc(T('لم يتضمن الدليل مهامًا جديدة يمكن اقتراحها.', 'The handbook contains no new tasks to suggest.'))}</p>${droppedNote}<button class="hb-btn hb-btn--ghost" data-extract type="button">${esc(T('إنشاء المهام مجددًا', 'Create again'))}</button></div>`; return; }
     const canApply = isLeader() && suggestions.canApply !== false;
     const owners = `<option value="">${esc(T('غير مُسنَدة', 'Unassigned'))}</option>` + members().map((m) => `<option value="${esc(m.userId)}">${esc(m.label)}</option>`).join('');
-    const stageOpts = stages_.map((m) => `<option value="${esc(m.id)}">${esc(m.title)}</option>`).join('');
-    const cur = currentStage();
     panel.innerHTML = TASKS_HEAD() + `
       <div class="hb-tasks__bar">
         <label class="handbook-check"><input id="hbSelectAll" type="checkbox"/><span>${esc(T('تحديد الكل', 'Select all'))}</span></label>
-        <span class="hb-tasks__end"><button class="hb-btn hb-btn--ghost" data-extract type="button">${esc(T('استخراج المهام مجددًا', 'Extract again'))}</button>
+        <span class="hb-tasks__end"><button class="hb-btn hb-btn--ghost" data-extract type="button">${esc(T('إنشاء المهام مجددًا', 'Create again'))}</button>
         <button class="tasks-add" disabled id="hbAddSelected" type="button">${esc(T('إضافة المحدد إلى المهام', 'Add selected to tasks'))}</button></span>
       </div>
       ${canApply ? '' : `<p class="hb-note">${esc(T('يضيف قائد الفريق المهام المقترحة إلى المشروع.', 'The Team Leader adds suggested tasks to the project.'))}</p>`}
       ${droppedNote}
-      <ul class="hb-suggestions">${suggestions.list.map((s) => {
+      ${groupByStage(suggestions.list).map((g) => `<section class="hb-stage-group"><h3 class="hb-stage-group__title" dir="auto">${esc(g.title)}</h3><ul class="hb-suggestions">${g.items.map((s) => {
         const done = suggestions.applied.has(s.id);
         return `<li class="handbook-item${done ? ' is-added' : ''}">
           <label class="handbook-check"><input data-sugg="${esc(s.id)}" type="checkbox"${done || !canApply ? ' disabled' : ''}${done ? ' checked' : ''} aria-label="${esc(T('تحديد', 'Select'))}: ${esc(s.title)}"/></label>
           <div class="handbook-item__text"><strong dir="auto">${esc(s.title)}</strong><small dir="auto">${esc(s.description || '')}</small>${s.quote ? `<small class="hb-quote" dir="auto">"${esc(s.quote)}"</small>` : ''}</div>
-          <div class="handbook-item__meta">${pageChips(s.pages)}${canApply && !done && stageOpts ? `<select class="hb-owner hb-stage" data-stage="${esc(s.id)}" aria-label="${esc(T('المرحلة', 'Stage'))}">${stageOpts.replace(`value="${esc(cur)}"`, `value="${esc(cur)}" selected`)}</select>` : ''}${canApply && !done ? `<select class="hb-owner" data-owner="${esc(s.id)}" aria-label="${esc(T('المسؤول', 'Owner'))}">${owners}</select>` : ''}</div>
+          <div class="handbook-item__meta">${pageChips(s.pages)}${canApply && !done ? `<select class="hb-owner" data-owner="${esc(s.id)}" aria-label="${esc(T('المسؤول', 'Owner'))}">${owners}</select>` : ''}</div>
           ${done ? `<a class="handbook-item__done" href="tasks.html?project=${encodeURIComponent(projectId)}">${esc(T('مضافة إلى المهام', 'In tasks'))}</a>` : ''}
         </li>`;
-      }).join('')}</ul>
+      }).join('')}</ul></section>`).join('')}
       <p aria-live="polite" class="handbook-status" id="hbTaskStatus"></p>`;
     updateSelection();
+  }
+  // the suggestions under their stage, from the first stage to the last (the server sends them in order)
+  function groupByStage(list) {
+    const groups = [];
+    for (const s of list) {
+      const key = s.milestoneId || '';
+      let g = groups.find((x) => x.key === key);
+      if (!g) { g = { key, title: s.milestoneTitle || (stages_.find((m) => m.id === key) || {}).title || T('مهام عامة', 'General tasks'), items: [] }; groups.push(g); }
+      g.items.push(s);
+    }
+    return groups;
   }
   function updateSelection() {
     const boxes = [...document.querySelectorAll('#hbTasksPanel input[data-sugg]:not(:disabled)')];
@@ -343,7 +358,7 @@
   async function extractTasks() {
     const panel = $('hbTasksPanel'); panel.innerHTML = '';
     try {
-      const r = await Api.post(`/projects/${projectId}/handbook/task-suggestions`, { language: lang }, { timeout: Math.max(Api.aiTimeout, 300000), loader: { target: panel, label: T('جارٍ استخراج المهام من الدليل…', 'Extracting tasks from the handbook…') } });
+      const r = await Api.post(`/projects/${projectId}/handbook/task-suggestions`, { language: lang }, { timeout: Math.max(Api.aiTimeout, 300000), loader: { target: panel, label: T('جارٍ إنشاء مهام المشروع…', 'Creating the project tasks…') } });
       suggestions = { projectId, aiRequestId: r.aiRequestId, list: r.suggestions || [], canApply: r.canApply, dropped: r.dropped, applied: new Set() };
       renderTasks();
     } catch (error) { renderTasks(Api.message(error)); }
@@ -354,10 +369,13 @@
     if (!ids.length) return;
     // each task goes to the chosen stage and, when chosen, to its owner
     const items = ids.map((id) => {
-      const o = document.querySelector(`[data-owner="${CSS.escape(id)}"]`); const st = document.querySelector(`[data-stage="${CSS.escape(id)}"]`);
+      const o = document.querySelector(`[data-owner="${CSS.escape(id)}"]`);
+      const sg = suggestions.list.find((x) => x.id === id) || {};
       const it = { suggestionId: id };
       if (o && o.value) it.assignedStudentId = o.value;
-      if (st && st.value) it.milestoneId = st.value;
+      // each task goes to its own stage (the current stage when the server gave none)
+      const stage = sg.milestoneId && stages_.some((m) => m.id === sg.milestoneId) ? sg.milestoneId : currentStage();
+      if (stage) it.milestoneId = stage;
       return it;
     });
     await UI.busy(btn, async () => {
@@ -372,10 +390,20 @@
     });
   }
   $('hbTasksPanel').addEventListener('click', (e) => {
-    if (e.target.closest('[data-extract]')) hasStages().then((ok) => { if (ok) extractTasks(); });
+    if (e.target.closest('[data-extract]')) createTasks();
     const add = e.target.closest('#hbAddSelected'); if (add) addSelected(add);
   });
+  async function createTasks() {
+    const pick = $('hbTaskProject');
+    if (pick) {
+      taskPick = pick.value;
+      if (!taskPick) { pick.classList.add('is-invalid'); $('hbTaskProjectError').hidden = false; pick.focus(); return; }
+      if (taskPick !== projectId) { $('hbProject').value = taskPick; await loadProject(taskPick); tab = 'tasks'; aiOpen = true; renderView(); }
+    }
+    if (await hasStages()) extractTasks();
+  }
   $('hbTasksPanel').addEventListener('change', (e) => {
+    if (e.target.id === 'hbTaskProject') { taskPick = e.target.value; e.target.classList.remove('is-invalid'); $('hbTaskProjectError').hidden = true; return; }
     if (e.target.id === 'hbSelectAll') document.querySelectorAll('#hbTasksPanel input[data-sugg]:not(:disabled)').forEach((b) => { b.checked = e.target.checked; });
     updateSelection();
   });

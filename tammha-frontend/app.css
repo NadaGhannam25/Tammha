@@ -1372,3 +1372,31 @@ html body .lang-toggle.lang-toggle--short{min-width:46px;height:36px;padding:0 1
 .projects-card .projects-list,.projects-list{grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),460px))}
 .hb-card li .hb-unverified{color:#7f939e}
 #projectWizard label:has(#wizardStartDate) > span:first-child::after{content:" *";color:#c0392b;font-weight:700}
+/* handbook: create project tasks — choose the project, then tasks grouped under each stage */
+.hb-pick{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-top:12px}
+.hb-pick__select{min-width:240px;height:40px;padding:0 12px;border:1px solid #d7e4ec;border-radius:10px;background:#fff;font:inherit;font-size:13.5px;color:#173d57}
+.hb-pick__select.is-invalid{border-color:#e26b6b}
+.hb-pick__error{margin:8px 0 0;color:#c0392b;font-size:12.5px;text-align:center}
+.hb-pick__error[hidden]{display:none}
+.hb-stage-group{margin-top:12px;border:1px solid #e3e9ee;border-radius:12px;overflow:hidden}
+.hb-stage-group__title{margin:0;padding:10px 14px;background:#e9f6fb;color:#0b5f86;font-size:14px;font-weight:800}
+.hb-stage-group .hb-suggestions{margin:0;padding:0 12px}
+/* project overview: the tabs are joined to the title bar (straight top, round bottom) */
+.project-overview-main .project-detail-hero,.project-details-page .project-detail-hero,.project-files-page .project-detail-hero{border-bottom-left-radius:0!important;border-bottom-right-radius:0!important;margin-bottom:0!important}
+.project-detail-hero + .project-tabs{margin-top:0!important;border-top:0;border-radius:0 0 14px 14px}
+/* the team column starts on the same line as the sections */
+.overview-layout{align-items:start}
+.overview-layout > .overview-team{margin-top:0}
+/* edit project details: the creation steps 1 and 2 */
+.team-exit__btn--edit{flex-basis:100%;color:#0b5f86;border-color:#cfe6f1}
+.team-exit__btn--edit:hover{background:#f3f9fd}
+.ep-dialog{max-width:720px}
+.ep-steps{margin:0 0 14px}
+.ep-steps li{flex:1}
+.ep-panel[hidden]{display:none!important}
+.ep-panel label > span:first-child::after{content:" *";color:#c0392b;font-weight:700}
+.ep-panel label:has(#epEnd) > span:first-child::after{content:none}
+.ep-panel .is-invalid{border-color:#e26b6b!important}
+.ep-sup{display:grid;gap:4px;padding:12px;border:1px solid #e6eef3;border-radius:10px;background:#fbfdfe}
+.ep-sup__label{font-size:13px;font-weight:700;color:#274b61}
+.ep-sup small{display:block;color:#7f939e}

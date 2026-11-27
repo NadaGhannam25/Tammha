@@ -23,7 +23,7 @@
  * Grading information in a handbook is reference information only: Tammha never grades.
  */
 export const SUMMARY_PROMPT_VERSION = 'handbook-summary-1';
-export const HANDBOOK_TASKS_PROMPT_VERSION = 'handbook-tasks-1';
+export const HANDBOOK_TASKS_PROMPT_VERSION = 'handbook-tasks-2';
 
 export const HANDBOOK_TOPICS = [
   {
@@ -143,9 +143,10 @@ export const HANDBOOK_TASKS_RESPONSE_SCHEMA = {
           description: S('What to do, based on the handbook'),
           priority: { type: 'STRING', enum: ['HIGH', 'MEDIUM', 'LOW'] },
           estimatedDays: { type: 'INTEGER' },
+          stage: S('Key of the project stage this task belongs to (S1, S2, ...)'),
           pages: PAGES,
           quote: S(
-            'Exact quote (3-25 words) from the handbook that requires this task',
+            'Exact quote (3-25 words) from the handbook that requires this task, or empty',
           ),
         },
         required: [
@@ -153,6 +154,7 @@ export const HANDBOOK_TASKS_RESPONSE_SCHEMA = {
           'description',
           'priority',
           'estimatedDays',
+          'stage',
           'pages',
           'quote',
         ],
@@ -163,12 +165,16 @@ export const HANDBOOK_TASKS_RESPONSE_SCHEMA = {
 };
 
 export const HANDBOOK_TASKS_SYSTEM_INSTRUCTION = [
-  'You are Tammha, an assistant that turns a university graduation-project handbook into project tasks.',
-  'Propose only tasks that the handbook text requires or clearly describes (deliverables, report chapters, ' +
-    'submissions, proposal, weekly reports, defense preparation, formatting work). Never invent requirements.',
-  'Each task cites the page numbers ([Page N] markers) and an exact quote from the handbook that requires it.',
-  'Do not repeat tasks listed as existing. Return 0-15 tasks; return an empty list when the handbook contains ' +
-    'no actionable requirements. Return JSON only.',
+  'You are Tammha, an assistant that plans the tasks of a university graduation project, stage by stage.',
+  'You get the project stages in order (from the first one, such as the proposal, to the last one) and the ' +
+    'graduation-project handbook. For EVERY stage, in order, propose 2-5 concrete tasks the team must do in that ' +
+    'stage, and put the stage key (S1, S2, ...) in "stage".',
+  'Base the tasks on the handbook whenever it describes the work of that stage (deliverables, report chapters, ' +
+    'proposal, submissions, formatting, presentations, defense); then cite the page numbers ([Page N] markers) and ' +
+    'an exact quote from those pages. When the handbook says nothing about a stage, propose the usual tasks of such ' +
+    'a stage in a graduation project, with an empty pages list and an empty quote. Never invent handbook rules, ' +
+    'dates, grades or numbers.',
+  'Do not repeat tasks listed as existing. Return JSON only.',
 ].join('\n');
 
 // ==========================================================
@@ -204,8 +210,12 @@ export interface HandbookTaskSuggestion {
   description: string;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   estimatedDays: number | null;
+  /** The project stage (milestone) the task belongs to; null when the project has no stages. */
+  milestoneId: string | null;
+  milestoneTitle: string | null;
   pages: number[];
-  quote: string;
+  /** Handbook text behind the task; null when the handbook does not describe it. */
+  quote: string | null;
 }
 
 export class InvalidExplanationError extends Error {
@@ -325,10 +335,17 @@ export function buildHandbookTasksPrompt(input: {
   pages: { page: number; text: string }[];
   truncated: boolean;
   existingTasks: string[];
+  stages?: { title: string }[];
 }): string {
   const lang = input.language === 'ar' ? 'Arabic' : 'English';
+  const stages = input.stages ?? [];
   return [
-    `TASK: HANDBOOK TASKS — propose project tasks required by the handbook "${input.title}". Write titles and descriptions in ${lang}.`,
+    `TASK: HANDBOOK TASKS — propose the tasks of every project stage, from the first stage to the last, using the handbook "${input.title}". Write titles and descriptions in ${lang}.`,
+    stages.length
+      ? `PROJECT STAGES (in order; give tasks for each one):\n${stages
+          .map((s, i) => `S${i + 1}: ${s.title}`)
+          .join('\n')}`
+      : 'PROJECT STAGES: none (use the key S0 for every task)',
     input.existingTasks.length
       ? `EXISTING TASKS (do not repeat):\n${input.existingTasks
           .slice(0, 100)
@@ -486,6 +503,7 @@ export function parseHandbookTasks(
   raw: string,
   pages: { page: number; text: string }[],
   existingTitles: string[],
+  stages: { id: string; title: string }[] = [],
 ): {
   suggestions: HandbookTaskSuggestion[];
   dropped: { unverified: number; duplicates: number };
@@ -500,14 +518,19 @@ export function parseHandbookTasks(
   const suggestions: HandbookTaskSuggestion[] = [];
   let unverified = 0;
   let duplicates = 0;
-  for (const t of data.tasks.slice(0, 30)) {
+  // a task belongs to the stage it names (S1 = first stage); an unknown key goes to the first stage
+  const stageOf = (key: unknown) => {
+    const n = Number(String(key ?? '').replace(/[^0-9]/g, ''));
+    return stages.length ? stages[n >= 1 && n <= stages.length ? n - 1 : 0] : null;
+  };
+  for (const t of data.tasks.slice(0, 60)) {
     const title = clip(t?.title, 200);
     if (title.length < 3) continue;
+    // a task the handbook describes keeps its pages and quote; a usual task of the stage that
+    // the handbook does not mention is kept without them (counted as "unverified")
     const ref = check(t?.pages, t?.quote);
-    if (!ref.verified || !ref.quote) {
-      unverified++;
-      continue;
-    }
+    const cited = ref.verified && !!ref.quote;
+    if (!cited) unverified++;
     if (seen.has(normTitle(title))) {
       duplicates++;
       continue;
@@ -523,10 +546,22 @@ export function parseHandbookTasks(
         : 'MEDIUM',
       estimatedDays:
         Number.isInteger(days) && days >= 1 && days <= 365 ? days : null,
-      pages: ref.pages,
-      quote: ref.quote,
+      milestoneId: stageOf(t?.stage)?.id ?? null,
+      milestoneTitle: stageOf(t?.stage)?.title ?? null,
+      pages: cited ? ref.pages : [],
+      quote: cited ? ref.quote : null,
     });
-    if (suggestions.length >= 15) break;
+    if (suggestions.length >= 40) break;
   }
-  return { suggestions, dropped: { unverified, duplicates } };
+  // in stage order (first stage first), keeping the model's order inside each stage
+  const pos = new Map(stages.map((m, i) => [m.id, i]));
+  const ordered = suggestions
+    .map((x, i) => ({ x, i }))
+    .sort(
+      (a, b) =>
+        (pos.get(a.x.milestoneId ?? '') ?? 999) -
+          (pos.get(b.x.milestoneId ?? '') ?? 999) || a.i - b.i,
+    )
+    .map(({ x }, i) => ({ ...x, id: `t${i + 1}` }));
+  return { suggestions: ordered, dropped: { unverified, duplicates } };
 }

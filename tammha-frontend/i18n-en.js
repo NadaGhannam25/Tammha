@@ -336,7 +336,7 @@ window.TAMMHA_EN = {
  "اختر أو أرسل دعوة للمشرف.": "Choose or invite the supervisor.",
  "البريد الجامعي للمشرف": "Supervisor's university email",
  "الدليل الذي يتبعه المشروع": "Handbook followed by the project",
- "اختر دليل إحدى الجامعات أو ارفع دليلًا خاصًا بالمشروع، ويُعتمد عليه في ملخص الدليل واستخراج المهام.": "Choose a university handbook or upload a handbook for the project; it is used for the handbook summary and task extraction.",
+ "اختر دليل إحدى الجامعات أو ارفع دليلًا خاصًا بالمشروع، ويُعتمد عليه في ملخص الدليل وإنشاء مهام المشروع.": "Choose a university handbook or upload a handbook for the project; it is used for the handbook summary and task extraction.",
  "دليل جامعة": "University handbook",
  "الجامعة": "University",
  "اختر الجامعة": "Select a university",

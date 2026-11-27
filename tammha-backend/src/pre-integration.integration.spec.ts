@@ -872,7 +872,7 @@ describe('Pre-integration features (AppModule integration)', () => {
     const applyUrl = () =>
       `${API}/projects/${p['Smart Campus']}/ai-task-suggestions/apply`;
 
-    it('members see suggestions taken from the handbook; unverifiable ones are dropped', async () => {
+    it('members see suggestions; one the handbook does not back is kept without pages or quote', async () => {
       ai.reset();
       const res = await http()
         .post(extractUrl())
@@ -885,11 +885,16 @@ describe('Pre-integration features (AppModule integration)', () => {
         canApply: true, // every student of the team applies
         advisoryOnly: true,
       });
-      expect(res.body.suggestions).toHaveLength(1);
+      expect(res.body.suggestions).toHaveLength(2);
       expect(res.body.suggestions[0]).toMatchObject({
         id: 't1',
         title: 'Prepare the project proposal',
         pages: [1],
+      });
+      expect(res.body.suggestions[1]).toMatchObject({
+        title: 'Book the defense hall',
+        pages: [],
+        quote: null,
       });
       expect(ai.lastPrompt).toContain('TASK: HANDBOOK TASKS');
       expect(ai.lastPrompt).toContain('[Page 1]');
@@ -989,7 +994,9 @@ describe('Pre-integration features (AppModule integration)', () => {
         .set(as('leila'))
         .send({})
         .expect(200);
-      expect(next.body.suggestions).toHaveLength(0);
+      expect(next.body.suggestions.map((x: any) => x.title)).toEqual([
+        'Book the defense hall',
+      ]);
       expect(next.body.dropped).toEqual({ unverified: 1, duplicates: 1 });
       // the request of another project cannot be applied here
       const foreign = await http()

@@ -5,6 +5,7 @@ import {
   InvalidExplanationError,
   normalizeForMatch,
   parseHandbookTasks,
+  buildHandbookTasksPrompt,
   parseSummary,
 } from './handbook-summary.schema';
 
@@ -105,7 +106,7 @@ describe('handbook summary schema', () => {
     ).not.toThrow();
   });
 
-  it('task extraction keeps only verifiable, new tasks', () => {
+  it('task extraction keeps new tasks; one the handbook does not back has no pages or quote', () => {
     const { suggestions, dropped } = parseHandbookTasks(
       JSON.stringify({
         tasks: [
@@ -146,11 +147,61 @@ describe('handbook summary schema', () => {
         estimatedDays: null,
         pages: [2],
       }),
+      expect.objectContaining({
+        id: 't2',
+        title: 'Invented',
+        pages: [],
+        quote: null,
+        milestoneId: null,
+      }),
     ]);
     expect(dropped).toEqual({ unverified: 1, duplicates: 1 });
     expect(() => parseHandbookTasks('[]', PAGES, [])).toThrow(
       InvalidExplanationError,
     );
+  });
+
+  it('tasks are given to their stage and listed from the first stage to the last', () => {
+    const stages = [
+      { id: 'm1', title: 'Proposal' },
+      { id: 'm2', title: 'Design' },
+    ];
+    const task = (title: string, stage: string) => ({
+      title,
+      description: 'x',
+      priority: 'LOW',
+      estimatedDays: 2,
+      stage,
+      pages: [],
+      quote: '',
+    });
+    const { suggestions } = parseHandbookTasks(
+      JSON.stringify({
+        tasks: [
+          task('Draw the diagrams', 'S2'),
+          task('Write the proposal', 'S1'),
+          task('Unknown stage task', 'S9'),
+        ],
+      }),
+      PAGES,
+      [],
+      stages,
+    );
+    expect(suggestions.map((x) => [x.id, x.title, x.milestoneId])).toEqual([
+      ['t1', 'Write the proposal', 'm1'],
+      ['t2', 'Unknown stage task', 'm1'],
+      ['t3', 'Draw the diagrams', 'm2'],
+    ]);
+    expect(
+      buildHandbookTasksPrompt({
+        title: 'H',
+        language: 'ar',
+        pages: [{ page: 1, text: 'x' }],
+        truncated: false,
+        existingTasks: [],
+        stages,
+      }),
+    ).toContain('S1: Proposal\nS2: Design');
   });
 
   it('prompt helpers', () => {

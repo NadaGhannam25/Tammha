@@ -34,7 +34,8 @@
     const goals = (p.objectives || []).filter(Boolean);
     $('ovGoals').innerHTML = goals.length ? goals.map((g) => `<li>${esc(g)}</li>`).join('') : '';
     // a pencil (top-left) edits the idea and the objectives, for every student of the team
-    document.querySelectorAll('[data-edit-panel]').forEach((b) => { b.hidden = !canManage; });
+    // the details are edited from "Edit project details" (no pencils on the sections)
+    document.querySelectorAll('.overview-edit').forEach((b) => { b.hidden = true; });
     const members = w.team?.members || [];
     // team: the Team Leader (who created the project, or received the leadership) first with the
     // badge; under the leader's name the leader sees two small options: add a member, invitation code
@@ -57,7 +58,7 @@
         <div class="team-tool" id="ovInviteCode" hidden aria-live="polite"></div>
         <ul class="team-pending" id="ovSentInvites"></ul>` : '') +
       // leave the project (not the last student) and, for the owner, delete it
-      `<div class="team-exit">${members.length > 1 ? `<button class="team-exit__btn" type="button" data-leave>${esc(T('مغادرة المشروع', 'Leave the project'))}</button>` : ''}${isOwner ? `<button class="team-exit__btn team-exit__btn--danger" type="button" data-delete-project>${esc(T('حذف المشروع', 'Delete the project'))}</button>` : ''}</div>`;
+      `<div class="team-exit">${canManage ? `<button class="team-exit__btn team-exit__btn--edit" type="button" data-edit-project>${esc(T('تعديل بيانات المشروع', 'Edit project details'))}</button>` : ''}${members.length > 1 ? `<button class="team-exit__btn" type="button" data-leave>${esc(T('مغادرة المشروع', 'Leave the project'))}</button>` : ''}${isOwner ? `<button class="team-exit__btn team-exit__btn--danger" type="button" data-delete-project>${esc(T('حذف المشروع', 'Delete the project'))}</button>` : ''}</div>`;
     if (canManage) loadSentInvitations();
     renderSetup(); loadSupervision();
   }
@@ -201,7 +202,7 @@
     if (d.cancelInvite) UI.busy(t, async () => { await Api.post(`/team-invitations/${d.cancelInvite}/cancel`, {}); loadSentInvitations(); });
     if (d.remove && confirmAction(T('إزالة هذا العضو من الفريق؟', 'Remove this member from the team?'))) UI.busy(t, async () => { await Api.del(`/teams/${w.team.id}/members/${d.remove}`); await reload(); });
     if (d.makeLeader && confirmAction(T('نقل قيادة الفريق إلى هذا العضو؟ ستصبح عضوًا في الفريق.', 'Hand the team leadership to this member? You become a member.'))) UI.busy(t, async () => { await Api.patch(`/teams/${w.team.id}/leader`, { userId: d.makeLeader }); S.invalidateProjects(); await reload(); });
-    if (d.editPanel) editPanel(d.editPanel, t);
+    if (d.editPanel || 'editProject' in d) openEditProject();
     if (d.panelCancel) render();
     if (d.panelSave) savePanel(d.panelSave, t);
     if ('leave' in d) confirmLeave();
@@ -209,6 +210,75 @@
     if (d.cancelRequest) UI.busy(t, async () => { await Api.post(`/supervision-requests/${d.cancelRequest}/cancel`, {}); await reload(); });
     if ('completeSetup' in d) UI.busy(t, async () => { await Api.post(`/projects/${w.id}/setup/complete`, {}); UI.toast(T('اكتمل إعداد المشروع.', 'Project setup completed.'), 'success'); await reload(); });
   });
+  // ----- edit project details: the creation steps 1 (project) and 2 (team and supervisor) -----
+  const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function setDate(id, value) {
+    const el = $(id); const iso = value ? String(value).slice(0, 10) : '';
+    el.dataset.iso = iso;
+    if (!iso) { el.value = ''; return; }
+    const [y, m, d] = iso.split('-').map(Number);
+    el.value = document.documentElement.lang === 'en' ? `${MONTHS_EN[m - 1]} ${d}, ${y}` : `${d} ${MONTHS_AR[m - 1]} ${y}`;
+  }
+  const dateOf = (id) => $(id).dataset.iso || '';
+  function epStep(n) {
+    document.querySelectorAll('[data-ep-step]').forEach((b) => b.classList.toggle('is-active', b.dataset.epStep === String(n)));
+    document.querySelectorAll('[data-ep-panel]').forEach((p) => { p.hidden = p.dataset.epPanel !== String(n); });
+  }
+  function epError(id, msg) {
+    const el = $(id); const er = $(`${id}Error`);
+    el.classList.toggle('is-invalid', !!msg); if (er) { er.textContent = msg || ''; er.hidden = !msg; }
+    return !msg;
+  }
+  function openEditProject() {
+    const p = w.project; const Dm = window.TammhaDomain || {};
+    const opts = (map, cur, ph) => `<option value="">${esc(ph)}</option>` + Object.entries(map || {}).map(([k, v]) => `<option value="${esc(k)}"${k === cur ? ' selected' : ''}>${esc(T(v[0], v[1]))}</option>`).join('');
+    $('epName').value = p.name || ''; $('epDescription').value = p.description || '';
+    $('epCategory').innerHTML = opts(Dm.PROJECT_CATEGORIES, p.category, T('اختر التصنيف', 'Choose the category'));
+    $('epOrigin').innerHTML = opts(Dm.PROJECT_ORIGINS, p.origin, T('اختر النوع', 'Choose the type'));
+    setDate('epStart', p.startDate); setDate('epEnd', p.expectedCompletionDate || p.endDate);
+    $('epGoals').value = (p.objectives || []).filter(Boolean).join('\n'); $('epAbout').value = p.overview || '';
+    $('epTeam').value = w.team?.name || '';
+    const sup = ((w.supervisors || [])[0] || {}).user || (w.supervisors || [])[0];
+    $('epSupervisor').innerHTML = sup
+      ? `<b>${esc(UI.personName(sup))}</b>${sup.email ? `<small dir="ltr">${esc(sup.email)}</small>` : ''}`
+      : `<span class="app-muted">${esc(T('لا يوجد مشرف بعد؛ يُرسل طلب الإشراف من قسم "المشرف الأكاديمي" في هذه الصفحة.', 'No supervisor yet; the supervision request is sent from the "Academic supervisor" section on this page.'))}</span>`;
+    ['epName', 'epDescription', 'epCategory', 'epOrigin', 'epStart', 'epEnd', 'epGoals', 'epAbout', 'epTeam'].forEach((id) => epError(id, ''));
+    epStep(1); $('editProjectModal').hidden = false; $('epName').focus();
+  }
+  const closeEditProject = () => { $('editProjectModal').hidden = true; };
+  $('editProjectModal').addEventListener('click', (e) => {
+    const s = e.target.closest('[data-ep-step]'); if (s) { epStep(s.dataset.epStep); return; }
+    if (e.target.closest('[data-ep-close]') || e.target === $('editProjectModal')) closeEditProject();
+  });
+  $('editProjectForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = (id) => $(id).value.trim();
+    const goals = v('epGoals').split(/\n+/).map((x) => x.replace(/^[\s\-•*\d.)]+/, '').trim()).filter(Boolean);
+    const start = dateOf('epStart'); const end = dateOf('epEnd');
+    // every problem shows under its field; the first step with a problem is opened
+    const ok1 = [
+      epError('epName', v('epName').length < 3 ? T('اسم المشروع 3 أحرف على الأقل', 'The project name needs at least 3 characters') : ''),
+      epError('epDescription', v('epDescription') ? '' : T('الوصف المختصر مطلوب', 'Short description is required')),
+      epError('epCategory', v('epCategory') ? '' : T('اختر تصنيف المشروع', 'Select the project category')),
+      epError('epOrigin', v('epOrigin') ? '' : T('اختر نوع المشروع', 'Select the project type')),
+      epError('epStart', start ? '' : T('تاريخ البدء مطلوب', 'Start date is required')),
+      epError('epEnd', start && end && end <= start ? T('تاريخ الإنجاز يجب أن يكون بعد تاريخ البدء', 'The completion date must be after the start date') : ''),
+      epError('epGoals', !goals.length ? T('هدف المشروع مطلوب', 'Project objective is required') : goals.length > 10 ? T('الحد الأقصى 10 أهداف', 'Up to 10 objectives') : goals.some((x) => x.length > 300) ? T('كل هدف 300 حرف بحد أقصى', 'Each objective is up to 300 characters') : ''),
+      epError('epAbout', v('epAbout') ? '' : T('نبذة المشروع مطلوبة', 'Project overview is required'))
+    ].every(Boolean);
+    const ok2 = epError('epTeam', v('epTeam').length < 2 ? T('اسم قائد الفريق حرفان على الأقل', 'The team leader name needs at least 2 characters') : '');
+    if (!ok1 || !ok2) { epStep(ok1 ? 2 : 1); return; }
+    UI.busy(e.submitter || $('editProjectForm').querySelector('[type="submit"]'), async () => {
+      try {
+        await Api.patch(`/projects/${w.id}`, { name: v('epName'), description: v('epDescription'), category: v('epCategory'), origin: v('epOrigin'), startDate: start, expectedCompletionDate: end || null, objectives: goals, overview: v('epAbout') });
+        if (w.team?.id && v('epTeam') !== (w.team.name || '')) await Api.patch(`/teams/${w.team.id}`, { name: v('epTeam') });
+      } catch (err) { UI.toast(Api.message(err), 'error'); return; }
+      closeEditProject(); UI.toast(T('حُفظت التعديلات.', 'Changes saved.'), 'success');
+      S.invalidateProjects(); await reload();
+    });
+  });
+
   // a native confirm keeps the page simple and works in both languages
   function confirmAction(text) { return window.confirm(text); }
 

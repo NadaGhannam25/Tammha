@@ -7,17 +7,17 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="نظرة عامة على مشروع تممها" name="description"/>
 <title data-en="Overview">نظرة عامة</title><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"/><link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png"/><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"/>
-<link href="style.css?v=qa35" rel="stylesheet"/>
-<link href="ltr.css?v=qa35" rel="stylesheet"/>
-<link href="loader.css?v=qa35" rel="stylesheet"/>
-<script src="i18n-en.js?v=qa35"></script>
-<script src="i18n.js?v=qa35"></script>
-<script src="loader.js?v=qa35"></script>
-<script src="config.js?v=qa35"></script>
-<script src="api.js?v=qa35"></script>
-<script src="session.js?v=qa35"></script>
-<script src="domain.js?v=qa35"></script>
-<link href="app.css?v=qa35" rel="stylesheet"/>
+<link href="style.css?v=qa36" rel="stylesheet"/>
+<link href="ltr.css?v=qa36" rel="stylesheet"/>
+<link href="loader.css?v=qa36" rel="stylesheet"/>
+<script src="i18n-en.js?v=qa36"></script>
+<script src="i18n.js?v=qa36"></script>
+<script src="loader.js?v=qa36"></script>
+<script src="config.js?v=qa36"></script>
+<script src="api.js?v=qa36"></script>
+<script src="session.js?v=qa36"></script>
+<script src="domain.js?v=qa36"></script>
+<link href="app.css?v=qa36" rel="stylesheet"/>
 </head>
 <body class="project-overview-page" data-app-role="STUDENT">
 <div class="app-shell">
@@ -111,11 +111,35 @@
 <section class="app-panel" id="ovSupervision" aria-labelledby="ovSupTitle"><h2 id="ovSupTitle" data-en="Academic supervisor">المشرف الأكاديمي</h2><div id="ovSupBody"></div></section>
 </div>
 </section>
+<div class="meeting-modal" hidden id="editProjectModal">
+<div aria-labelledby="editProjectTitle" aria-modal="true" class="meeting-modal__dialog ep-dialog" role="dialog">
+<button aria-label="إغلاق" data-en-aria-label="Close" class="meeting-modal__close" data-ep-close type="button">×</button>
+<div class="meeting-modal__heading"><h2 id="editProjectTitle" data-en="Edit project details">تعديل بيانات المشروع</h2><p data-en="Change the details and save them together.">عدّل البيانات ثم احفظها مرة واحدة.</p></div>
+<ol class="wz__steps ep-steps"><li><button class="wizard-tab is-active" data-ep-step="1" type="button"><b>1</b><span data-en="Project details">بيانات المشروع</span></button></li><li><button class="wizard-tab" data-ep-step="2" type="button"><b>2</b><span data-en="Team and supervisor">الفريق والمشرف</span></button></li></ol>
+<form class="meeting-modal__form" id="editProjectForm" novalidate>
+<div class="meeting-create-grid ep-panel" data-ep-panel="1">
+<label><span data-en="Project name">اسم المشروع</span><input id="epName" maxlength="150"/><small class="field-error" hidden id="epNameError"></small></label>
+<label><span data-en="Short description">وصف مختصر</span><input id="epDescription" maxlength="2000"/><small class="field-error" hidden id="epDescriptionError"></small></label>
+<label><span data-en="Project category">تصنيف المشروع</span><select id="epCategory"></select><small class="field-error" hidden id="epCategoryError"></small></label>
+<label><span data-en="Project type">نوع المشروع</span><select id="epOrigin"></select><small class="field-error" hidden id="epOriginError"></small></label>
+<label><span data-en="Start date">تاريخ البدء</span><input id="epStart" type="date"/><small class="field-error" hidden id="epStartError"></small></label>
+<label><span data-en="Expected completion date">تاريخ الإنجاز المتوقع</span><input id="epEnd" type="date"/><small class="field-error" hidden id="epEndError"></small></label>
+<label class="meeting-create-full"><span data-en="Project objectives (one per line)">أهداف المشروع (هدف في كل سطر)</span><textarea id="epGoals" rows="3"></textarea><small class="field-error" hidden id="epGoalsError"></small></label>
+<label class="meeting-create-full"><span data-en="Project overview">نبذة عن المشروع</span><textarea id="epAbout" maxlength="5000" rows="4"></textarea><small class="field-error" hidden id="epAboutError"></small></label>
+</div>
+<div class="meeting-create-grid ep-panel" data-ep-panel="2" hidden>
+<label class="meeting-create-full"><span data-en="Team leader name">اسم قائد الفريق</span><input id="epTeam" maxlength="100"/><small class="field-error" hidden id="epTeamError"></small></label>
+<div class="meeting-create-full ep-sup"><span class="ep-sup__label" data-en="Academic supervisor">المشرف الأكاديمي</span><div id="epSupervisor"></div></div>
+</div>
+<div class="meeting-modal__actions"><button class="meeting-modal__cancel" data-ep-close type="button" data-en="Cancel">إلغاء</button><button class="meeting-modal__submit" type="submit" data-en="Save changes">حفظ التعديلات</button></div>
+</form>
+</div>
+</div>
 <footer class="footer project-overview-footer">جميع الحقوق محفوظة لتممها ©2026</footer>
 </main>
 </div>
-<script src="script.js?v=qa35"></script>
-<script src="account-security.js?v=qa35"></script>
-<script src="pages/project-overview.js?v=qa35"></script>
+<script src="script.js?v=qa36"></script>
+<script src="account-security.js?v=qa36"></script>
+<script src="pages/project-overview.js?v=qa36"></script>
 </body>
 </html>
