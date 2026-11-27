@@ -1437,3 +1437,10 @@ html body .lang-toggle.lang-toggle--short{min-width:46px;height:36px;padding:0 1
 /* project tasks list: more room between the task and its owner column */
 @media(min-width:901px){.tasks-row{grid-template-columns:minmax(0,2.4fr) minmax(110px,1fr) 110px 130px 76px}.tasks-row>:first-child{padding-inline-end:44px}}
 .ep-panel .ep-image span::after{content:none}
+/* ===== QA 38 ===== */
+/* project tabs: the open tab keeps its light tint, without a line under it (students and supervisors) */
+.project-tab.is-active,.project-tab.is-active:hover{background:#e9f6fb!important;background-image:none!important;box-shadow:none!important}
+.sv-page .project-tab.is-active,.sv-page .project-tab.is-active:hover{background:var(--sv-tint)!important;background-image:none!important;box-shadow:none!important}
+/* "Create again": a thin blue border */
+#hbTasksPanel .hb-btn--ghost{border-width:1px}
+.hbv-btn [data-change-file] svg,[data-change-file] svg{width:18px;height:18px}
